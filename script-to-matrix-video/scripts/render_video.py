@@ -474,6 +474,15 @@ def validated_color(value: Any, label: str) -> str:
     return color
 
 
+def validated_font(value: Any, label: str, allow_empty: bool = False) -> str:
+    font = str(value or "").strip()
+    if allow_empty and not font:
+        return ""
+    if not re.fullmatch(r"[\w .\-]{1,120}", font):
+        raise RuntimeError(f"{label} contains unsupported characters")
+    return font
+
+
 def resolve_kicker(raw: Any, width: int, height: int) -> dict[str, Any] | None:
     if raw in (None, False):
         return None
@@ -496,7 +505,7 @@ def resolve_kicker(raw: Any, width: int, height: int) -> dict[str, Any] | None:
         "font_size": font_size,
         "color": validated_color(raw.get("color", "#FFFFFF"), "layout.kicker.color"),
         "background_color": validated_color(raw.get("background_color", "#111111"), "layout.kicker.background_color"),
-        "font": str(raw.get("font") or "").strip(),
+        "font": validated_font(raw.get("font"), "layout.kicker.font", allow_empty=True),
         "padding": padding,
     }
 
@@ -601,8 +610,8 @@ def resolve_layout(
         "media_height": media_height,
         "top_text_y": top_y,
         "bottom_text_y": bottom_y,
-        "top_font": str(raw.get("top_font") or "").strip(),
-        "bottom_font": str(raw.get("bottom_font") or "").strip(),
+        "top_font": validated_font(raw.get("top_font"), "layout.top_font", allow_empty=True),
+        "bottom_font": validated_font(raw.get("bottom_font"), "layout.bottom_font", allow_empty=True),
         "top_font_size": int(raw.get("top_font_size", 80 if native_bold else 76)),
         "bottom_font_size": int(raw.get("bottom_font_size", 70 if native_bold else 62)),
         "top_min_font_size": int(raw.get("top_min_font_size", 52 if native_bold else 48)),
@@ -636,7 +645,7 @@ def write_ass(
     layout: dict[str, Any] | None,
 ) -> None:
     render = project.get("render", {})
-    font = str(render.get("subtitle_font", "Microsoft YaHei"))
+    font = validated_font(render.get("subtitle_font", "Microsoft YaHei"), "render.subtitle_font")
     font_size = int(render.get("subtitle_font_size", 70))
     margin_v = int(render.get("subtitle_margin_v", 250))
     lines = [
