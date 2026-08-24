@@ -10,6 +10,8 @@ step.
 from __future__ import annotations
 
 import argparse
+from functools import lru_cache
+import hashlib
 import json
 import math
 import os
@@ -31,6 +33,7 @@ VIDEO_SUFFIXES = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"}
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE_CATALOG_PATH = SKILL_ROOT / "assets" / "templates" / "catalog.json"
 DEFAULT_FONTS_DIR = SKILL_ROOT / "assets" / "fonts"
+FONT_FAMILY_ALIASES = {"Microsoft YaHei": "Noto Sans SC"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -56,6 +59,19 @@ def load_json(path: Path) -> dict[str, Any]:
         raise RuntimeError(f"Invalid project JSON: {exc}") from exc
 
 
+def load_json_snapshot(path: Path) -> tuple[dict[str, Any], str]:
+    try:
+        raw = path.read_bytes()
+        payload = json.loads(raw.decode("utf-8"))
+    except FileNotFoundError as exc:
+        raise RuntimeError(f"Project manifest not found: {path}") from exc
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Invalid project JSON: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Project JSON root must be an object: {path}")
+    return payload, hashlib.sha256(raw).hexdigest()
+
+
 def save_json(path: Path, payload: dict[str, Any]) -> None:
     with tempfile.NamedTemporaryFile(
         mode="w", encoding="utf-8", newline="\n", dir=path.parent, suffix=".tmp", delete=False
@@ -67,6 +83,23 @@ def save_json(path: Path, payload: dict[str, Any]) -> None:
         os.replace(temp_path, path)
     finally:
         temp_path.unlink(missing_ok=True)
+
+
+def save_json_if_unchanged(path: Path, payload: dict[str, Any], expected_sha256: str) -> str:
+    lock_path = path.with_name(f".{path.name}.lock")
+    try:
+        lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError as exc:
+        raise RuntimeError(f"Project manifest is locked by another process: {path}") from exc
+    try:
+        current = hashlib.sha256(path.read_bytes()).hexdigest()
+        if current != expected_sha256:
+            raise RuntimeError(f"Project manifest changed during processing: {path}")
+        save_json(path, payload)
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    finally:
+        os.close(lock_fd)
+        lock_path.unlink(missing_ok=True)
 
 
 def manifest_path(value: str, label: str) -> Path:
@@ -161,21 +194,53 @@ def ffmpeg_filter_path(path: Path, root: Path) -> str:
     return value
 
 
-def stage_fonts(source: Path, destination: Path, families: set[str] | None = None) -> Path:
-    staged = destination / "fonts"
-    staged.mkdir()
+@lru_cache(maxsize=64)
+def cached_file_sha256(path_value: str, size: int, mtime_ns: int) -> str:
+    digest = hashlib.sha256()
+    with Path(path_value).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def resolve_font_files(source: Path, families: set[str]) -> list[Path]:
     font_files = [path for path in source.iterdir() if path.is_file() and path.suffix.lower() in {".ttf", ".otf", ".ttc"}]
     source_manifest = source / "sources.json"
-    if families and source_manifest.is_file():
+    if source_manifest.is_file():
         try:
             font_sources = json.loads(source_manifest.read_text(encoding="utf-8"))["fonts"]
-            selected_families = set(families) | {"Noto Sans SC"}
-            selected_names = {str(item["file"]) for item in font_sources if str(item.get("family")) in selected_families}
+            selected_families = {FONT_FAMILY_ALIASES.get(family, family) for family in families} | {"Noto Sans SC"}
+            source_families = [str(item["family"]) for item in font_sources]
+            if len(source_families) != len(set(source_families)):
+                raise RuntimeError(f"Bundled font source manifest has duplicate families: {source_manifest}")
+            missing_families = selected_families - set(source_families)
+            if missing_families:
+                raise RuntimeError(f"Bundled font families are missing: {', '.join(sorted(missing_families))}")
+            selected_sources = [item for item in font_sources if str(item["family"]) in selected_families]
         except (KeyError, TypeError, json.JSONDecodeError) as exc:
             raise RuntimeError(f"Invalid bundled font source manifest: {source_manifest}") from exc
-        font_files = [path for path in font_files if path.name in selected_names]
+        font_files = []
+        for item in selected_sources:
+            filename = str(item.get("file") or "")
+            if Path(filename).name != filename:
+                raise RuntimeError(f"Bundled font source manifest contains an unsafe path: {filename}")
+            path = source / filename
+            if not path.is_file():
+                raise RuntimeError(f"Bundled font file is missing: {path}")
+            expected = str(item.get("sha256") or "").lower()
+            stat = path.stat()
+            actual = cached_file_sha256(str(path), stat.st_size, stat.st_mtime_ns)
+            if not re.fullmatch(r"[0-9a-f]{64}", expected) or actual != expected:
+                raise RuntimeError(f"Bundled font hash mismatch: {path}")
+            font_files.append(path)
     if not font_files:
         raise RuntimeError(f"fonts_dir contains no supported font files: {source}")
+    return font_files
+
+
+def stage_fonts(font_files: list[Path], destination: Path) -> Path:
+    staged = destination / "fonts"
+    staged.mkdir()
     for source_file in font_files:
         target = staged / source_file.name
         try:
@@ -183,6 +248,15 @@ def stage_fonts(source: Path, destination: Path, families: set[str] | None = Non
         except OSError:
             shutil.copy2(source_file, target)
     return staged
+
+
+def required_font_families(render: dict[str, Any], layout: dict[str, Any] | None) -> set[str]:
+    families = {validated_font(render.get("subtitle_font", "Microsoft YaHei"), "render.subtitle_font")}
+    if layout:
+        families.update(font for font in (layout["top_font"], layout["bottom_font"]) if font)
+        if layout["kicker"] and layout["kicker"]["font"]:
+            families.add(layout["kicker"]["font"])
+    return families
 
 
 def validate_tools() -> tuple[str, str]:
@@ -492,6 +566,16 @@ def validated_font(value: Any, label: str, allow_empty: bool = False) -> str:
     return font
 
 
+def bounded_int(value: Any, label: str, default: int, minimum: int, maximum: int) -> int:
+    try:
+        parsed = int(default if value is None else value)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"{label} must be an integer") from exc
+    if not minimum <= parsed <= maximum:
+        raise RuntimeError(f"{label} must be between {minimum} and {maximum}")
+    return parsed
+
+
 def resolve_kicker(raw: Any, width: int, height: int) -> dict[str, Any] | None:
     if raw in (None, False):
         return None
@@ -596,6 +680,17 @@ def resolve_layout(
         warnings.append(f"unsupported background_mode {background_mode!r}; used 'solid'")
         background_mode = "solid"
 
+    top_font_size = bounded_int(raw.get("top_font_size"), "layout.top_font_size", 80 if native_bold else 76, 12, height // 2)
+    bottom_font_size = bounded_int(raw.get("bottom_font_size"), "layout.bottom_font_size", 70 if native_bold else 62, 12, height // 2)
+    top_min_font_size = min(
+        top_font_size,
+        bounded_int(raw.get("top_min_font_size"), "layout.top_min_font_size", 52 if native_bold else 48, 12, height // 2),
+    )
+    bottom_min_font_size = min(
+        bottom_font_size,
+        bounded_int(raw.get("bottom_min_font_size"), "layout.bottom_min_font_size", 46 if native_bold else 42, 12, height // 2),
+    )
+
     return {
         "preset": preset,
         "variant": variant,
@@ -621,10 +716,10 @@ def resolve_layout(
         "bottom_text_y": bottom_y,
         "top_font": validated_font(raw.get("top_font"), "layout.top_font", allow_empty=True),
         "bottom_font": validated_font(raw.get("bottom_font"), "layout.bottom_font", allow_empty=True),
-        "top_font_size": int(raw.get("top_font_size", 80 if native_bold else 76)),
-        "bottom_font_size": int(raw.get("bottom_font_size", 70 if native_bold else 62)),
-        "top_min_font_size": int(raw.get("top_min_font_size", 52 if native_bold else 48)),
-        "bottom_min_font_size": int(raw.get("bottom_min_font_size", 46 if native_bold else 42)),
+        "top_font_size": top_font_size,
+        "bottom_font_size": bottom_font_size,
+        "top_min_font_size": top_min_font_size,
+        "bottom_min_font_size": bottom_min_font_size,
         "top_max_chars": max(6, int(raw.get("top_max_chars", 12))),
         "top_max_lines": min(4, max(1, int(raw.get("top_max_lines", 4 if native_bold else 2)))),
         "bottom_max_chars": max(6, int(raw.get("bottom_max_chars", 12 if native_bold else 14))),
@@ -655,8 +750,8 @@ def write_ass(
 ) -> None:
     render = project.get("render", {})
     font = validated_font(render.get("subtitle_font", "Microsoft YaHei"), "render.subtitle_font")
-    font_size = int(render.get("subtitle_font_size", 70))
-    margin_v = int(render.get("subtitle_margin_v", 250))
+    font_size = bounded_int(render.get("subtitle_font_size"), "render.subtitle_font_size", 70, 12, height // 2)
+    margin_v = bounded_int(render.get("subtitle_margin_v"), "render.subtitle_margin_v", 250, 0, height)
     lines = [
         "[Script Info]",
         "ScriptType: v4.00+",
@@ -780,6 +875,8 @@ def write_ass(
                         f"Dialogue: 1,{ass_time(top_start)},{ass_time(entry['start'] + entry['duration'])},TopText,,0,0,0,,{top_tags}{top_rendered}"
                     )
         for overlay in scene.get("overlays") or []:
+            if not isinstance(overlay, dict):
+                raise RuntimeError("scene overlays must contain objects")
             text = str(overlay.get("text") or "").strip()
             if not text:
                 continue
@@ -787,11 +884,13 @@ def write_ass(
             relative_end = min(entry["duration"], float(overlay.get("end", entry["duration"])))
             if relative_end <= relative_start:
                 continue
-            x = int(overlay.get("x", width // 2))
-            y = int(overlay.get("y", height // 2))
+            x = bounded_int(overlay.get("x"), "overlay.x", width // 2, 0, width)
+            y = bounded_int(overlay.get("y"), "overlay.y", height // 2, 0, height)
             style = "Info" if str(overlay.get("style", "overlay")).lower() == "info" else "Overlay"
-            alignment = int(overlay.get("alignment", 7 if style == "Info" else 5))
-            font_size_override = int(overlay.get("font_size", 0))
+            alignment = bounded_int(overlay.get("alignment"), "overlay.alignment", 7 if style == "Info" else 5, 1, 9)
+            font_size_override = bounded_int(overlay.get("font_size"), "overlay.font_size", 0, 0, height // 2)
+            if 0 < font_size_override < 12:
+                raise RuntimeError("overlay.font_size must be 0 or at least 12")
             color = ass_primary_color(str(overlay.get("color", "#FFFFFF")))
             tags = [f"\\an{alignment}", f"\\pos({x},{y})", "\\fad(120,120)", f"\\1c{color}"]
             if font_size_override > 0:
@@ -1216,19 +1315,21 @@ def main() -> int:
     args = parse_args()
     project_path = args.project.resolve()
     root = project_path.parent
-    source_project = load_json(project_path)
+    source_project, source_sha256 = load_json_snapshot(project_path)
     project, template_id = resolve_template(source_project)
     ffmpeg, ffprobe = validate_tools()
 
     canvas = project.get("canvas", {})
+    if not isinstance(canvas, dict):
+        raise RuntimeError("canvas must be an object")
     width = int(canvas.get("width", 1080))
     height = int(canvas.get("height", 1920))
     fps = int(canvas.get("fps", 30))
     if width <= 0 or height <= 0 or fps <= 0 or width % 2 or height % 2:
         raise RuntimeError("Canvas width and height must be positive even integers; fps must be positive")
     scenes = project.get("scenes")
-    if not isinstance(scenes, list) or not scenes:
-        raise RuntimeError("project.json must contain a non-empty scenes array")
+    if not isinstance(scenes, list) or not scenes or any(not isinstance(scene, dict) for scene in scenes):
+        raise RuntimeError("project.json must contain a non-empty array of scene objects")
 
     render = project.setdefault("render", {})
     if not isinstance(render, dict):
@@ -1239,6 +1340,7 @@ def main() -> int:
     output = resolve_output(root, str(render.get("output", "output/final.mp4")))
     warnings: list[str] = []
     layout = resolve_layout(project, width, height, warnings)
+    font_files = resolve_font_files(fonts_dir, required_font_families(render, layout))
     voice_config = project.get("voice") or {}
     voice_enabled = not (isinstance(voice_config, dict) and voice_config.get("enabled") is False)
     bgm = resolve_bgm(project, root, voice_enabled, warnings)
@@ -1252,6 +1354,8 @@ def main() -> int:
         scene["id"] = scene_id
         duration = float(scene.get("duration") or 0)
         audio_duration = float(scene.get("audio_duration") or 0)
+        if not math.isfinite(duration) or not math.isfinite(audio_duration):
+            raise RuntimeError(f"Scene {scene_id} duration values must be finite numbers")
         if voice_enabled:
             if duration <= 0 or audio_duration <= 0:
                 raise RuntimeError(f"Scene {scene_id} has no locked TTS duration; run aliyun_tts.py first")
@@ -1482,12 +1586,7 @@ def main() -> int:
         )
         ass_path = temp / "captions.ass"
         write_ass(project, ass_path, width, height, timeline, layout)
-        font_families = {validated_font(render.get("subtitle_font", "Microsoft YaHei"), "render.subtitle_font")}
-        if layout:
-            font_families.update(font for font in (layout["top_font"], layout["bottom_font"]) if font)
-            if layout["kicker"] and layout["kicker"]["font"]:
-                font_families.add(layout["kicker"]["font"])
-        staged_fonts = stage_fonts(fonts_dir, temp, font_families)
+        staged_fonts = stage_fonts(font_files, temp)
         subtitle_filter = (
             f"subtitles=filename='{ffmpeg_filter_path(ass_path, root)}':"
             f"fontsdir='{ffmpeg_filter_path(staged_fonts, root)}'"
@@ -1559,7 +1658,7 @@ def main() -> int:
         }
     report["warnings"] = warnings
     source_project["render_report"] = report
-    save_json(project_path, source_project)
+    save_json_if_unchanged(project_path, source_project, source_sha256)
     print(json.dumps({"ok": True, **report}, ensure_ascii=False))
     return 0
 

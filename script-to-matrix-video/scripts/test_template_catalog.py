@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -33,8 +34,12 @@ def check_real_catalog() -> None:
     for template_id in ids:
         project, resolved_id = renderer.resolve_template({"layout": {"template_id": template_id}})
         assert resolved_id == template_id
-        assert renderer.resolve_layout(project, 1080, 1920, [])
+        layout = renderer.resolve_layout(project, 1080, 1920, [])
+        assert layout
         renderer.validated_font(project["render"]["subtitle_font"], f"{template_id}.subtitle_font")
+        assert renderer.resolve_font_files(
+            renderer.DEFAULT_FONTS_DIR, renderer.required_font_families(project["render"], layout)
+        )
 
 
 def check_template_resolution() -> None:
@@ -84,7 +89,7 @@ def check_template_resolution() -> None:
             source_fonts.mkdir(parents=True)
             render_temp.mkdir()
             (source_fonts / "demo.ttf").write_bytes(b"font")
-            staged_fonts = renderer.stage_fonts(source_fonts, render_temp)
+            staged_fonts = renderer.stage_fonts(renderer.resolve_font_files(source_fonts, {"Demo Font"}), render_temp)
             assert renderer.ffmpeg_filter_path(staged_fonts, quoted_root) == ".matrix-render-safe/fonts"
             assert_raises_runtime(lambda: renderer.ffmpeg_filter_path(source_fonts, quoted_root))
 
@@ -194,14 +199,14 @@ def check_paths_and_fonts() -> None:
         empty.mkdir()
         target = temp / "render"
         target.mkdir()
-        assert_raises_runtime(lambda: renderer.stage_fonts(empty, target))
+        assert_raises_runtime(lambda: renderer.resolve_font_files(empty, {"Empty Font"}))
 
         original_link = renderer.os.link
         renderer.os.link = lambda source, destination: (_ for _ in ()).throw(OSError("cross-device"))
         try:
             fallback = temp / "fallback"
             fallback.mkdir()
-            copied = renderer.stage_fonts(fonts, fallback)
+            copied = renderer.stage_fonts(renderer.resolve_font_files(fonts, {"Custom Font"}), fallback)
             assert (copied / "custom.ttf").read_bytes() == b"font"
         finally:
             renderer.os.link = original_link
@@ -214,9 +219,9 @@ def check_paths_and_fonts() -> None:
             json.dumps(
                 {
                     "fonts": [
-                        {"family": "Noto Sans SC", "file": "noto.ttf"},
-                        {"family": "Style Font", "file": "style.ttf"},
-                        {"family": "Unused Font", "file": "unused.ttf"},
+                        {"family": "Noto Sans SC", "file": "noto.ttf", "sha256": hashlib.sha256(b"noto.ttf").hexdigest()},
+                        {"family": "Style Font", "file": "style.ttf", "sha256": hashlib.sha256(b"style.ttf").hexdigest()},
+                        {"family": "Unused Font", "file": "unused.ttf", "sha256": hashlib.sha256(b"unused.ttf").hexdigest()},
                     ]
                 }
             ),
@@ -224,8 +229,15 @@ def check_paths_and_fonts() -> None:
         )
         selected_root = temp / "selected"
         selected_root.mkdir()
-        selected = renderer.stage_fonts(bundle, selected_root, {"Style Font"})
+        selected_files = renderer.resolve_font_files(bundle, {"Style Font"})
+        selected = renderer.stage_fonts(selected_files, selected_root)
         assert {path.name for path in selected.iterdir()} == {"noto.ttf", "style.ttf"}
+        assert_raises_runtime(lambda: renderer.resolve_font_files(bundle, {"Missing Family"}))
+        (bundle / "style.ttf").write_bytes(b"corrupt")
+        assert_raises_runtime(lambda: renderer.resolve_font_files(bundle, {"Style Font"}))
+        (bundle / "style.ttf").write_bytes(b"style.ttf")
+        (bundle / "noto.ttf").unlink()
+        assert_raises_runtime(lambda: renderer.resolve_font_files(bundle, {"Style Font"}))
 
         first = temp / "first.mp4"
         second = temp / "second.mp4"
@@ -322,6 +334,76 @@ def check_cli_dry_run_and_batch() -> None:
         assert fixed_project["scenes"][0]["duration"] > 8.0
 
 
+def check_concurrency_and_boundaries() -> None:
+    assert_raises_runtime(
+        lambda: renderer.resolve_layout(
+            {"layout": {"preset": "text-media-text", "top_font_size": 100000}}, 1080, 1920, []
+        )
+    )
+    with tempfile.TemporaryDirectory() as temp_value:
+        temp = Path(temp_value).resolve()
+        project_path = temp / "project.json"
+        project_path.write_text(json.dumps({"value": 1}), encoding="utf-8")
+        payload, digest = renderer.load_json_snapshot(project_path)
+        project_path.write_text(json.dumps({"value": 2}), encoding="utf-8")
+        assert_raises_runtime(lambda: renderer.save_json_if_unchanged(project_path, payload, digest))
+        assert not (temp / ".project.json.lock").exists()
+
+        payload, digest = renderer.load_json_snapshot(project_path)
+        lock_path = temp / ".project.json.lock"
+        lock_path.write_text("locked", encoding="utf-8")
+        assert_raises_runtime(lambda: renderer.save_json_if_unchanged(project_path, payload, digest))
+        lock_path.unlink()
+
+        assert_raises_runtime(
+            lambda: batch_validator.normalize_jobs(
+                {"jobs": [{"project": "../outside/project.json"}]}, temp / "batch.json"
+            )
+        )
+        assert_raises_runtime(
+            lambda: batch_validator.normalize_jobs(
+                {"jobs": [{"project": str(Path("/tmp/outside-project.json"))}]}, temp / "batch.json"
+            )
+        )
+
+        invalid_project = {
+            "layout": {"template_id": "business-black"},
+            "render": {"output": "output/final.mp4"},
+            "scenes": ["not-an-object"],
+        }
+        project_path.write_text(json.dumps(invalid_project), encoding="utf-8")
+        batch_path = temp / "batch.json"
+        batch_path.write_text(json.dumps({"jobs": [{"project": "project.json"}]}), encoding="utf-8")
+        invalid_scene = subprocess.run(
+            [sys.executable, str(SCRIPTS / "validate_template_batch.py"), str(batch_path)],
+            capture_output=True,
+            text=True,
+        )
+        assert invalid_scene.returncode == 1
+        assert "array of scene objects" in invalid_scene.stdout
+
+        layout = renderer.resolve_layout(
+            {"layout": {"preset": "text-media-text"}}, 1080, 1920, []
+        )
+        assert layout
+        assert_raises_runtime(
+            lambda: renderer.write_ass(
+                {"render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 100000}},
+                temp / "invalid.ass",
+                1080,
+                1920,
+                [
+                    {
+                        "scene": {"top_text": "标题", "overlays": [{"text": "越界", "x": 2000}]},
+                        "start": 0.0,
+                        "duration": 8.0,
+                    }
+                ],
+                layout,
+            )
+        )
+
+
 if __name__ == "__main__":
     check_real_catalog()
     check_template_resolution()
@@ -329,4 +411,5 @@ if __name__ == "__main__":
     check_layout_and_ass()
     check_paths_and_fonts()
     check_cli_dry_run_and_batch()
+    check_concurrency_and_boundaries()
     print("template catalog checks passed")

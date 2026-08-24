@@ -6,12 +6,23 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import tempfile
 from typing import Any
 
-from render_video import manifest_path, resolve_fonts_dir, resolve_input, resolve_template
+from render_video import (
+    manifest_path,
+    load_json_snapshot,
+    required_font_families,
+    resolve_font_files,
+    resolve_fonts_dir,
+    resolve_input,
+    resolve_layout,
+    resolve_template,
+    save_json_if_unchanged,
+)
 from template_policy import infer_media_type, recommended_duration, required_media_count
 
 
@@ -80,7 +91,12 @@ def normalize_jobs(batch: dict[str, Any], manifest_path: Path) -> list[dict[str,
         if not project_value:
             raise RuntimeError(f"Batch job {index} has no project path")
         job["_index"] = index
-        job["_project_path"] = resolve_relative(manifest_path.parent, project_value)
+        project_path = resolve_relative(manifest_path.parent, project_value)
+        try:
+            project_path.relative_to(manifest_path.parent.resolve())
+        except ValueError as exc:
+            raise RuntimeError(f"Batch project path must stay inside the batch folder: {project_path}") from exc
+        job["_project_path"] = project_path
         jobs.append(job)
     return jobs
 
@@ -140,7 +156,7 @@ def main() -> int:
         project_path: Path = job["_project_path"]
         label = str(job.get("job_id") or project_path.stem or f"job-{job['_index']}")
         try:
-            source_project = load_json(project_path)
+            source_project, source_sha256 = load_json_snapshot(project_path)
             project, template_id = resolve_template(source_project)
         except RuntimeError as exc:
             errors.append(f"{label}: {exc}")
@@ -150,17 +166,25 @@ def main() -> int:
             errors.append(f"{label}: layout.preset must be text-media-text")
             continue
         scenes = project.get("scenes")
-        if not isinstance(scenes, list) or not scenes:
-            errors.append(f"{label}: project has no scenes")
+        if not isinstance(scenes, list) or not scenes or any(not isinstance(scene, dict) for scene in scenes):
+            errors.append(f"{label}: project must contain a non-empty array of scene objects")
             continue
 
         target = recommended_duration(scenes)
-        current = sum(max(0.0, float(scene.get("duration") or 0)) for scene in scenes)
+        try:
+            durations = [float(scene.get("duration") or 0) for scene in scenes]
+        except (TypeError, ValueError) as exc:
+            errors.append(f"{label}: scene duration must be numeric: {exc}")
+            continue
+        if any(not math.isfinite(duration) or duration < 0 for duration in durations):
+            errors.append(f"{label}: scene durations must be finite non-negative numbers")
+            continue
+        current = sum(durations)
         fixed = False
         if current + 0.001 < target:
             if args.fix_duration:
                 scenes[-1]["duration"] = round(float(scenes[-1].get("duration") or 0) + target - current, 3)
-                save_json(project_path, source_project)
+                source_sha256 = save_json_if_unchanged(project_path, source_project, source_sha256)
                 current = target
                 fixed = True
                 warnings.append(f"{label}: duration extended to {target:.1f}s")
@@ -175,6 +199,11 @@ def main() -> int:
             continue
         try:
             fonts_dir = resolve_fonts_dir(project_path.parent, render)
+            canvas = project.get("canvas") or {}
+            resolved_layout = resolve_layout(
+                project, int(canvas.get("width", 1080)), int(canvas.get("height", 1920)), []
+            )
+            font_files = resolve_font_files(fonts_dir, required_font_families(render, resolved_layout))
             media = collect_media(project, project_path)
             bgm_id = bgm_identity(project, project_path)
         except RuntimeError as exc:
@@ -210,6 +239,7 @@ def main() -> int:
                 "project": str(project_path),
                 "template_id": template_id,
                 "fonts_dir": str(fonts_dir),
+                "font_files": [path.name for path in font_files],
                 "duration": round(current, 3),
                 "copy_target_duration": target,
                 "duration_fixed": fixed,

@@ -28,6 +28,8 @@ Create one project manifest per output, then create a batch JSON beside them:
 
 Paths are relative to `batch.json`. A `projects` array of path strings is accepted for simple batches, but include `copy_id` and `variant_id` when producing A/B variants so duplicate media sets can be detected.
 
+Every project manifest must stay inside the folder that contains `batch.json`; absolute paths and `..` escapes are rejected. Run validation before starting render workers. Both validator and renderer use optimistic file snapshots plus an exclusive save lock, so a project changed by another process fails instead of silently overwriting the newer manifest.
+
 ## Required preflight
 
 ```powershell

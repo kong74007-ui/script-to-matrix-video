@@ -13,7 +13,7 @@ Keep `SKILL.md`, `agents`, `references`, `scripts`, and `requirements.txt` toget
 
 Keep `assets/templates` and `assets/fonts` as well. The 12-style catalog and four licensed Chinese font families are part of the runtime, so no separate operating-system font installation is required for bundled templates.
 
-The Windows installer validates the catalog shape and every bundled font SHA-256 before it backs up or replaces an existing Skill. A missing or altered runtime asset must stop installation.
+The Windows installer runs the source environment check and catalog regression suite, then validates every bundled font SHA-256 before it backs up or replaces an existing Skill. A missing, malformed, or altered runtime asset must stop installation.
 
 ## Runtime dependencies
 

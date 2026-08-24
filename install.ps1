@@ -54,6 +54,15 @@ if (-not $pythonCommand) {
     throw 'Python 3.10 or newer is required. Install Python, reopen PowerShell, and run this installer again.'
 }
 
+& $pythonCommand.Source (Join-Path $sourceSkill 'scripts\check_environment.py')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Source Skill environment validation failed; the existing installation was not changed.'
+}
+& $pythonCommand.Source (Join-Path $sourceSkill 'scripts\test_template_catalog.py')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Source Skill catalog/font validation failed; the existing installation was not changed.'
+}
+
 New-Item -ItemType Directory -Force -Path $DestinationRoot | Out-Null
 $targetSkill = Join-Path $DestinationRoot 'script-to-matrix-video'
 

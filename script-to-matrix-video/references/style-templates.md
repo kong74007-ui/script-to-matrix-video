@@ -42,6 +42,8 @@ The Skill bundles four SIL Open Font License families and passes `assets/fonts` 
 
 Use `layout.top_font` and `layout.bottom_font` only when a project must override the selected template. A custom `render.fonts_dir` must point to a directory inside that project so the project remains self-contained.
 
+With the bundled font directory, every requested family must appear in `assets/fonts/sources.json`, its file must exist, and its SHA-256 must match before dry-run, batch validation, or rendering can pass. Use a project-local custom `fonts_dir` for any other family.
+
 ## Batch rules
 
 - Template rotation is a style change, not an A/B media substitution. Continue enforcing approved-media counts, video-first selection, duration, and BGM rules independently.
