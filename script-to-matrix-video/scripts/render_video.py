@@ -10,6 +10,7 @@ step.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 from functools import lru_cache
 import hashlib
 import json
@@ -85,7 +86,8 @@ def save_json(path: Path, payload: dict[str, Any]) -> None:
         temp_path.unlink(missing_ok=True)
 
 
-def save_json_if_unchanged(path: Path, payload: dict[str, Any], expected_sha256: str) -> str:
+@contextmanager
+def unchanged_manifest_lock(path: Path, expected_sha256: str):
     lock_path = path.with_name(f".{path.name}.lock")
     try:
         lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
@@ -95,11 +97,39 @@ def save_json_if_unchanged(path: Path, payload: dict[str, Any], expected_sha256:
         current = hashlib.sha256(path.read_bytes()).hexdigest()
         if current != expected_sha256:
             raise RuntimeError(f"Project manifest changed during processing: {path}")
-        save_json(path, payload)
-        return hashlib.sha256(path.read_bytes()).hexdigest()
+        yield
     finally:
         os.close(lock_fd)
         lock_path.unlink(missing_ok=True)
+
+
+def save_json_if_unchanged(path: Path, payload: dict[str, Any], expected_sha256: str) -> str:
+    with unchanged_manifest_lock(path, expected_sha256):
+        save_json(path, payload)
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def publish_render_if_unchanged(
+    project_path: Path,
+    project: dict[str, Any],
+    expected_sha256: str,
+    candidate: Path,
+    output: Path,
+) -> str:
+    previous = candidate.with_name("previous-output.mp4")
+    with unchanged_manifest_lock(project_path, expected_sha256):
+        try:
+            if output.is_file():
+                os.replace(output, previous)
+            os.replace(candidate, output)
+            save_json(project_path, project)
+        except Exception:
+            output.unlink(missing_ok=True)
+            if previous.is_file():
+                os.replace(previous, output)
+            raise
+        previous.unlink(missing_ok=True)
+        return hashlib.sha256(project_path.read_bytes()).hexdigest()
 
 
 def manifest_path(value: str, label: str) -> Path:
@@ -1591,7 +1621,8 @@ def main() -> int:
             f"subtitles=filename='{ffmpeg_filter_path(ass_path, root)}':"
             f"fontsdir='{ffmpeg_filter_path(staged_fonts, root)}'"
         )
-        captioned = temp / "captioned.mp4" if bgm else output
+        candidate = temp / "final.mp4"
+        captioned = temp / "captioned.mp4" if bgm else candidate
         run(
             [
                 ffmpeg,
@@ -1626,39 +1657,38 @@ def main() -> int:
                 ffmpeg=ffmpeg,
                 ffprobe=ffprobe,
                 source_video=captioned,
-                output=output,
+                output=candidate,
                 duration=cursor,
                 bgm=bgm,
                 mix_program_audio=voice_enabled
                 or any(bool(item["scene"].get("sfx")) for item in prepared),
             )
-
-    report = probe_media(ffprobe, output)
-    if report["video_codec"] != "h264" or report["audio_codec"] != "aac":
-        raise RuntimeError(f"Unexpected final codecs: {report}")
-    if report["width"] != width or report["height"] != height or report["duration"] <= 0:
-        raise RuntimeError(f"Final media probe did not match the project canvas: {report}")
-    report["output"] = output.relative_to(root).as_posix()
-    report["layout"] = layout["preset"] if layout else "full-frame"
-    report["layout_variant"] = layout["variant"] if layout else None
-    report["background_mode"] = layout["background_mode"] if layout else None
-    report["template_id"] = template_id
-    report["fonts_dir"] = str(fonts_dir)
-    report["voice_enabled"] = voice_enabled
-    report["bgm_enabled"] = bgm is not None
-    if bgm:
-        report["bgm"] = {
-            "path": bgm["path"].relative_to(root).as_posix()
-            if bgm["path"].is_relative_to(root)
-            else str(bgm["path"]),
-            "loop_mode": bgm["loop_mode"],
-            "loop_count": bgm["config"].get("loop_count"),
-            "target_lufs": bgm["config"].get("resolved_target_lufs"),
-            "ducking": bgm["ducking"],
-        }
-    report["warnings"] = warnings
-    source_project["render_report"] = report
-    save_json_if_unchanged(project_path, source_project, source_sha256)
+        report = probe_media(ffprobe, candidate)
+        if report["video_codec"] != "h264" or report["audio_codec"] != "aac":
+            raise RuntimeError(f"Unexpected final codecs: {report}")
+        if report["width"] != width or report["height"] != height or report["duration"] <= 0:
+            raise RuntimeError(f"Final media probe did not match the project canvas: {report}")
+        report["output"] = output.relative_to(root).as_posix()
+        report["layout"] = layout["preset"] if layout else "full-frame"
+        report["layout_variant"] = layout["variant"] if layout else None
+        report["background_mode"] = layout["background_mode"] if layout else None
+        report["template_id"] = template_id
+        report["fonts_dir"] = str(fonts_dir)
+        report["voice_enabled"] = voice_enabled
+        report["bgm_enabled"] = bgm is not None
+        if bgm:
+            report["bgm"] = {
+                "path": bgm["path"].relative_to(root).as_posix()
+                if bgm["path"].is_relative_to(root)
+                else str(bgm["path"]),
+                "loop_mode": bgm["loop_mode"],
+                "loop_count": bgm["config"].get("loop_count"),
+                "target_lufs": bgm["config"].get("resolved_target_lufs"),
+                "ducking": bgm["ducking"],
+            }
+        report["warnings"] = warnings
+        source_project["render_report"] = report
+        publish_render_if_unchanged(project_path, source_project, source_sha256, candidate, output)
     print(json.dumps({"ok": True, **report}, ensure_ascii=False))
     return 0
 

@@ -355,6 +355,35 @@ def check_concurrency_and_boundaries() -> None:
         assert_raises_runtime(lambda: renderer.save_json_if_unchanged(project_path, payload, digest))
         lock_path.unlink()
 
+        output = temp / "output.mp4"
+        output.write_bytes(b"old-output")
+        candidate = temp / "candidate.mp4"
+        candidate.write_bytes(b"new-output")
+        payload, digest = renderer.load_json_snapshot(project_path)
+        project_path.write_text(json.dumps({"value": 3}), encoding="utf-8")
+        assert_raises_runtime(
+            lambda: renderer.publish_render_if_unchanged(project_path, payload, digest, candidate, output)
+        )
+        assert output.read_bytes() == b"old-output"
+
+        project_path.write_text(json.dumps({"value": 4}), encoding="utf-8")
+        payload, digest = renderer.load_json_snapshot(project_path)
+        candidate.write_bytes(b"new-output")
+        original_save = renderer.save_json
+        renderer.save_json = lambda path, value: (_ for _ in ()).throw(RuntimeError("disk full"))
+        try:
+            assert_raises_runtime(
+                lambda: renderer.publish_render_if_unchanged(project_path, payload, digest, candidate, output)
+            )
+            assert output.read_bytes() == b"old-output"
+        finally:
+            renderer.save_json = original_save
+
+        candidate.write_bytes(b"new-output")
+        payload, digest = renderer.load_json_snapshot(project_path)
+        renderer.publish_render_if_unchanged(project_path, payload, digest, candidate, output)
+        assert output.read_bytes() == b"new-output"
+
         assert_raises_runtime(
             lambda: batch_validator.normalize_jobs(
                 {"jobs": [{"project": "../outside/project.json"}]}, temp / "batch.json"
