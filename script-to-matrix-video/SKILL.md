@@ -27,6 +27,7 @@ Use when the user asks for 模板成片、上面文字中间素材下面文字, 
 - Single mode: generate one or more variants for one copy.
 - Batch mode: accept multiple copy rows or screenshots and generate the requested number of variants per copy. Vary media choice, crop/start offset, highlight treatment, or palette without changing the copy's meaning. Render independent jobs with safe concurrency, isolate failures, and record batch start/end time, per-output render time, status, and file path in CSV or JSON.
 - Output: final MP4 files; for batch work, also return a ZIP and timing report unless the user requests individual files only.
+- Reference outputs: when the user asks to see examples or when visual calibration is needed, read [the template example index](references/template-examples.md). The bundled MP4s are accepted output references, not source material for new videos.
 
 Routing rule: an explicit top/middle/bottom layout request selects Function 2. Otherwise a full client script selects Function 1. If the user supplies a long script but explicitly requests the structured template, honor the layout and use Function 2 without asking them to restate the copy.
 

@@ -2,7 +2,7 @@
 
 一个面向中文矩阵引流内容的 Codex Skill，输出可直接发布的 9:16 MP4。
 
-当前版本：`v1.3.0`
+当前版本：`v1.4.0`
 
 ## 两个独立功能
 
@@ -15,6 +15,17 @@
 输入上方标题和下方副标题/CTA，生成“上文字—中素材—下文字”的竖屏视频。默认无配音，支持单条、多版本和批量生成，并记录批次与单条耗时。
 
 模板成片只允许使用客户素材或素材库中状态为“可使用”的图片和视频，禁止 AI 生成素材。没有合适素材时返回 `material_missing`，不会使用无关素材填充。
+
+## 模板案例视频
+
+仓库内置 6 组文案、每组 A/B 两个版本，共 12 条已经生成的 `text-media-text` 模板案例视频。全部为 1080×1920 H.264 MP4，单条约 10.5–12 秒。
+
+![12条模板案例首帧预览](script-to-matrix-video/assets/examples/text-media-text/preview-opening.jpg)
+
+- [查看案例文案与 A/B 视频索引](script-to-matrix-video/references/template-examples.md)
+- [打开案例视频目录](script-to-matrix-video/assets/examples/text-media-text/)
+
+案例只用于展示成片效果和校准布局，不会作为新客户视频的素材重复使用。
 
 ## 素材库能力
 
@@ -78,8 +89,8 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 
 ```text
 script-to-matrix-video/   Skill 本体
+  assets/examples/        12条模板案例视频与预览图
 install.ps1               Windows 安装器
 INSTALL.md                完整安装与连接配置
 功能介绍.md               两个独立功能的说明
 ```
-
