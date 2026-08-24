@@ -9,4 +9,5 @@ id_ed25519
 id_ed25519.pub
 outputs/
 *.mp4
+!script-to-matrix-video/assets/examples/text-media-text/*.mp4
 *.wav
