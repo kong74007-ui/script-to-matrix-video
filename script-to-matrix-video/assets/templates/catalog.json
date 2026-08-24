@@ -1,5 +1,19 @@
 {
   "version": 1,
+  "emphasis_profiles": {
+    "video-diary": {"scale": 1.12, "min_scale": 1.04, "color": "#D86F61", "outline_width": 3, "outline_color": "#FFF8F2", "role_colors": {"cta": "#7CA6A1"}},
+    "minimal-headline": {"scale": 1.28, "min_scale": 1.08, "color": "#FF4D2E", "outline_width": 0, "outline_color": "#F7F6F2", "role_colors": {"contrast": "#111111"}},
+    "airy-blush": {"scale": 1.14, "min_scale": 1.04, "color": "#D9778B", "outline_width": 6, "outline_color": "#F5C9D2"},
+    "yellow-blue-pop": {"scale": 1.24, "min_scale": 1.08, "color": "#FFF32D", "outline_width": 8, "outline_color": "#083287", "role_colors": {"contrast": "#FF7146", "pain": "#FF7146"}},
+    "business-black": {"scale": 1.14, "min_scale": 1.04, "color": "#4FA3FF", "outline_width": 2, "outline_color": "#172433"},
+    "black-gold-premium": {"scale": 1.14, "min_scale": 1.04, "color": "#CDA65A", "outline_width": 1, "outline_color": "#806230"},
+    "data-compare": {"scale": 1.34, "min_scale": 1.10, "color": "#2563EB", "outline_width": 0, "outline_color": "#F2F6FF", "role_colors": {"contrast": "#FF5B5B", "pain": "#FF5B5B"}},
+    "chinese-title": {"scale": 1.22, "min_scale": 1.08, "color": "#B7352C", "outline_width": 4, "outline_color": "#F3EAD7", "role_colors": {"contrast": "#B7352C", "pain": "#B7352C"}},
+    "torn-magazine": {"scale": 1.18, "min_scale": 1.06, "color": "#191815", "outline_width": 12, "outline_color": "#F8D35C", "underline": true, "angle": -1.5, "role_colors": {"contrast": "#F04438"}},
+    "vlog-journal": {"scale": 1.18, "min_scale": 1.06, "color": "#FF9C5A", "outline_width": 5, "outline_color": "#FFFCEB", "underline": true, "angle": -1.0, "role_colors": {"benefit": "#62B8AE"}},
+    "bilingual-split": {"scale": 1.16, "min_scale": 1.05, "color": "#E64C3C", "outline_width": 0, "outline_color": "#EEF2F5", "underline": true, "role_colors": {"benefit": "#1C6DB2"}},
+    "portrait-quote": {"scale": 1.22, "min_scale": 1.08, "color": "#D9B56E", "outline_width": 2, "outline_color": "#1E2630", "italic": true}
+  },
   "templates": [
     {
       "id": "video-diary",

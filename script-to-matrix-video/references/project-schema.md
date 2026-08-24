@@ -18,6 +18,16 @@ Create one `project.json` for each video. Paths are relative to the manifest unl
   "layout": {
     "preset": "full-frame"
   },
+  "emphasis": {
+    "schema_version": "emphasis.v1",
+    "provider": "codex",
+    "source_hash": "sha256-of-exact-top-and-bottom-copy",
+    "prompt_version": "v1",
+    "top": [
+      {"start": 7, "end": 10, "text": "一样大", "role": "contrast", "priority": 1, "confidence": 0.95}
+    ],
+    "bottom": []
+  },
   "material_policy": {
     "allow_image_only": false,
     "image_only_reason": ""
@@ -138,13 +148,15 @@ Unknown values must fall back to `static` or `cut` and be recorded in the render
 
 `text-media-text` supports two variants: `native-bold` for strong native-feed titles with outlined keyword highlights and a blurred-media background, and `classic` for the original restrained solid-background card treatment. `native-bold` is the default for new structured-layout projects. Scene highlight arrays accept strings or objects shaped as `{"text":"40%","color":"#FFD400"}`.
 
+For Agent-selected emphasis, use the top-level `emphasis.v1` object described in [semantic-emphasis.md](semantic-emphasis.md). Its `top` and `bottom` offsets must match the exact persistent scene copy. Scene-level highlight arrays remain backward compatible and take precedence. The renderer drops stale or invalid spans, falls back to conservative deterministic rules when appropriate, and records the resolved provider and span counts in `render_report.emphasis`.
+
 For one of the 12 bundled authored styles, set only a stable template identifier:
 
 ```json
 {"layout": {"template_id": "black-gold-premium"}}
 ```
 
-The renderer loads its defaults from `assets/templates/catalog.json`. Explicit project `layout` and `render` fields override template defaults. Read [style-templates.md](style-templates.md) for the complete catalog. Bundled templates can set independent `top_font` and `bottom_font`, one persistent `kicker`, and validated `surface_boxes` decoration. The Skill automatically supplies `assets/fonts` to FFmpeg/libass; set `render.fonts_dir` only for a custom font directory contained inside the current project.
+The renderer loads its defaults from `assets/templates/catalog.json`. Explicit project `layout` and `render` fields override template defaults. Read [style-templates.md](style-templates.md) for the complete catalog. Bundled templates can set independent `top_font` and `bottom_font`, one persistent `kicker`, validated `surface_boxes` decoration, and one catalog-owned semantic `emphasis_profile`. The Skill automatically supplies `assets/fonts` to FFmpeg/libass; set `render.fonts_dir` only for a custom font directory contained inside the current project.
 
 An unsupported layout falls back to `full-frame` and is recorded in `render_report.warnings`.
 

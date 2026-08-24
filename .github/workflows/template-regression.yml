@@ -1,0 +1,39 @@
+name: Template regression
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  semantic-emphasis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Ensure FFmpeg is available
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+      - name: Check runtime
+        run: python script-to-matrix-video/scripts/check_environment.py
+      - name: Run catalog and semantic regression
+        run: python script-to-matrix-video/scripts/test_template_catalog.py
+      - name: Render zero-cost review artifacts
+        run: python script-to-matrix-video/scripts/render_ci_artifacts.py "${{ runner.temp }}/template-regression"
+      - name: Upload contact sheet and representative videos
+        uses: actions/upload-artifact@v7
+        with:
+          name: template-regression
+          path: ${{ runner.temp }}/template-regression
+          if-no-files-found: error
+          retention-days: 14

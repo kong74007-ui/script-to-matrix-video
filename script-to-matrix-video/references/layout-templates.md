@@ -121,6 +121,8 @@ When highlight arrays are absent and `auto_highlight` is true, the renderer emph
 
 The renderer respects explicit newlines when they fit. Otherwise it wraps the complete text and reduces type size down to the configured minimum instead of silently discarding the final clause.
 
+For AI-selected large type, use the top-level [`emphasis.v1` contract](semantic-emphasis.md) instead of putting colors or scale values into the Agent result. Every bundled `template_id` owns an `emphasis_profile`; the same semantic spans therefore render differently across the 12 styles. The renderer protects emphasized phrases from line breaks and fits them in two passes: reduce emphasis scale first, then reduce the base font size. Source text is never truncated.
+
 Use `background_mode: "solid"` when the image colors make the blurred background distracting. `blurred-media` darkens and blurs the current image behind the top and bottom bands; it does not create additional content.
 
 ### `classic` configuration

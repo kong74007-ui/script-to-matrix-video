@@ -31,6 +31,12 @@ The renderer merges the selected template first, then applies explicit project `
 
 These are original template definitions. Reference products may inform category names and information hierarchy, but do not copy their assets, icons, player chrome, CSS, or exact compositions.
 
+## Semantic emphasis profiles
+
+The catalog's `emphasis_profiles` map gives every `template_id` its own scale, color, outline/marker, underline, angle, and optional role colors. Providers emit only the neutral [`emphasis.v1` spans](semantic-emphasis.md); never copy visual settings into an Agent prompt or project semantic result. This lets Codex and a future Huangque Agent produce interchangeable decisions while the template remains responsible for appearance.
+
+Use the profile as a restrained hierarchy, not decoration on every word. The renderer keeps at most three non-overlapping spans per region and reduces emphasis scale before base type when space is tight.
+
 ## Fonts
 
 The Skill bundles four SIL Open Font License families and passes `assets/fonts` to FFmpeg/libass automatically:

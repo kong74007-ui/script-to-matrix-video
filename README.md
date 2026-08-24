@@ -38,9 +38,13 @@
 
 模板目录位于 `script-to-matrix-video/assets/templates/catalog.json`。渲染器先应用模板默认值，再应用项目显式覆盖；批量校验器使用同一份目录，因此网站或其他调用方以后只需要保存 `template_id`，不必复制整套版式参数。
 
+12 套模板现在都支持 `emphasis.v1` 语义重点：Codex 只输出原文中的重点区间和 `number / contrast / pain / benefit / conclusion / cta` 角色，模板目录决定放大、颜色、描边、荧光笔或下划线效果。未来黄雀 Agent 只需输出同一协议，无需修改渲染器。无效区间会被丢弃并回退到数字、日期、引号、转折和 CTA 的确定性规则；排版会先降低重点倍率、再降低基础字号，不截断文案。协议见 [semantic-emphasis.md](script-to-matrix-video/references/semantic-emphasis.md)。
+
 Skill 自带 `Noto Sans SC`、`ZCOOL XiaoWei`、`Ma Shan Zheng`、`ZCOOL KuaiLe` 四个 OFL 中文字体家族，并自动交给 FFmpeg 加载，不依赖运行电脑碰巧安装了什么字体。详细选择建议见 [视觉模板目录](script-to-matrix-video/references/style-templates.md)。
 
 v1.7.0 同时修复了两项真实批量问题：中英混排会保留英文词间空格；`blurred-media` 使用 50/60fps 素材时会先统一到项目帧率，不再因 `-frames:v` 提前结束。
+
+PR 会运行零付费模板回归：校验协议和 12 套重点档案，为全部 12 套模板生成真实 libass 首帧矩阵，再用 30/60fps 合成素材渲染鲜黄亮蓝、撕边杂志、国风标题三条 MP4 供审查。
 
 ## 模板案例视频
 

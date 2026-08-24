@@ -23,7 +23,7 @@ from render_video import (
     resolve_template,
     save_json_if_unchanged,
 )
-from template_policy import infer_media_type, recommended_duration, required_media_count
+from template_policy import infer_media_type, recommended_duration, required_media_count, resolve_emphasis
 
 
 def parse_args() -> argparse.Namespace:
@@ -169,6 +169,8 @@ def main() -> int:
         if not isinstance(scenes, list) or not scenes or any(not isinstance(scene, dict) for scene in scenes):
             errors.append(f"{label}: project must contain a non-empty array of scene objects")
             continue
+        emphasis, emphasis_warnings = resolve_emphasis(project, scenes)
+        warnings.extend(f"{label}: {warning}" for warning in emphasis_warnings)
 
         target = recommended_duration(scenes)
         try:
@@ -247,6 +249,12 @@ def main() -> int:
                 "required_media": required,
                 "video_media": video_count,
                 "bgm_identity": bgm_id,
+                "emphasis": {
+                    "provider": emphasis["provider"],
+                    "input_valid": emphasis["input_valid"],
+                    "top_count": len(emphasis["top"]),
+                    "bottom_count": len(emphasis["bottom"]),
+                },
             }
         )
 

@@ -15,6 +15,7 @@ SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 import render_video as renderer
 import validate_template_batch as batch_validator
+from template_policy import emphasis_source_hash, fallback_emphasis, resolve_emphasis
 
 
 def assert_raises_runtime(action) -> None:
@@ -29,13 +30,15 @@ def check_real_catalog() -> None:
     assert renderer.TEMPLATE_CATALOG_PATH.is_file(), "required template catalog is missing"
     catalog = json.loads(renderer.TEMPLATE_CATALOG_PATH.read_text(encoding="utf-8"))
     ids = [item.get("id") for item in catalog.get("templates", []) if isinstance(item, dict)]
+    profiles = catalog.get("emphasis_profiles") or {}
     assert catalog.get("version") == 1
     assert len(ids) == 12 and len(ids) == len(set(ids)) and all(ids)
+    assert set(profiles) == set(ids)
     for template_id in ids:
         project, resolved_id = renderer.resolve_template({"layout": {"template_id": template_id}})
         assert resolved_id == template_id
         layout = renderer.resolve_layout(project, 1080, 1920, [])
-        assert layout
+        assert layout and layout["emphasis_profile"]["scale"] > 1
         renderer.validated_font(project["render"]["subtitle_font"], f"{template_id}.subtitle_font")
         assert renderer.resolve_font_files(
             renderer.DEFAULT_FONTS_DIR, renderer.required_font_families(project["render"], layout)
@@ -182,6 +185,158 @@ def check_layout_and_ass() -> None:
         assert "Style: TopText,Ma Shan Zheng" in ass
         assert "Style: BottomText,ZCOOL XiaoWei" in ass
         assert "Style: Kicker" in ass and "风物小记" in ass
+
+
+def check_emphasis_protocol() -> None:
+    top = "不是所有字都该一样大"
+    bottom = "先让观众看到重点"
+    project = {
+        "emphasis": {
+            "schema_version": "emphasis.v1",
+            "provider": "codex",
+            "source_hash": emphasis_source_hash(top, bottom),
+            "prompt_version": "v1",
+            "top": [
+                {"start": 7, "end": 10, "text": "一样大", "role": "contrast", "priority": 1, "confidence": 0.95},
+                {"start": 2, "end": 5, "text": "所有字", "role": "pain", "priority": 2, "confidence": 0.86},
+                {"start": 4, "end": 7, "text": "字都该", "role": "pain", "priority": 3, "confidence": 0.8},
+                {"start": 0, "end": 2, "text": "不是", "role": "contrast", "priority": 4, "confidence": 0.4},
+            ],
+            "bottom": [
+                {"start": 4, "end": 8, "text": "看到重点", "role": "conclusion", "priority": 1, "confidence": 0.94}
+            ],
+        }
+    }
+    scenes = [{"top_text": top, "bottom_text": bottom}]
+    emphasis, warnings = resolve_emphasis(project, scenes)
+    assert emphasis["input_valid"] and len(emphasis["top"]) == 2 and len(emphasis["bottom"]) == 1
+    assert any("overlapping" in warning for warning in warnings)
+    assert any("confidence" in warning for warning in warnings)
+
+    stale = json.loads(json.dumps(project, ensure_ascii=False))
+    stale["emphasis"]["source_hash"] = "0" * 64
+    fallback, stale_warnings = resolve_emphasis(stale, scenes)
+    assert not fallback["input_valid"] and not fallback["top"] and stale_warnings
+
+    assert any(item["role"] == "number" for item in fallback_emphasis("2026年增长40%", "top"))
+    assert any(item["role"] == "cta" for item in fallback_emphasis("立即保存这条内容", "bottom"))
+
+    wrapped, _ = renderer.wrap_layout_text(top, 6, 2, ["一样大"])
+    assert wrapped.replace("\n", "") == top and "一样大" in wrapped
+    long_text = "这是不会被截断的完整长标题用于验证排版"
+    wrapped_long, _ = renderer.wrap_layout_text(long_text, 5, 2)
+    assert wrapped_long.replace("\n", "") == long_text
+
+    styled_project, _ = renderer.resolve_template(
+        {"layout": {"template_id": "torn-magazine"}, "render": {"subtitle_font": "Noto Sans SC"}, **project}
+    )
+    layout = renderer.resolve_layout(styled_project, 1080, 1920, [])
+    assert layout
+    resolved, _ = resolve_emphasis(styled_project, scenes)
+    with tempfile.TemporaryDirectory() as temp_value:
+        ass_path = Path(temp_value) / "emphasis.ass"
+        renderer.write_ass(
+            styled_project,
+            ass_path,
+            1080,
+            1920,
+            [{"scene": scenes[0], "start": 0.0, "duration": 8.0}],
+            layout,
+            resolved,
+        )
+        ass = ass_path.read_text(encoding="utf-8-sig")
+        assert "\\fscx" in ass and "\\u1" in ass and "\\frz-1.50" in ass
+        assert "一样大" in ass and "看到重点" in ass
+
+    assert_raises_runtime(
+        lambda: renderer.resolve_emphasis_profile(
+            {"role_colors": {"unknown": "#FFFFFF"}}, "#FFD400", "#FF453A"
+        )
+    )
+
+    legacy_project, _ = renderer.resolve_template({"layout": {"template_id": "video-diary"}})
+    legacy_layout = renderer.resolve_layout(legacy_project, 1080, 1920, [])
+    assert legacy_layout and not legacy_layout["auto_highlight"]
+    legacy = renderer.normalize_highlights(
+        {"top_highlights": [{"text": "重点", "color": "#FF0000", "scale": 1.5}]},
+        "top_highlights",
+        "旧清单重点",
+        legacy_layout,
+    )
+    assert legacy[0]["scale"] == 1 and not legacy[0]["underline"] and legacy[0]["color"] == "#FF0000"
+    old_auto_project, _ = renderer.resolve_template({"layout": {"template_id": "yellow-blue-pop"}})
+    old_auto_layout = renderer.resolve_layout(old_auto_project, 1080, 1920, [])
+    assert old_auto_layout
+    old_auto = renderer.normalize_highlights(
+        {}, "top_highlights", "增长40%", old_auto_layout, resolve_emphasis({}, [{"top_text": "增长40%"}])[0]
+    )
+    assert old_auto and old_auto[0]["scale"] == 1 and old_auto[0]["text"] == "40%"
+
+    repeated_top, repeated_bottom = "哈哈哈", "立即保存"
+    repeated_project = {
+        "emphasis": {
+            "schema_version": "emphasis.v1",
+            "provider": "codex",
+            "source_hash": emphasis_source_hash(repeated_top, repeated_bottom),
+            "prompt_version": "v1",
+            "top": [
+                {"start": 1, "end": 3, "text": "哈哈", "role": "conclusion", "priority": 1, "confidence": 0.9}
+            ],
+            "bottom": [],
+        }
+    }
+    repeated, _ = resolve_emphasis(
+        repeated_project, [{"top_text": repeated_top, "bottom_text": repeated_bottom}]
+    )
+    repeated_highlights = renderer.normalize_highlights(
+        {}, "top_highlights", repeated_top, legacy_layout, repeated
+    )
+    repeated_wrapped, _, repeated_highlights = renderer.wrap_highlighted_text(
+        repeated_top, 1, 2, repeated_highlights
+    )
+    repeated_intervals = renderer.highlight_intervals(repeated_wrapped, repeated_highlights)
+    assert repeated_wrapped == "哈\n哈哈"
+    assert repeated_intervals[0][:2] == (2, 4)
+
+    later_scene = renderer.normalize_highlights(
+        {}, "top_highlights", "别人也哈哈哈", legacy_layout, repeated
+    )
+    assert later_scene == []
+
+    invalid_region_project = json.loads(json.dumps(repeated_project, ensure_ascii=False))
+    invalid_region_project["emphasis"]["top"] = "not-an-array"
+    invalid_region_project["emphasis"]["source_hash"] = emphasis_source_hash("增长40%", repeated_bottom)
+    invalid_region, invalid_warnings = resolve_emphasis(
+        invalid_region_project, [{"top_text": "增长40%", "bottom_text": repeated_bottom}]
+    )
+    invalid_fallback = renderer.normalize_highlights(
+        {}, "top_highlights", "增长40%", legacy_layout, invalid_region
+    )
+    assert (
+        invalid_warnings
+        and invalid_fallback
+        and invalid_fallback[0]["role"] == "number"
+        and invalid_fallback[0]["scale"] > 1
+    )
+
+    float_offsets = json.loads(json.dumps(repeated_project, ensure_ascii=False))
+    float_offsets["emphasis"]["top"][0]["start"] = 1.9
+    float_offsets["emphasis"]["top"][0]["end"] = 3.9
+    float_result, float_warnings = resolve_emphasis(
+        float_offsets, [{"top_text": repeated_top, "bottom_text": repeated_bottom}]
+    )
+    assert not float_result["top"] and any("numeric" in warning for warning in float_warnings)
+
+    assert_raises_runtime(
+        lambda: renderer.fit_emphasis(
+            "这是一个明显超过模板容量且不能继续缩小的超长标题文本" * 3,
+            [],
+            legacy_layout["top_min_font_size"],
+            legacy_layout["top_min_font_size"],
+            legacy_layout["top_font_size"],
+            legacy_layout["top_max_chars"],
+        )
+    )
 
 
 def check_paths_and_fonts() -> None:
@@ -662,6 +817,7 @@ if __name__ == "__main__":
     check_template_resolution()
     check_invalid_catalogs()
     check_layout_and_ass()
+    check_emphasis_protocol()
     check_paths_and_fonts()
     check_cli_dry_run_and_batch()
     check_concurrency_and_boundaries()
