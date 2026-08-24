@@ -97,6 +97,7 @@ Create one `project.json` for each video. Paths are relative to the manifest unl
     "crf": 18,
     "preset": "medium",
     "subtitle_font": "Microsoft YaHei",
+    "fonts_dir": null,
     "subtitle_font_size": 70,
     "subtitle_margin_v": 250
   }
@@ -137,6 +138,14 @@ Unknown values must fall back to `static` or `cut` and be recorded in the render
 
 `text-media-text` supports two variants: `native-bold` for strong native-feed titles with outlined keyword highlights and a blurred-media background, and `classic` for the original restrained solid-background card treatment. `native-bold` is the default for new structured-layout projects. Scene highlight arrays accept strings or objects shaped as `{"text":"40%","color":"#FFD400"}`.
 
+For one of the 12 bundled authored styles, set only a stable template identifier:
+
+```json
+{"layout": {"template_id": "black-gold-premium"}}
+```
+
+The renderer loads its defaults from `assets/templates/catalog.json`. Explicit project `layout` and `render` fields override template defaults. Read [style-templates.md](style-templates.md) for the complete catalog. Bundled templates can set independent `top_font` and `bottom_font`, one persistent `kicker`, and validated `surface_boxes` decoration. The Skill automatically supplies `assets/fonts` to FFmpeg/libass; set `render.fonts_dir` only for a custom font directory contained inside the current project.
+
 An unsupported layout falls back to `full-frame` and is recorded in `render_report.warnings`.
 
 ## Videos without narration
@@ -163,4 +172,4 @@ The renderer also requires distinct media counts for `text-media-text`: two asse
 
 ## Generated fields
 
-The TTS helper adds `tts_text_sha256`, `tts_settings_sha256`, `tts_request_id`, `audio_duration`, `duration`, and `tts_status`. The renderer may add `timeline_start`, `timeline_end`, `render_status`, BGM loop/render fields, and a top-level `render_report`, including the resolved `layout_variant`, `background_mode`, and BGM summary.
+The TTS helper adds `tts_text_sha256`, `tts_settings_sha256`, `tts_request_id`, `audio_duration`, `duration`, and `tts_status`. The renderer may add `timeline_start`, `timeline_end`, `render_status`, BGM loop/render fields, and a top-level `render_report`, including the resolved `template_id`, font directory, `layout_variant`, `background_mode`, and BGM summary.

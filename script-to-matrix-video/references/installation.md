@@ -11,6 +11,10 @@ Copy the complete `script-to-matrix-video` folder to the user's Codex skills dir
 
 Keep `SKILL.md`, `agents`, `references`, `scripts`, and `requirements.txt` together. Restart Codex after installing so the Skill is rediscovered.
 
+Keep `assets/templates` and `assets/fonts` as well. The 12-style catalog and four licensed Chinese font families are part of the runtime, so no separate operating-system font installation is required for bundled templates.
+
+The Windows installer validates the catalog shape and every bundled font SHA-256 before it backs up or replaces an existing Skill. A missing or altered runtime asset must stop installation.
+
 ## Runtime dependencies
 
 Rendering requires:
@@ -115,3 +119,4 @@ Generated project folders and media must stay outside the installed Skill direct
 - `ssh is required`: install/enable OpenSSH, or mount/copy the library locally and set `MATRIX_MATERIAL_LIBRARY_ROOT`.
 - `Material status is ...`: only `可使用` records are eligible by default; update the source library through its approved review process rather than bypassing the filter.
 - BGM is enabled but skipped: copy a selected track into the project and set `bgm.path`, or disable BGM explicitly.
+- `fonts_dir is not a directory`: reinstall the complete Skill, or point `render.fonts_dir` at a custom font directory inside the current project. Do not use a machine-specific external path in a portable project.

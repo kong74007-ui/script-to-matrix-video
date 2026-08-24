@@ -36,6 +36,8 @@ python scripts/validate_template_batch.py "D:\video-project\batch.json" --fix-du
 
 `--fix-duration` only extends project durations to the copy-based target. It never invents, substitutes, or downloads media and never changes BGM. A nonzero exit code means the batch is not ready to render.
 
+Projects may select a bundled style with `layout.template_id`. The validator resolves the same catalog as the renderer before checking `layout.preset`, then reports the resolved `template_id` per job. Do not expand and duplicate the full template object into every batch manifest.
+
 The validator rejects:
 
 - a duration below `max(8 seconds, reading time + 1.5 seconds)`;

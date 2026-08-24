@@ -1,0 +1,35 @@
+{
+  "source_repository": "https://github.com/google/fonts",
+  "source_commit": "ec626514f79f831f1ab848a82114a0ce7e2d6372",
+  "license": "SIL Open Font License 1.1",
+  "fonts": [
+    {
+      "family": "Noto Sans SC",
+      "file": "NotoSansSC-Variable.ttf",
+      "sha256": "a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
+      "source": "https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf",
+      "license_file": "OFL-NotoSansSC.txt"
+    },
+    {
+      "family": "ZCOOL XiaoWei",
+      "file": "ZCOOLXiaoWei-Regular.ttf",
+      "sha256": "a42b620140f493db42f741351dfbf343c0936d58588ee8004b8b2a218d997ff1",
+      "source": "https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/zcoolxiaowei/ZCOOLXiaoWei-Regular.ttf",
+      "license_file": "OFL-ZCOOLXiaoWei.txt"
+    },
+    {
+      "family": "Ma Shan Zheng",
+      "file": "MaShanZheng-Regular.ttf",
+      "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+      "source": "https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/mashanzheng/MaShanZheng-Regular.ttf",
+      "license_file": "OFL-MaShanZheng.txt"
+    },
+    {
+      "family": "ZCOOL KuaiLe",
+      "file": "ZCOOLKuaiLe-Regular.ttf",
+      "sha256": "812a6fc1fe54b6d73a419245c32dfeba8aa33104d5be90d1cf6af082007cb71d",
+      "source": "https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/zcoolkuaile/ZCOOLKuaiLe-Regular.ttf",
+      "license_file": "OFL-ZCOOLKuaiLe.txt"
+    }
+  ]
+}

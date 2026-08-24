@@ -2,6 +2,8 @@
 
 Read this reference only when the user asks to see template cases, wants a style comparison, or the current task needs visual calibration against accepted outputs.
 
+These 12 MP4s are production examples for copy, material, duration, and A/B calibration. They are separate from the v1.7 authored visual catalog in [style-templates.md](style-templates.md); selecting a new visual style uses `layout.template_id` and does not reuse these videos as source media.
+
 The bundled set contains 12 completed `1080x1920` H.264 MP4s: six copy items with A/B material variants. Each video is approximately 10.5–12 seconds. The source batch completed 12/12 outputs in 108.289 seconds on its original machine; treat this as a historical example, not a performance guarantee.
 
 These files demonstrate layout, readable hierarchy, material variation, no narration, BGM use, and the absence of a yellow divider. They are reference outputs only. Do not reuse, trim, remix, or publish them as source material for a new client video unless the user explicitly requests that reuse.

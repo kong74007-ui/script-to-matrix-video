@@ -2,6 +2,18 @@
 
 Read this reference when a video should use a structured page layout instead of full-frame media.
 
+## Bundled style catalog
+
+For an authored visual style, select one entry from [style-templates.md](style-templates.md) with a stable `template_id`:
+
+```json
+{"layout": {"template_id": "business-black"}}
+```
+
+The renderer reads `assets/templates/catalog.json`, applies that template's `layout` and `render` defaults, then applies explicit project fields. This means a project can select one template and override only the one value it needs. The batch validator resolves the same catalog before enforcing duration, media, A/B, and BGM rules.
+
+The bundled templates may use `top_font`, `bottom_font`, a persistent `kicker`, and up to 24 validated `surface_boxes`. These are styling primitives only; they do not change copy, retrieve media, or bypass provenance rules. Bundled fonts load from `assets/fonts` automatically.
+
 ## `text-media-text`
 
 Use for knowledge explainers, local-business invitations, case studies, data comparisons, tutorials, and list-style videos where the title and CTA must stay visible around the media.

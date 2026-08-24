@@ -28,6 +28,9 @@ SUPPORTED_MOTIONS = {"zoom-in", "zoom-out", "pan-left", "pan-right", "static"}
 SUPPORTED_TRANSITIONS = {"cut", "dissolve", "dip-black", "push"}
 SUPPORTED_LAYOUTS = {"full-frame", "text-media-text"}
 VIDEO_SUFFIXES = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"}
+SKILL_ROOT = Path(__file__).resolve().parent.parent
+TEMPLATE_CATALOG_PATH = SKILL_ROOT / "assets" / "templates" / "catalog.json"
+DEFAULT_FONTS_DIR = SKILL_ROOT / "assets" / "fonts"
 
 
 def parse_args() -> argparse.Namespace:
@@ -66,8 +69,16 @@ def save_json(path: Path, payload: dict[str, Any]) -> None:
         temp_path.unlink(missing_ok=True)
 
 
+def manifest_path(value: str, label: str) -> Path:
+    text = value.strip()
+    if re.match(r"^[A-Za-z]:[\\/]", text) and os.name != "nt":
+        raise RuntimeError(f"{label} uses a Windows absolute path on this platform: {text}")
+    text = text.replace("\\", os.sep).replace("/", os.sep)
+    return Path(text)
+
+
 def resolve_input(root: Path, value: str, label: str) -> Path:
-    candidate = Path(value)
+    candidate = manifest_path(value, label)
     candidate = candidate.resolve() if candidate.is_absolute() else (root / candidate).resolve()
     if not candidate.is_file():
         raise RuntimeError(f"Missing {label}: {candidate}")
@@ -75,13 +86,94 @@ def resolve_input(root: Path, value: str, label: str) -> Path:
 
 
 def resolve_output(root: Path, value: str) -> Path:
-    candidate = Path(value)
+    candidate = manifest_path(value, "render output")
     candidate = candidate.resolve() if candidate.is_absolute() else (root / candidate).resolve()
     try:
         candidate.relative_to(root)
     except ValueError as exc:
         raise RuntimeError(f"Render output must stay inside project folder: {candidate}") from exc
     return candidate
+
+
+def merge_defaults(defaults: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
+    """Merge manifest fields over template defaults without mutating either input."""
+
+    merged = dict(defaults)
+    for key, value in overrides.items():
+        merged[key] = merge_defaults(merged[key], value) if isinstance(merged.get(key), dict) and isinstance(value, dict) else value
+    return merged
+
+
+def resolve_template(project: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
+    raw_layout = project.get("layout") or {}
+    if not isinstance(raw_layout, dict):
+        return project, None
+    template_id = raw_layout.get("template_id")
+    if template_id in (None, ""):
+        return project, None
+    template_id = str(template_id).strip()
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", template_id):
+        raise RuntimeError(f"Illegal template_id: {template_id!r}")
+    catalog = load_json(TEMPLATE_CATALOG_PATH)
+    if catalog.get("version") != 1 or not isinstance(catalog.get("templates"), list):
+        raise RuntimeError(f"Invalid template catalog: {TEMPLATE_CATALOG_PATH}")
+    templates = [item for item in catalog["templates"] if isinstance(item, dict)]
+    ids = [str(item.get("id") or "") for item in templates]
+    if len(ids) != len(set(ids)) or not template_id in ids:
+        raise RuntimeError(f"Unknown template_id: {template_id}")
+    template = next(item for item in templates if item["id"] == template_id)
+    template_layout = template.get("layout") or {}
+    template_render = template.get("render") or {}
+    if not isinstance(template_layout, dict) or not isinstance(template_render, dict):
+        raise RuntimeError(f"Invalid template defaults for {template_id}")
+    resolved = dict(project)
+    resolved["layout"] = merge_defaults(template_layout, raw_layout)
+    render = project.get("render") or {}
+    if not isinstance(render, dict):
+        raise RuntimeError("render must be an object")
+    resolved["render"] = merge_defaults(template_render, render)
+    return resolved, template_id
+
+
+def resolve_fonts_dir(root: Path, render: dict[str, Any]) -> Path:
+    value = render.get("fonts_dir")
+    if value in (None, ""):
+        candidate = DEFAULT_FONTS_DIR.resolve()
+    else:
+        candidate = manifest_path(str(value), "fonts_dir")
+        candidate = candidate.resolve() if candidate.is_absolute() else (root / candidate).resolve()
+        try:
+            candidate.relative_to(root)
+        except ValueError as exc:
+            raise RuntimeError(f"fonts_dir must stay inside project folder: {candidate}") from exc
+    if not candidate.is_dir():
+        raise RuntimeError(f"fonts_dir is not a directory: {candidate}")
+    return candidate
+
+
+def ffmpeg_filter_path(path: Path, root: Path) -> str:
+    try:
+        value = path.relative_to(root).as_posix()
+    except ValueError as exc:
+        raise RuntimeError(f"FFmpeg filter input must be staged inside the project: {path}") from exc
+    if not re.fullmatch(r"[A-Za-z0-9._/\-]+", value):
+        raise RuntimeError(f"FFmpeg filter path contains unsupported characters: {value}")
+    return value
+
+
+def stage_fonts(source: Path, destination: Path) -> Path:
+    staged = destination / "fonts"
+    staged.mkdir()
+    font_files = [path for path in source.iterdir() if path.is_file() and path.suffix.lower() in {".ttf", ".otf", ".ttc"}]
+    if not font_files:
+        raise RuntimeError(f"fonts_dir contains no supported font files: {source}")
+    for source_file in font_files:
+        target = staged / source_file.name
+        try:
+            os.link(source_file, target)
+        except OSError:
+            shutil.copy2(source_file, target)
+    return staged
 
 
 def validate_tools() -> tuple[str, str]:
@@ -220,7 +312,7 @@ def transition_fade(transition: str) -> float:
 
 
 def split_caption(text: str, max_chars: int = 14) -> list[str]:
-    compact = re.sub(r"\s+", "", text.strip())
+    compact = re.sub(r"\s+", " ", text.strip())
     if not compact:
         return []
     phrases = [part for part in re.split(r"(?<=[，。！？；：,.!?;:])", compact) if part]
@@ -250,11 +342,15 @@ def ass_escape(text: str) -> str:
 
 
 def wrap_layout_text(text: str, max_chars: int, max_lines: int) -> tuple[str, int]:
-    manual_lines = [re.sub(r"\s+", "", item.strip()) for item in re.split(r"\r?\n", text) if item.strip()]
+    manual_lines = [re.sub(r"[ \t]+", " ", item.strip()) for item in re.split(r"\r?\n", text) if item.strip()]
     if len(manual_lines) > 1 and len(manual_lines) <= max_lines and max(map(len, manual_lines)) <= max_chars + 3:
         return "\n".join(manual_lines), max(map(len, manual_lines))
 
-    compact = re.sub(r"\s+", "", text.strip())
+    compact = ""
+    for line in manual_lines:
+        if compact and compact[-1].isascii() and compact[-1].isalnum() and line[0].isascii() and line[0].isalnum():
+            compact += " "
+        compact += line
     if not compact:
         return "", 0
     effective_max = max(max_chars, math.ceil(len(compact) / max_lines))
@@ -371,6 +467,65 @@ def nonnegative_even_int(value: Any, default: int) -> int:
     return parsed - parsed % 2
 
 
+def validated_color(value: Any, label: str) -> str:
+    color = str(value).strip()
+    if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
+        raise RuntimeError(f"{label} must be a #RRGGBB color")
+    return color
+
+
+def resolve_kicker(raw: Any, width: int, height: int) -> dict[str, Any] | None:
+    if raw in (None, False):
+        return None
+    if not isinstance(raw, dict):
+        raise RuntimeError("layout.kicker must be an object")
+    text = str(raw.get("text") or "").strip()
+    if not text or len(text) > 120:
+        raise RuntimeError("layout.kicker.text must contain 1-120 characters")
+    try:
+        x, y = int(raw.get("x", 40)), int(raw.get("y", 40))
+        font_size, padding = int(raw.get("font_size", 36)), int(raw.get("padding", 12))
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("layout.kicker positions and sizes must be integers") from exc
+    if not 0 <= x <= width or not 0 <= y <= height or not 12 <= font_size <= height // 2 or not 0 <= padding <= 120:
+        raise RuntimeError("layout.kicker values are outside the canvas or reasonable range")
+    return {
+        "text": text,
+        "x": x,
+        "y": y,
+        "font_size": font_size,
+        "color": validated_color(raw.get("color", "#FFFFFF"), "layout.kicker.color"),
+        "background_color": validated_color(raw.get("background_color", "#111111"), "layout.kicker.background_color"),
+        "font": str(raw.get("font") or "").strip(),
+        "padding": padding,
+    }
+
+
+def resolve_surface_boxes(raw: Any, width: int, height: int) -> list[dict[str, Any]]:
+    if raw in (None, False):
+        return []
+    if not isinstance(raw, list) or len(raw) > 24:
+        raise RuntimeError("layout.surface_boxes must contain at most 24 rectangles")
+    boxes: list[dict[str, Any]] = []
+    for index, item in enumerate(raw, start=1):
+        if not isinstance(item, dict):
+            raise RuntimeError(f"layout.surface_boxes[{index}] must be an object")
+        try:
+            x, y = int(item.get("x")), int(item.get("y"))
+            box_width, box_height = int(item.get("width")), int(item.get("height"))
+            opacity = float(item.get("opacity", 1))
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError(f"layout.surface_boxes[{index}] needs numeric geometry") from exc
+        if x < 0 or y < 0 or box_width <= 0 or box_height <= 0 or x + box_width > width or y + box_height > height or not 0 <= opacity <= 1:
+            raise RuntimeError(f"layout.surface_boxes[{index}] must stay within the canvas")
+        boxes.append({
+            "x": x, "y": y, "width": box_width, "height": box_height,
+            "color": validated_color(item.get("color", "#000000"), f"layout.surface_boxes[{index}].color"),
+            "opacity": opacity,
+        })
+    return boxes
+
+
 def resolve_layout(
     project: dict[str, Any], width: int, height: int, warnings: list[str]
 ) -> dict[str, Any] | None:
@@ -446,6 +601,8 @@ def resolve_layout(
         "media_height": media_height,
         "top_text_y": top_y,
         "bottom_text_y": bottom_y,
+        "top_font": str(raw.get("top_font") or "").strip(),
+        "bottom_font": str(raw.get("bottom_font") or "").strip(),
         "top_font_size": int(raw.get("top_font_size", 80 if native_bold else 76)),
         "bottom_font_size": int(raw.get("bottom_font_size", 70 if native_bold else 62)),
         "top_min_font_size": int(raw.get("top_min_font_size", 52 if native_bold else 48)),
@@ -465,6 +622,8 @@ def resolve_layout(
         "auto_highlight": bool(raw.get("auto_highlight", native_bold)),
         "text_pop_in": bool(raw.get("text_pop_in", native_bold)),
         "bottom_text_mode": bottom_mode,
+        "kicker": resolve_kicker(raw.get("kicker"), width, height),
+        "surface_boxes": resolve_surface_boxes(raw.get("surface_boxes"), width, height),
     }
 
 
@@ -499,12 +658,19 @@ def write_ass(
         top_color = ass_primary_color(layout["top_text_color"])
         bottom_color = ass_primary_color(layout["bottom_text_color"])
         outline_color = ass_primary_color(layout["text_outline_color"])
+        top_font = layout["top_font"] or font
+        bottom_font = layout["bottom_font"] or font
         lines.extend(
             [
-                f"Style: TopText,{font},{layout['top_font_size']},{top_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['top_text_outline']},{layout['text_shadow']},5,54,54,0,1",
-                f"Style: BottomText,{font},{layout['bottom_font_size']},{bottom_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['bottom_text_outline']},{layout['text_shadow']},5,54,54,0,1",
+                f"Style: TopText,{top_font},{layout['top_font_size']},{top_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['top_text_outline']},{layout['text_shadow']},5,54,54,0,1",
+                f"Style: BottomText,{bottom_font},{layout['bottom_font_size']},{bottom_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['bottom_text_outline']},{layout['text_shadow']},5,54,54,0,1",
             ]
         )
+        kicker = layout["kicker"]
+        if kicker:
+            lines.append(
+                f"Style: Kicker,{kicker['font'] or font},{kicker['font_size']},{ass_primary_color(kicker['color'])},&H00000000,{ass_primary_color(kicker['background_color'])},{ass_primary_color(kicker['background_color'])},-1,0,0,0,100,100,0,0,3,{kicker['padding']},0,7,0,0,0,1"
+            )
     lines.extend(
         [
             "",
@@ -512,6 +678,13 @@ def write_ass(
             "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
         ]
     )
+
+    if layout and layout["kicker"] and timeline:
+        kicker = layout["kicker"]
+        end = timeline[-1]["start"] + timeline[-1]["duration"]
+        lines.append(
+            f"Dialogue: 3,{ass_time(0)},{ass_time(end)},Kicker,,0,0,0,,{{\\an7\\pos({kicker['x']},{kicker['y']})}}{ass_escape(kicker['text'])}"
+        )
 
     cover_title = str(project.get("cover", {}).get("title") or "").strip()
     cover_end = 0.0
@@ -749,10 +922,16 @@ def render_media_segment(
             surface_filters.append(
                 f"drawbox=x=0:y={divider_y}:w=iw:h={layout['divider_height']}:color={color}:t=fill"
             )
+        for box in layout["surface_boxes"]:
+            color = ffmpeg_color_alpha(box["color"], "000000", box["opacity"])
+            surface_filters.append(
+                f"drawbox=x={box['x']}:y={box['y']}:w={box['width']}:h={box['height']}:color={color}:t=fill"
+            )
 
         if layout["background_mode"] == "blurred-media":
             blur = layout["background_blur"]
             background_filters = [
+                f"fps={fps}",
                 f"scale={width}:{height}:force_original_aspect_ratio=increase",
                 f"crop={width}:{height}",
                 f"gblur=sigma={blur:.2f}:steps=2" if blur > 0 else "null",
@@ -1019,7 +1198,8 @@ def main() -> int:
     args = parse_args()
     project_path = args.project.resolve()
     root = project_path.parent
-    project = load_json(project_path)
+    source_project = load_json(project_path)
+    project, template_id = resolve_template(source_project)
     ffmpeg, ffprobe = validate_tools()
 
     canvas = project.get("canvas", {})
@@ -1033,6 +1213,9 @@ def main() -> int:
         raise RuntimeError("project.json must contain a non-empty scenes array")
 
     render = project.setdefault("render", {})
+    if not isinstance(render, dict):
+        raise RuntimeError("render must be an object")
+    fonts_dir = resolve_fonts_dir(root, render)
     crf = int(render.get("crf", 18))
     preset = str(render.get("preset", "medium"))
     output = resolve_output(root, str(render.get("output", "output/final.mp4")))
@@ -1166,6 +1349,8 @@ def main() -> int:
                     "layout": layout["preset"] if layout else "full-frame",
                     "layout_variant": layout["variant"] if layout else None,
                     "background_mode": layout["background_mode"] if layout else None,
+                    "template_id": template_id,
+                    "fonts_dir": str(fonts_dir),
                     "voice_enabled": voice_enabled,
                     "bgm_enabled": bgm is not None,
                     "bgm_path": str(bgm["path"]) if bgm else None,
@@ -1279,8 +1464,11 @@ def main() -> int:
         )
         ass_path = temp / "captions.ass"
         write_ass(project, ass_path, width, height, timeline, layout)
-        relative_ass = ass_path.relative_to(root).as_posix().replace("'", r"\'")
-        subtitle_filter = f"subtitles=filename='{relative_ass}'"
+        staged_fonts = stage_fonts(fonts_dir, temp)
+        subtitle_filter = (
+            f"subtitles=filename='{ffmpeg_filter_path(ass_path, root)}':"
+            f"fontsdir='{ffmpeg_filter_path(staged_fonts, root)}'"
+        )
         captioned = temp / "captioned.mp4" if bgm else output
         run(
             [
@@ -1332,6 +1520,8 @@ def main() -> int:
     report["layout"] = layout["preset"] if layout else "full-frame"
     report["layout_variant"] = layout["variant"] if layout else None
     report["background_mode"] = layout["background_mode"] if layout else None
+    report["template_id"] = template_id
+    report["fonts_dir"] = str(fonts_dir)
     report["voice_enabled"] = voice_enabled
     report["bgm_enabled"] = bgm is not None
     if bgm:
@@ -1345,8 +1535,8 @@ def main() -> int:
             "ducking": bgm["ducking"],
         }
     report["warnings"] = warnings
-    project["render_report"] = report
-    save_json(project_path, project)
+    source_project["render_report"] = report
+    save_json(project_path, source_project)
     print(json.dumps({"ok": True, **report}, ensure_ascii=False))
     return 0
 

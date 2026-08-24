@@ -2,7 +2,7 @@
 
 一个面向中文矩阵引流内容的 Codex Skill，输出可直接发布的 9:16 MP4。
 
-当前版本：`v1.6.0`
+当前版本：`v1.7.0`
 
 ## 两个独立功能
 
@@ -27,6 +27,20 @@
 模板素材采用视频优先策略：8–10 秒至少使用 2 个不同素材，10–15 秒至少 3 个，默认至少包含 1 个素材库视频。只有两次视频检索均无合适结果并写明原因时，才允许纯图片成片。批量开启 BGM 时会轮换曲库：2–3 条成片至少 2 首，4 条及以上至少 3 首，相邻成片不得使用同一首。
 
 批量渲染前必须运行 `scripts/validate_template_batch.py`，它会阻止单素材、无理由纯图片、A/B 素材重复、BGM 未轮换以及时长不足的任务进入渲染。
+
+## 12 套原创视觉模板
+
+`text-media-text` 现在可直接用稳定的 `template_id` 选择：视频日记、极简大标题、轻透雅粉、鲜黄亮蓝、商务深黑、黑金高级、数据对比、国风标题、撕边杂志、Vlog 手账、中英双语、人物金句。
+
+```json
+{"layout": {"template_id": "black-gold-premium"}}
+```
+
+模板目录位于 `script-to-matrix-video/assets/templates/catalog.json`。渲染器先应用模板默认值，再应用项目显式覆盖；批量校验器使用同一份目录，因此网站或其他调用方以后只需要保存 `template_id`，不必复制整套版式参数。
+
+Skill 自带 `Noto Sans SC`、`ZCOOL XiaoWei`、`Ma Shan Zheng`、`ZCOOL KuaiLe` 四个 OFL 中文字体家族，并自动交给 FFmpeg 加载，不依赖运行电脑碰巧安装了什么字体。详细选择建议见 [视觉模板目录](script-to-matrix-video/references/style-templates.md)。
+
+v1.7.0 同时修复了两项真实批量问题：中英混排会保留英文词间空格；`blurred-media` 使用 50/60fps 素材时会先统一到项目帧率，不再因 `-frames:v` 提前结束。
 
 ## 模板案例视频
 
@@ -101,6 +115,8 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 
 ```text
 script-to-matrix-video/   Skill 本体
+  assets/fonts/           4 个开源中文字体家族及许可证
+  assets/templates/       12 套原创模板目录
   assets/examples/        12条模板案例视频与预览图
 install.ps1               Windows 安装器
 INSTALL.md                完整安装与连接配置
