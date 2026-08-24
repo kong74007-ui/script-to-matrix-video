@@ -26,6 +26,7 @@ SUPPORTED_MOTIONS = {"zoom-in", "zoom-out", "pan-left", "pan-right", "static"}
 SUPPORTED_TRANSITIONS = {"cut", "dissolve", "dip-black", "push"}
 SUPPORTED_LAYOUTS = {"full-frame", "text-media-text"}
 VIDEO_SUFFIXES = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"}
+MIN_TEXT_MEDIA_TEXT_DURATION = 8.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -1106,6 +1107,20 @@ def main() -> int:
                 "transition": transition,
             }
         )
+
+    if layout and layout["preset"] == "text-media-text":
+        minimum_frames = math.ceil(MIN_TEXT_MEDIA_TEXT_DURATION * fps)
+        current_frames = sum(sum(item["frame_counts"]) for item in prepared)
+        if current_frames < minimum_frames:
+            added_frames = minimum_frames - current_frames
+            final_item = prepared[-1]
+            final_item["frame_counts"][-1] += added_frames
+            final_item["duration"] = sum(final_item["frame_counts"]) / fps
+            final_item["scene"]["duration"] = round(final_item["duration"], 3)
+            warnings.append(
+                "text-media-text total duration was below 8 seconds; "
+                f"extended the final scene by {added_frames / fps:.3f} seconds"
+            )
 
     timeline: list[dict[str, Any]] = []
     cursor = 0.0

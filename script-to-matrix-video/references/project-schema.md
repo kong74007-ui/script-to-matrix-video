@@ -139,6 +139,8 @@ An unsupported layout falls back to `full-frame` and is recorded in `render_repo
 
 Set `"voice": {"enabled": false}` and give every scene a positive `duration`. The renderer does not require `audio` or `audio_duration` in this mode and emits a silent 48 kHz mono AAC track for platform compatibility. Sound effects may still be supplied per scene.
 
+For `text-media-text`, calculate total duration as `max(8 seconds, visible-copy reading time + 1.5 seconds)` using approximately five visible Chinese characters, letters, or digits per second. Eight to fifteen seconds is the normal range. The renderer enforces an 8-second total minimum by extending the final scene and recording a warning when necessary.
+
 ## Background music
 
 - Omit `bgm`, set it to `false`, or set `bgm.enabled` to `false` for no music.

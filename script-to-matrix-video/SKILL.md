@@ -23,7 +23,7 @@ Use when the user asks for 模板成片、上面文字中间素材下面文字, 
 
 - Minimum input: top title and bottom subtitle/CTA. Accept direct text, a table, or text extracted from supplied screenshots.
 - Optional input: background context, asset keywords, preferred image/video mix, BGM preference, duration, variant count, platform, and brand style.
-- Default behavior: `native-bold` 1080x1920 layout, no narration, fixed top and bottom text, central client-supplied or approved-library media, no yellow divider, restrained motion, and auto BGM unless the user asks for silence. Never generate AI media for this function.
+- Default behavior: `native-bold` 1080x1920 layout, no narration, fixed top and bottom text, central client-supplied or approved-library media, no yellow divider, restrained motion, and auto BGM unless the user asks for silence. Never generate AI media for this function. Enforce an 8-second hard minimum; 8–15 seconds is the normal range.
 - Single mode: generate one or more variants for one copy.
 - Batch mode: accept multiple copy rows or screenshots and generate the requested number of variants per copy. Vary media choice, crop/start offset, highlight treatment, or palette without changing the copy's meaning. Render independent jobs with safe concurrency, isolate failures, and record batch start/end time, per-output render time, status, and file path in CSV or JSON.
 - Output: final MP4 files; for batch work, also return a ZIP and timing report unless the user requests individual files only.
@@ -78,7 +78,7 @@ If the copy already contains a CTA, preserve its intent. Otherwise choose one CT
 ## Function 2 workflow
 
 1. Normalize each copy item into `top_text`, `bottom_text`, background context, optional media constraints, requested variant count, and BGM preference. Preserve the user's wording and CTA intent.
-2. Read [the layout template reference](references/layout-templates.md) and create one project manifest per output variant. Use explicit reading-time durations when narration is disabled.
+2. Read [the layout template reference](references/layout-templates.md) and create one project manifest per output variant. When narration is disabled, calculate `target duration = max(8 seconds, visible-copy reading time + 1.5 seconds)`. Use approximately five visible Chinese characters, letters, or digits per second; ignore whitespace and punctuation. The normal target is 8–15 seconds. If reading needs more than 15 seconds, shorten or split the copy instead of forcing it into 15 seconds.
 3. Analyze the complete title and CTA together before searching. Use only client assets or library images/videos marked `可使用`. Never call AI image/video generation, even when no candidate matches. Select ordinary, contextually relevant knowledge-video material rather than futuristic filler.
 4. Build deliberate variants. Do not create duplicates by merely renaming the same render; change at least one meaningful visual dimension while preserving the copy.
 5. Add optional BGM, restrained SFX, subtle media motion, and readable highlight hierarchy. Keep `divider_height` and `media_border_width` at `0` unless the user explicitly requests a separator or border.
@@ -98,6 +98,7 @@ If the copy already contains a CTA, preserve its intent. Otherwise choose one CT
 ## Timing and edit invariants
 
 - When narration is enabled, audio duration is measured from the generated file, never estimated from character count. When narration is disabled, every scene must provide a positive explicit duration.
+- A `text-media-text` video's total duration may never be shorter than 8 seconds. If a manifest requests less, the renderer extends the final scene to 8 seconds and records a warning. An explicit user duration below 8 seconds does not override this guard.
 - Narration may not be cut to fit a visual. Extend or simplify the visual instead.
 - Prefer clean cuts, short dissolves, subtle push/slide transitions, and match-motion handoffs. Avoid random transition packs.
 - Captions should normally contain 7–14 Chinese characters per chunk and no more than two display lines. Break on meaning and punctuation.

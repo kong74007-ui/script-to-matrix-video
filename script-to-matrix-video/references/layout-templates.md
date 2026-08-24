@@ -15,6 +15,15 @@ The template has two variants:
 
 Do not reproduce player chrome from visual references. Play buttons, progress bars, account labels, and platform UI are not part of the rendered template.
 
+### Duration policy
+
+- Hard minimum total duration: 8 seconds.
+- Normal target range: 8–15 seconds.
+- Without narration, calculate `target duration = max(8 seconds, reading time + 1.5 seconds)`.
+- Estimate reading time at about five visible Chinese characters, letters, or digits per second. Ignore whitespace and punctuation when counting.
+- Round up to a valid video frame. If the requested manifest totals less than 8 seconds, the renderer extends the final scene to exactly the minimum and records a warning.
+- When the computed reading time pushes the result beyond 15 seconds, shorten the displayed copy or split it into multiple template scenes. Do not cut required wording or force unreadable speed merely to stay within 15 seconds.
+
 ### Recommended `native-bold` configuration
 
 Default 1080×1920 structure:
@@ -136,7 +145,7 @@ Use `background_mode: "solid"` when the image colors make the blurred background
 
 With `bottom_text_mode: "captions"`, the bottom region shows timed `caption_chunks`. If a scene provides `bottom_text`, that fixed text replaces timed captions for the scene. With `bottom_text_mode: "fixed"`, every scene uses `bottom_text`, falling back to its narration text.
 
-For a pure graphic template without narration, set `voice.enabled` to `false`, use `bottom_text_mode: "fixed"`, provide concise `bottom_text`, and set explicit scene durations based on reading time. The MP4 keeps a silent AAC track for publishing compatibility.
+For a pure graphic template without narration, set `voice.enabled` to `false`, use `bottom_text_mode: "fixed"`, provide concise `bottom_text`, and set explicit scene durations using the duration policy above. The MP4 keeps a silent AAC track for publishing compatibility.
 
 Supplied and library images should not contain conflicting top or bottom wording. Compose readable Chinese in the renderer. For `native-bold`, choose assets that survive a wide, near-full-width central crop. For `classic`, choose assets with more internal negative space around the subject. Never generate replacement media for this template.
 
