@@ -21,8 +21,15 @@ Do not reproduce player chrome from visual references. Play buttons, progress ba
 - Normal target range: 8–15 seconds.
 - Without narration, calculate `target duration = max(8 seconds, reading time + 1.5 seconds)`.
 - Estimate reading time at about five visible Chinese characters, letters, or digits per second. Ignore whitespace and punctuation when counting.
-- Round up to a valid video frame. If the requested manifest totals less than 8 seconds, the renderer extends the final scene to exactly the minimum and records a warning.
+- Round up to a valid video frame. The renderer performs the same calculation and extends a short manifest to the full copy-based target, not merely to 8 seconds.
 - When the computed reading time pushes the result beyond 15 seconds, shorten the displayed copy or split it into multiple template scenes. Do not cut required wording or force unreadable speed merely to stay within 15 seconds.
+
+### Media pacing policy
+
+- Search approved `视频` records first, then approved `图片` records. Do not satisfy a whole template with one still image.
+- Use at least two distinct assets for 8–10 seconds, at least three above 10 through 15 seconds, and at least four above 15 seconds. Repeating the same file or changing only its crop does not count as a distinct asset.
+- Include at least one contextually suitable video by default. Use an image-only output only after two distinct video searches fail; record `material_policy.allow_image_only=true` and a specific `image_only_reason`.
+- For A/B variants, change the media set itself. A different filename, crop, or color treatment applied to the same complete media set is not enough.
 
 ### Recommended `native-bold` configuration
 

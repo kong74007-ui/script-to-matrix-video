@@ -21,12 +21,13 @@ import sys
 import tempfile
 from typing import Any
 
+from template_policy import recommended_duration, required_media_count
+
 
 SUPPORTED_MOTIONS = {"zoom-in", "zoom-out", "pan-left", "pan-right", "static"}
 SUPPORTED_TRANSITIONS = {"cut", "dissolve", "dip-black", "push"}
 SUPPORTED_LAYOUTS = {"full-frame", "text-media-text"}
 VIDEO_SUFFIXES = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"}
-MIN_TEXT_MEDIA_TEXT_DURATION = 8.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -1109,18 +1110,41 @@ def main() -> int:
         )
 
     if layout and layout["preset"] == "text-media-text":
-        minimum_frames = math.ceil(MIN_TEXT_MEDIA_TEXT_DURATION * fps)
+        target_duration = recommended_duration(scenes)
+        minimum_frames = math.ceil(target_duration * fps)
         current_frames = sum(sum(item["frame_counts"]) for item in prepared)
         if current_frames < minimum_frames:
             added_frames = minimum_frames - current_frames
             final_item = prepared[-1]
-            final_item["frame_counts"][-1] += added_frames
+            final_total_frames = sum(final_item["frame_counts"]) + added_frames
+            final_item["frame_counts"] = allocate_frames(final_total_frames, len(final_item["assets"]))
             final_item["duration"] = sum(final_item["frame_counts"]) / fps
             final_item["scene"]["duration"] = round(final_item["duration"], 3)
             warnings.append(
-                "text-media-text total duration was below 8 seconds; "
+                f"text-media-text total duration was below the copy-based target {target_duration:.1f} seconds; "
                 f"extended the final scene by {added_frames / fps:.3f} seconds"
             )
+
+        effective_duration = sum(sum(item["frame_counts"]) for item in prepared) / fps
+        unique_assets = {str(asset["path"]).casefold() for item in prepared for asset in item["assets"]}
+        required_assets = required_media_count(effective_duration)
+        if len(unique_assets) < required_assets:
+            raise RuntimeError(
+                f"text-media-text needs at least {required_assets} distinct media assets for "
+                f"{effective_duration:.1f} seconds; found {len(unique_assets)}"
+            )
+        video_assets = {str(asset["path"]).casefold() for item in prepared for asset in item["assets"] if asset["type"] == "video"}
+        material_policy = project.get("material_policy") or {}
+        allow_image_only = bool(material_policy.get("allow_image_only")) and bool(
+            str(material_policy.get("image_only_reason") or "").strip()
+        )
+        if not video_assets and not allow_image_only:
+            raise RuntimeError(
+                "text-media-text image-only output is disabled by default; search approved video records first. "
+                "If no suitable video exists, set material_policy.allow_image_only=true and record image_only_reason."
+            )
+        if not video_assets and allow_image_only:
+            warnings.append(f"image-only fallback: {material_policy['image_only_reason']}")
 
     timeline: list[dict[str, Any]] = []
     cursor = 0.0
@@ -1138,6 +1162,7 @@ def main() -> int:
                     "dry_run": True,
                     "output": str(output),
                     "duration": round(cursor, 3),
+                    "copy_target_duration": recommended_duration(scenes) if layout and layout["preset"] == "text-media-text" else None,
                     "layout": layout["preset"] if layout else "full-frame",
                     "layout_variant": layout["variant"] if layout else None,
                     "background_mode": layout["background_mode"] if layout else None,

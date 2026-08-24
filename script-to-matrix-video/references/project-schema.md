@@ -18,6 +18,10 @@ Create one `project.json` for each video. Paths are relative to the manifest unl
   "layout": {
     "preset": "full-frame"
   },
+  "material_policy": {
+    "allow_image_only": false,
+    "image_only_reason": ""
+  },
   "style": {
     "preset": "native-feed-problem-solution",
     "audience": "目标受众",
@@ -139,7 +143,9 @@ An unsupported layout falls back to `full-frame` and is recorded in `render_repo
 
 Set `"voice": {"enabled": false}` and give every scene a positive `duration`. The renderer does not require `audio` or `audio_duration` in this mode and emits a silent 48 kHz mono AAC track for platform compatibility. Sound effects may still be supplied per scene.
 
-For `text-media-text`, calculate total duration as `max(8 seconds, visible-copy reading time + 1.5 seconds)` using approximately five visible Chinese characters, letters, or digits per second. Eight to fifteen seconds is the normal range. The renderer enforces an 8-second total minimum by extending the final scene and recording a warning when necessary.
+For `text-media-text`, calculate total duration as `max(8 seconds, visible-copy reading time + 1.5 seconds)` using approximately five visible Chinese characters, letters, or digits per second. Eight to fifteen seconds is the normal range. The renderer repeats this calculation and extends the final scene to the calculated target when necessary.
+
+The renderer also requires distinct media counts for `text-media-text`: two assets through 10 seconds, three above 10 through 15 seconds, and four above 15 seconds. At least one video is required by default. If two approved-video searches find no suitable result, an image-only fallback must set both `material_policy.allow_image_only` to `true` and `material_policy.image_only_reason` to a non-empty explanation.
 
 ## Background music
 

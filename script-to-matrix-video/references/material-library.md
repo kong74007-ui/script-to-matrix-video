@@ -19,6 +19,11 @@ or video generation is prohibited. If no contextually suitable `可使用` recor
 exists, mark the affected output `material_missing`, report the searches tried,
 and continue other batch jobs. Do not substitute unrelated filler.
 
+For Function 2, perform a type-filtered `视频` search before the `图片` search.
+Use at least one suitable video by default, plus enough distinct approved assets
+for the duration policy in `layout-templates.md`. Image-only output requires two
+failed video searches and a recorded fallback reason; it is not the normal path.
+
 Do not treat keyword similarity as final approval. Reject a candidate when its
 subject, location, demographic, action, embedded wording, quality, or visual
 tone conflicts with the full copy. Avoid repeated filler shots. One strong
@@ -103,3 +108,10 @@ Preview the track. Avoid vocals that compete with narration and avoid dramatic
 music that overstates ordinary knowledge content. Copy the chosen file into
 `assets/bgm`, record it under top-level `bgm`, and let the renderer handle the
 loop, fades, loudness, and optional ducking.
+
+For a BGM-enabled template batch, retrieve at least three suitable approved BGM
+records before assigning jobs. Rotate them in job order, give A/B variants
+different tracks, and never place the same track on consecutive outputs. Two or
+three outputs require at least two distinct tracks; four or more require at least
+three. Preserve each BGM `record_id` so the batch validator can detect accidental
+reuse even when files were copied under different local names.
