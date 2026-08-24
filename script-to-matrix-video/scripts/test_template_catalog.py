@@ -239,6 +239,42 @@ def check_paths_and_fonts() -> None:
         (bundle / "noto.ttf").unlink()
         assert_raises_runtime(lambda: renderer.resolve_font_files(bundle, {"Style Font"}))
 
+        malformed = temp / "malformed-fonts"
+        malformed.mkdir()
+        (malformed / "sources.json").write_text("not json", encoding="utf-8")
+        assert_raises_runtime(lambda: renderer.resolve_font_files(malformed, {"Noto Sans SC"}))
+
+        duplicate = temp / "duplicate-fonts"
+        duplicate.mkdir()
+        (duplicate / "noto.ttf").write_bytes(b"noto")
+        noto_sha = hashlib.sha256(b"noto").hexdigest()
+        (duplicate / "sources.json").write_text(
+            json.dumps(
+                {
+                    "fonts": [
+                        {"family": "Noto Sans SC", "file": "noto.ttf", "sha256": noto_sha},
+                        {"family": "Noto Sans SC", "file": "noto.ttf", "sha256": noto_sha},
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        assert_raises_runtime(lambda: renderer.resolve_font_files(duplicate, {"Noto Sans SC"}))
+
+        unsafe = temp / "unsafe-fonts"
+        unsafe.mkdir()
+        (unsafe / "sources.json").write_text(
+            json.dumps(
+                {
+                    "fonts": [
+                        {"family": "Noto Sans SC", "file": "../noto.ttf", "sha256": "0" * 64}
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        assert_raises_runtime(lambda: renderer.resolve_font_files(unsafe, {"Noto Sans SC"}))
+
         first = temp / "first.mp4"
         second = temp / "second.mp4"
         first.write_bytes(b"same-media")
@@ -291,6 +327,31 @@ def check_cli_dry_run_and_batch() -> None:
         assert dry["template_id"] == "business-black" and dry["layout"] == "text-media-text"
         assert dry["scenes"][0]["video_assets"] == 2
 
+        for field, value, expected_error in (
+            ("canvas", "invalid", "canvas must be an object"),
+            ("render", "invalid", "render must be an object"),
+        ):
+            invalid = dict(project)
+            invalid[field] = value
+            project_path.write_text(json.dumps(invalid, ensure_ascii=False), encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS / "render_video.py"), str(project_path), "--dry-run"],
+                capture_output=True,
+                text=True,
+            )
+            assert result.returncode == 1 and expected_error in result.stderr
+
+        invalid_duration = json.loads(json.dumps(project, ensure_ascii=False))
+        invalid_duration["scenes"][0]["duration"] = float("nan")
+        project_path.write_text(json.dumps(invalid_duration, ensure_ascii=False), encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "render_video.py"), str(project_path), "--dry-run"],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 1 and "finite numbers" in result.stderr
+        project_path.write_text(json.dumps(project, ensure_ascii=False), encoding="utf-8")
+
         batch_path = temp / "batch.json"
         report_path = temp / "report.json"
         batch_path.write_text(json.dumps({"jobs": [{"project": "project.json"}]}), encoding="utf-8")
@@ -317,6 +378,72 @@ def check_cli_dry_run_and_batch() -> None:
             text=True,
         )
         assert duplicate.returncode == 1 and "duplicates the full media set" in duplicate.stdout
+
+        first_image = media / "first.png"
+        second_image = media / "second.png"
+        first_image.write_bytes(b"first-image")
+        second_image.write_bytes(b"second-image")
+        image_project = json.loads(json.dumps(project, ensure_ascii=False))
+        image_project["scenes"][0]["media"] = [
+            {"path": "media/first.png", "type": "image", "record_id": "image-first"},
+            {"path": "media/second.png", "type": "image", "record_id": "image-second"},
+        ]
+        image_path = temp / "image-project.json"
+        image_path.write_text(json.dumps(image_project, ensure_ascii=False), encoding="utf-8")
+        batch_path.write_text(json.dumps({"jobs": [{"project": "image-project.json"}]}), encoding="utf-8")
+        image_rejected = subprocess.run(
+            [sys.executable, str(SCRIPTS / "validate_template_batch.py"), str(batch_path)],
+            capture_output=True,
+            text=True,
+        )
+        assert image_rejected.returncode == 1 and "image-only output is not allowed" in image_rejected.stdout
+        image_project["material_policy"] = {
+            "allow_image_only": True,
+            "image_only_reason": "Two approved video searches returned no suitable record",
+        }
+        image_path.write_text(json.dumps(image_project, ensure_ascii=False), encoding="utf-8")
+        image_allowed = subprocess.run(
+            [sys.executable, str(SCRIPTS / "validate_template_batch.py"), str(batch_path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert "image-only fallback recorded" in image_allowed.stdout
+
+        music = media / "music.mp3"
+        music.write_bytes(b"music")
+        bgm_project = json.loads(json.dumps(project, ensure_ascii=False))
+        bgm_project["bgm"] = {"enabled": True, "path": "media/music.mp3", "record_id": "music"}
+        bgm_path = temp / "bgm-project.json"
+        bgm_path.write_text(json.dumps(bgm_project, ensure_ascii=False), encoding="utf-8")
+        batch_path.write_text(
+            json.dumps(
+                {
+                    "jobs": [
+                        {"project": "bgm-project.json"},
+                        {"project": "project.json"},
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        mixed_bgm = subprocess.run(
+            [sys.executable, str(SCRIPTS / "validate_template_batch.py"), str(batch_path)],
+            capture_output=True,
+            text=True,
+        )
+        assert mixed_bgm.returncode == 1 and "BGM is enabled on 1 of 2" in mixed_bgm.stdout
+        batch_path.write_text(
+            json.dumps({"jobs": [{"project": "bgm-project.json"}] * 4}), encoding="utf-8"
+        )
+        repeated_bgm = subprocess.run(
+            [sys.executable, str(SCRIPTS / "validate_template_batch.py"), str(batch_path)],
+            capture_output=True,
+            text=True,
+        )
+        assert repeated_bgm.returncode == 1
+        assert "require at least 3 distinct BGM tracks" in repeated_bgm.stdout
+        assert "reuse the same BGM" in repeated_bgm.stdout
 
         project["scenes"][0]["top_text"] = "ONE STORY 12种风格 不只是换颜色"
         project["scenes"][0]["bottom_text"] = "PICK A STYLE 再批量生成"
@@ -384,6 +511,35 @@ def check_concurrency_and_boundaries() -> None:
         renderer.publish_render_if_unchanged(project_path, payload, digest, candidate, output)
         assert output.read_bytes() == b"new-output"
 
+        no_previous = temp / "first-output.mp4"
+        first_candidate = temp / "first-candidate.mp4"
+        first_candidate.write_bytes(b"first-publish")
+        payload, digest = renderer.load_json_snapshot(project_path)
+        renderer.publish_render_if_unchanged(project_path, payload, digest, first_candidate, no_previous)
+        assert no_previous.read_bytes() == b"first-publish"
+
+        output.write_bytes(b"stable-output")
+        failed_candidate = temp / "failed-candidate.mp4"
+        failed_candidate.write_bytes(b"should-not-publish")
+        payload, digest = renderer.load_json_snapshot(project_path)
+        original_replace = renderer.os.replace
+
+        def fail_candidate_replace(source, destination):
+            if Path(source) == failed_candidate:
+                raise RuntimeError("candidate replace failed")
+            return original_replace(source, destination)
+
+        renderer.os.replace = fail_candidate_replace
+        try:
+            assert_raises_runtime(
+                lambda: renderer.publish_render_if_unchanged(
+                    project_path, payload, digest, failed_candidate, output
+                )
+            )
+            assert output.read_bytes() == b"stable-output"
+        finally:
+            renderer.os.replace = original_replace
+
         assert_raises_runtime(
             lambda: batch_validator.normalize_jobs(
                 {"jobs": [{"project": "../outside/project.json"}]}, temp / "batch.json"
@@ -433,6 +589,74 @@ def check_concurrency_and_boundaries() -> None:
         )
 
 
+def check_real_render() -> None:
+    ffmpeg, _ = renderer.validate_tools()
+    with tempfile.TemporaryDirectory() as temp_value:
+        temp = Path(temp_value).resolve()
+        media = temp / "media"
+        media.mkdir()
+        for name, color, fps in (("first.mp4", "0x315EFB", 60), ("second.mp4", "0xF3C95B", 30)):
+            subprocess.run(
+                [
+                    ffmpeg,
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-y",
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    f"color=c={color}:s=320x180:r={fps}:d=4",
+                    "-c:v",
+                    "libx264",
+                    "-pix_fmt",
+                    "yuv420p",
+                    str(media / name),
+                ],
+                check=True,
+            )
+        project_path = temp / "project.json"
+        project_path.write_text(
+            json.dumps(
+                {
+                    "version": 1,
+                    "canvas": {"width": 1080, "height": 1920, "fps": 30},
+                    "layout": {"template_id": "video-diary"},
+                    "voice": {"enabled": False},
+                    "bgm": False,
+                    "material_policy": {"allow_image_only": False, "image_only_reason": ""},
+                    "scenes": [
+                        {
+                            "id": "s01",
+                            "top_text": "真实渲染回归",
+                            "bottom_text": "模板字体与高帧率",
+                            "duration": 8.0,
+                            "media": [
+                                {"path": "media/first.mp4", "type": "video", "record_id": "first"},
+                                {"path": "media/second.mp4", "type": "video", "record_id": "second"},
+                            ],
+                        }
+                    ],
+                    "render": {"output": "output/final.mp4", "preset": "veryfast", "crf": 23},
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "render_video.py"), str(project_path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        report = json.loads(result.stdout)
+        assert report["video_codec"] == "h264" and report["audio_codec"] == "aac"
+        assert (report["width"], report["height"], report["template_id"]) == (1080, 1920, "video-diary")
+        assert report["duration"] >= 8.0 and (temp / "output/final.mp4").is_file()
+        saved = json.loads(project_path.read_text(encoding="utf-8"))
+        assert saved["render_report"]["template_id"] == "video-diary"
+
+
 if __name__ == "__main__":
     check_real_catalog()
     check_template_resolution()
@@ -441,4 +665,5 @@ if __name__ == "__main__":
     check_paths_and_fonts()
     check_cli_dry_run_and_batch()
     check_concurrency_and_boundaries()
+    check_real_render()
     print("template catalog checks passed")
