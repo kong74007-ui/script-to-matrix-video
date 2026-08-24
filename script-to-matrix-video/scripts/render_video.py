@@ -161,10 +161,19 @@ def ffmpeg_filter_path(path: Path, root: Path) -> str:
     return value
 
 
-def stage_fonts(source: Path, destination: Path) -> Path:
+def stage_fonts(source: Path, destination: Path, families: set[str] | None = None) -> Path:
     staged = destination / "fonts"
     staged.mkdir()
     font_files = [path for path in source.iterdir() if path.is_file() and path.suffix.lower() in {".ttf", ".otf", ".ttc"}]
+    source_manifest = source / "sources.json"
+    if families and source_manifest.is_file():
+        try:
+            font_sources = json.loads(source_manifest.read_text(encoding="utf-8"))["fonts"]
+            selected_families = set(families) | {"Noto Sans SC"}
+            selected_names = {str(item["file"]) for item in font_sources if str(item.get("family")) in selected_families}
+        except (KeyError, TypeError, json.JSONDecodeError) as exc:
+            raise RuntimeError(f"Invalid bundled font source manifest: {source_manifest}") from exc
+        font_files = [path for path in font_files if path.name in selected_names]
     if not font_files:
         raise RuntimeError(f"fonts_dir contains no supported font files: {source}")
     for source_file in font_files:
@@ -1473,7 +1482,12 @@ def main() -> int:
         )
         ass_path = temp / "captions.ass"
         write_ass(project, ass_path, width, height, timeline, layout)
-        staged_fonts = stage_fonts(fonts_dir, temp)
+        font_families = {validated_font(render.get("subtitle_font", "Microsoft YaHei"), "render.subtitle_font")}
+        if layout:
+            font_families.update(font for font in (layout["top_font"], layout["bottom_font"]) if font)
+            if layout["kicker"] and layout["kicker"]["font"]:
+                font_families.add(layout["kicker"]["font"])
+        staged_fonts = stage_fonts(fonts_dir, temp, font_families)
         subtitle_filter = (
             f"subtitles=filename='{ffmpeg_filter_path(ass_path, root)}':"
             f"fontsdir='{ffmpeg_filter_path(staged_fonts, root)}'"

@@ -40,6 +40,13 @@ def check_real_catalog() -> None:
 def check_template_resolution() -> None:
     assert batch_validator.resolve_template is renderer.resolve_template
     assert renderer.manifest_path(r"assets\clip.mp4", "test") == Path("assets") / "clip.mp4"
+    if renderer.os.name != "nt":
+        assert_raises_runtime(lambda: renderer.manifest_path(r"C:\video\clip.mp4", "test"))
+    unchanged = {"layout": {"preset": "text-media-text"}}
+    assert renderer.resolve_template(unchanged) == (unchanged, None)
+    warnings: list[str] = []
+    assert renderer.resolve_layout({"layout": "invalid"}, 1080, 1920, warnings) is None
+    assert warnings
     bilingual, _ = renderer.wrap_layout_text("ONE STORY\n12种风格\n不只是换颜色", 13, 2)
     assert "ONE STORY" in bilingual
     with tempfile.TemporaryDirectory() as temp_value:
@@ -182,6 +189,7 @@ def check_paths_and_fonts() -> None:
         fonts.mkdir()
         (fonts / "custom.ttf").write_bytes(b"font")
         assert renderer.resolve_fonts_dir(temp, {"fonts_dir": "fonts"}) == fonts
+        assert_raises_runtime(lambda: renderer.resolve_fonts_dir(temp, {"fonts_dir": "../fonts"}))
         empty = temp / "empty"
         empty.mkdir()
         target = temp / "render"
@@ -197,6 +205,36 @@ def check_paths_and_fonts() -> None:
             assert (copied / "custom.ttf").read_bytes() == b"font"
         finally:
             renderer.os.link = original_link
+
+        bundle = temp / "bundle"
+        bundle.mkdir()
+        for name in ("noto.ttf", "style.ttf", "unused.ttf"):
+            (bundle / name).write_bytes(name.encode())
+        (bundle / "sources.json").write_text(
+            json.dumps(
+                {
+                    "fonts": [
+                        {"family": "Noto Sans SC", "file": "noto.ttf"},
+                        {"family": "Style Font", "file": "style.ttf"},
+                        {"family": "Unused Font", "file": "unused.ttf"},
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        selected_root = temp / "selected"
+        selected_root.mkdir()
+        selected = renderer.stage_fonts(bundle, selected_root, {"Style Font"})
+        assert {path.name for path in selected.iterdir()} == {"noto.ttf", "style.ttf"}
+
+        first = temp / "first.mp4"
+        second = temp / "second.mp4"
+        first.write_bytes(b"same-media")
+        second.write_bytes(b"same-media")
+        media = batch_validator.collect_media(
+            {"scenes": [{"media": [{"path": "first.mp4"}, {"path": "second.mp4"}]}]}, temp / "project.json"
+        )
+        assert media[0]["identity"] == media[1]["identity"]
 
 
 def check_cli_dry_run_and_batch() -> None:
