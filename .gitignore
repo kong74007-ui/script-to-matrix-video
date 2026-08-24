@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+material-library.json
+*.pem
+*.key
+id_ed25519
+id_ed25519.pub
+outputs/
+*.mp4
+*.wav

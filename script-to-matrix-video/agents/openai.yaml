@@ -1,0 +1,6 @@
+interface:
+  display_name: "文案与模板矩阵视频"
+  short_description: "支持文案一键成片和上文中素材下文模板成片，可单条或批量生成"
+  default_prompt: "使用 $script-to-matrix-video 选择文案成片或 text-media-text 模板成片，生成可发布的9:16矩阵视频。"
+policy:
+  allow_implicit_invocation: true
