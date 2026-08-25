@@ -1,8 +1,34 @@
 # Material library integration
 
-Use this reference when a local or SSH-accessible Huangque-style material
-library is available. The library is optional; the video project must remain
-self-contained after selected files are copied into it.
+Use this reference to connect and operate the required local or SSH-accessible
+Huangque-style material library. Every new machine must pass `inspect` before
+its first render; the video project must remain self-contained after selected
+files are copied into it.
+
+## Mandatory first-run connection
+
+Connect and validate a local or mounted library:
+
+```powershell
+python scripts/material_library.py connect --root "D:\media\huangque-media"
+```
+
+Or connect through an existing SSH key or agent:
+
+```powershell
+python scripts/material_library.py connect --host material-library-ssh-alias --user media-reader --remote-root /srv/huangque-media
+```
+
+Then verify the saved per-user profile:
+
+```powershell
+python scripts/material_library.py inspect
+```
+
+The `connect` command writes the profile only after it can read a non-empty
+`index.jsonl`. If `inspect` fails, first-run setup is incomplete and the Skill
+must not create or render a video. Fix the connection instead of using unrelated
+or AI-generated replacement material.
 
 ## Selection order
 

@@ -9,6 +9,8 @@ $ErrorActionPreference = 'Stop'
 
 $sourceSkill = Join-Path $PSScriptRoot 'script-to-matrix-video'
 $sourceEntry = Join-Path $sourceSkill 'SKILL.md'
+$targetSkill = Join-Path $DestinationRoot 'script-to-matrix-video'
+$isFirstInstall = -not (Test-Path -LiteralPath $targetSkill)
 if (-not (Test-Path -LiteralPath $sourceEntry -PathType Leaf)) {
     throw "Skill files are incomplete: $sourceEntry was not found. Extract the complete archive before installing."
 }
@@ -62,9 +64,25 @@ if ($LASTEXITCODE -ne 0) {
 if ($LASTEXITCODE -ne 0) {
     throw 'Source Skill catalog/font validation failed; the existing installation was not changed.'
 }
+& $pythonCommand.Source (Join-Path $sourceSkill 'scripts\test_material_library.py')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Source Skill material-library regression failed; the existing installation was not changed.'
+}
+
+if ($isFirstInstall) {
+    Write-Host 'Checking the required first-run material-library connection...'
+    & $pythonCommand.Source (Join-Path $sourceSkill 'scripts\material_library.py') inspect
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ''
+        Write-Host 'Connect a local library:'
+        Write-Host "  python `"$(Join-Path $sourceSkill 'scripts\material_library.py')`" connect --root `"D:\media\your-library`""
+        Write-Host 'Or connect an SSH library with an existing SSH key/agent:'
+        Write-Host "  python `"$(Join-Path $sourceSkill 'scripts\material_library.py')`" connect --host YOUR_SSH_ALIAS --user YOUR_USER --remote-root /absolute/library/path"
+        throw 'First installation requires a verified personal material-library connection. Connect it, confirm inspect succeeds, then run the installer again.'
+    }
+}
 
 New-Item -ItemType Directory -Force -Path $DestinationRoot | Out-Null
-$targetSkill = Join-Path $DestinationRoot 'script-to-matrix-video'
 
 if (Test-Path -LiteralPath $targetSkill) {
     if (-not $Force) {

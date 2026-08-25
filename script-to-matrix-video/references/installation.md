@@ -11,7 +11,7 @@ Copy the complete `script-to-matrix-video` folder to the user's Codex skills dir
 
 Keep `SKILL.md`, `agents`, `references`, `scripts`, and `requirements.txt` together. Restart Codex after installing so the Skill is rediscovered.
 
-Keep `assets/templates` and `assets/fonts` as well. The 12-style catalog and four licensed Chinese font families are part of the runtime, so no separate operating-system font installation is required for bundled templates.
+Keep `assets/templates` and `assets/fonts` as well. The 13-style catalog and four licensed Chinese font families are part of the runtime, so no separate operating-system font installation is required for bundled templates.
 
 The Windows installer runs the source environment check and catalog regression suite, then validates every bundled font SHA-256 before it backs up or replaces an existing Skill. A missing, malformed, or altered runtime asset must stop installation.
 
@@ -23,9 +23,10 @@ Rendering requires:
 - FFmpeg with both `ffmpeg` and `ffprobe` available on `PATH`.
 - An image-generation capability in the running Codex environment, or user-supplied local images.
 
-Optional material-library access requires either a local/mounted library root or
-OpenSSH (`ssh`) plus an already configured SSH key/agent. Passwords are not
-accepted by the helper and must not be added to this Skill.
+Material-library access is required on the first installation. Connect either a
+local/mounted library root or OpenSSH (`ssh`) plus an already configured SSH
+key/agent. Passwords are not accepted by the helper and must not be added to
+this Skill.
 
 Alibaba narration additionally requires:
 
@@ -39,24 +40,26 @@ Configure `DASHSCOPE_API_KEY` as a user or process environment variable. Do not 
 
 No-narration videos do not require DashScope or an Alibaba API key.
 
-## Configure an optional material library
+## Connect the required material library
 
-Set a local root:
+Every new machine must connect and validate its own library before installation
+can complete or a video can render. The connection profile is per-user and is
+not bundled with the Skill.
 
-```powershell
-$env:MATRIX_MATERIAL_LIBRARY_ROOT = "D:\media\huangque-media"
-```
-
-Or configure remote read access without storing a password:
+Connect a local or mounted root and save the verified profile:
 
 ```powershell
-$env:MATRIX_MATERIAL_LIBRARY_HOST = "media.example.com"
-$env:MATRIX_MATERIAL_LIBRARY_USER = "media-reader"
-$env:MATRIX_MATERIAL_LIBRARY_REMOTE_ROOT = "/srv/huangque-media"
+python scripts/material_library.py connect --root "D:\media\huangque-media"
 ```
 
-For a persistent per-user connection that works without repeating environment
-variables, create `~/.codex/script-to-matrix-video/material-library.json`:
+Or connect remote read access without storing a password:
+
+```powershell
+python scripts/material_library.py connect --host material-library-ssh-alias --user media-reader --remote-root "/srv/huangque-media"
+```
+
+The `connect` command validates `index.jsonl` first, then writes the persistent
+per-user profile to `~/.codex/script-to-matrix-video/material-library.json`:
 
 ```json
 {
@@ -66,14 +69,19 @@ variables, create `~/.codex/script-to-matrix-video/material-library.json`:
 }
 ```
 
-Put the host name, user, and `IdentityFile` in `~/.ssh/config`. The JSON profile
-must never contain a password or private key.
+Put the host name and `IdentityFile` in `~/.ssh/config`. The JSON profile must
+never contain a password or private key. Environment variables remain supported
+for managed deployments, but they must still pass the same inspection gate.
 
 Verify it with:
 
 ```powershell
 python scripts/material_library.py inspect
 ```
+
+If this command fails, first-time setup is incomplete. Do not start a render or
+fall back to generated media; correct the local path, SSH authorization, remote
+root, or library index and run it again.
 
 Prefer a read-only server account. Copy every selected file into the task-owned
 project before rendering so the final project is portable and reproducible.
@@ -117,6 +125,7 @@ Generated project folders and media must stay outside the installed Skill direct
 - `DASHSCOPE_API_KEY is not configured`: configure the environment variable, or set `voice.enabled` to `false` for a no-narration video.
 - Function 1 images cannot be generated: enable image generation in the Codex environment or provide local image files for every scene. Function 2 must use supplied/library media and must not generate replacements.
 - `ssh is required`: install/enable OpenSSH, or mount/copy the library locally and set `MATRIX_MATERIAL_LIBRARY_ROOT`.
+- `Set --root, configure SSH host...`: run `material_library.py connect` with the new machine's local root or SSH connection before installing or rendering.
 - `Material status is ...`: only `可使用` records are eligible by default; update the source library through its approved review process rather than bypassing the filter.
 - BGM is enabled but skipped: copy a selected track into the project and set `bgm.path`, or disable BGM explicitly.
 - `fonts_dir is not a directory`: reinstall the complete Skill, or point `render.fonts_dir` at a custom font directory inside the current project. Do not use a machine-specific external path in a portable project.

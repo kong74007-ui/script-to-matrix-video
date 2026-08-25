@@ -1,4 +1,4 @@
-# 文案与模板矩阵视频 Skill v1.7.2
+# 文案与模板矩阵视频 Skill v1.7.3
 
 本安装包包含两个独立功能：
 
@@ -13,6 +13,8 @@ v1.7.1 将模板成片设为默认入口。未明确指定功能时直接使用 
 
 v1.7.2 将原本的 `native-bold` 默认版式登记为第 13 个稳定模板“默认原生大字”，默认项目直接使用 `template_id: native-bold`。
 
+v1.7.3 要求每台新电脑在首次安装前连接并验证自己的素材库。安装器会运行 `material_library.py inspect`；未连接、索引不可读或索引为空时，首次安装会停止。已有安装升级时保留原有个人连接，不要求重复配置。
+
 安装包不含 API 密钥、服务器密码、SSH 密钥或素材库原始文件；仅包含公开案例成片和预览图。
 
 安装包中的 `assets/examples/text-media-text` 包含公开案例成片，`assets/fonts` 包含模板运行所需字体，因此 v1.7.1 压缩包体积会明显大于旧版。
@@ -21,7 +23,25 @@ v1.7.2 将原本的 `native-bold` 默认版式登记为第 13 个稳定模板“
 
 1. 完整解压 ZIP，不要直接在压缩包里运行脚本。
 2. 在解压目录打开 PowerShell。
-3. 执行：
+3. 先连接这台电脑自己的素材库。连接本地或挂载目录：
+
+```powershell
+python .\script-to-matrix-video\scripts\material_library.py connect --root "D:\media\your-library"
+```
+
+或者连接已经配置 SSH 密钥的远程素材库：
+
+```powershell
+python .\script-to-matrix-video\scripts\material_library.py connect --host YOUR_SSH_ALIAS --user YOUR_USER --remote-root /absolute/library/path
+```
+
+4. 确认连接：
+
+```powershell
+python .\script-to-matrix-video\scripts\material_library.py inspect
+```
+
+5. 执行安装：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
@@ -46,9 +66,9 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 安装器不会安装 FFmpeg，也不会复制或保存 API 密钥、SSH 密钥或服务器密码。
 覆盖旧版本前，安装器会先校验 13 套模板目录、4 个字体文件、许可证和 SHA-256；分享包不完整时会停止，不会先移动现有 Skill。
 
-## 素材库配置（可选）
+## 素材库连接（首次安装必需）
 
-本地或挂载目录：
+推荐使用上面的 `connect` 命令。它会先读取非空的 `index.jsonl`，验证成功后才把非敏感连接信息保存到个人配置。也可以在受管理的电脑上使用环境变量连接本地或挂载目录：
 
 ```powershell
 $env:MATRIX_MATERIAL_LIBRARY_ROOT = "D:\media\huangque-media"
@@ -62,13 +82,13 @@ $env:MATRIX_MATERIAL_LIBRARY_USER = "media-reader"
 $env:MATRIX_MATERIAL_LIBRARY_REMOTE_ROOT = "/srv/huangque-media"
 ```
 
-验证：
+无论采用哪种配置方式，都必须验证：
 
 ```powershell
 python "$env:USERPROFILE\.codex\skills\script-to-matrix-video\scripts\material_library.py" inspect
 ```
 
-推荐使用持久个人配置。在 `%USERPROFILE%\.codex\script-to-matrix-video\material-library.json` 中写入非敏感连接信息：
+`connect` 命令默认在 `%USERPROFILE%\.codex\script-to-matrix-video\material-library.json` 中写入非敏感连接信息：
 
 ```json
 {
@@ -80,7 +100,7 @@ python "$env:USERPROFILE\.codex\skills\script-to-matrix-video\scripts\material_l
 
 然后在 `%USERPROFILE%\.ssh\config` 中为这个别名配置 `HostName`、`User` 和 `IdentityFile`。个人配置、Skill 和分享包都不能包含密码或私钥内容。每台同事电脑需要使用自己的 SSH 私钥，并由服务器授权对应公钥。
 
-连接配置优先级为：命令行参数、`MATRIX_MATERIAL_LIBRARY_*` 环境变量、个人 JSON 配置。执行上面的 `inspect` 命令后返回素材数量和状态统计，即表示 Skill 已经可以直接调用素材库。
+连接配置优先级为：命令行参数、`MATRIX_MATERIAL_LIBRARY_*` 环境变量、个人 JSON 配置。执行上面的 `inspect` 命令后返回素材数量和状态统计，即表示 Skill 已经可以直接调用素材库；否则首次安装和首次渲染都会停止。
 
 请优先使用只读服务器账号和 SSH 密钥，不要把密码写入个人配置、环境示例、项目文件、Skill 或聊天内容。
 
@@ -119,4 +139,4 @@ python "$env:USERPROFILE\.codex\skills\script-to-matrix-video\scripts\material_l
 - Windows：`%USERPROFILE%\.codex\skills\script-to-matrix-video`
 - macOS/Linux：`~/.codex/skills/script-to-matrix-video`
 
-再安装 Python 依赖并重启 Codex。更完整的配置和排错说明位于 Skill 内的 `references/installation.md`。
+先运行 `scripts/material_library.py connect` 和 `inspect`，再安装 Python 依赖并重启 Codex。更完整的配置和排错说明位于 Skill 内的 `references/installation.md`。

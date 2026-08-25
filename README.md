@@ -2,7 +2,7 @@
 
 一个面向中文矩阵引流内容的 Codex Skill，输出可直接发布的 9:16 MP4。
 
-当前版本：`v1.7.2`
+当前版本：`v1.7.3`
 
 ## 两个独立功能
 
@@ -50,6 +50,8 @@ v1.7.1 将模板成片设为 Skill 默认路由：没有明确模式时不再询
 
 v1.7.2 把原本的默认 `native-bold` 版式登记为第 13 个稳定模板“默认原生大字”。默认项目现在直接使用 `template_id: native-bold`，保持白色粗体、黄红重点词、模糊素材背景和无分隔线。
 
+v1.7.3 将个人素材库连接设为首次安装硬门槛。新电脑必须先用 `material_library.py connect` 保存本机连接并通过 `inspect`，安装器才会完成首次安装；Skill 在首次渲染前也会复核连接。升级已有安装不会要求重复建档。
+
 PR 会运行零付费模板回归：校验协议和 13 套重点档案，为全部 13 套模板生成真实 libass 首帧矩阵，再用 30/60fps 合成素材渲染鲜黄亮蓝、撕边杂志、国风标题三条 MP4 供审查。
 
 ## 模板案例视频
@@ -65,7 +67,7 @@ PR 会运行零付费模板回归：校验协议和 13 套重点档案，为全�
 
 ## 素材库能力
 
-Skill 可以连接本地或 SSH 素材库，完成：
+Skill 首次安装必须连接自己的本地或 SSH 素材库，连接成功后可以完成：
 
 - 索引读取和状态统计；
 - 按完整文案语义检索图片、视频和 BGM；
@@ -79,14 +81,21 @@ Skill 可以连接本地或 SSH 素材库，完成：
 ~/.codex/script-to-matrix-video/material-library.json
 ```
 
-个人配置只保存主机别名、用户名和素材库目录。密码、SSH 私钥、API 密钥和素材文件不会进入 Skill 或仓库。配置方式见 [安装说明](INSTALL.md)。
+个人配置只保存主机别名、用户名和素材库目录。密码、SSH 私钥、API 密钥和素材文件不会进入 Skill 或仓库。新电脑未通过 `inspect` 前不会开始成片，配置方式见 [安装说明](INSTALL.md)。
 
 ## Windows 安装
 
 ```powershell
 git clone https://github.com/kong74007-ui/script-to-matrix-video.git
 cd script-to-matrix-video
+python .\script-to-matrix-video\scripts\material_library.py connect --root "D:\media\your-library"
 powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+远程素材库可把连接命令替换为：
+
+```powershell
+python .\script-to-matrix-video\scripts\material_library.py connect --host YOUR_SSH_ALIAS --user YOUR_USER --remote-root /absolute/library/path
 ```
 
 覆盖旧版本并保留时间戳备份：

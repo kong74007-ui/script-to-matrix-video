@@ -50,11 +50,12 @@ Routing rule: Function 2 is the fallback whenever the mode is absent or ambiguou
 
 ## Runtime prerequisites
 
-- Before the first render on a machine, or when diagnosing setup failures, read [the installation reference](references/installation.md) and run `python scripts/check_environment.py`. Add `--require-tts` when narration is enabled.
+- A verified material-library connection is mandatory on every newly installed machine. Before the first render, read [the installation reference](references/installation.md), then run `python scripts/material_library.py inspect`. If it fails, stop the video task and help the user connect a local/mounted root or an SSH library with `material_library.py connect`; do not create a project, generate substitute media, or render until `inspect` succeeds. A successful connection is stored only in the per-user profile and does not need to be recreated for every job.
+- Before the first render on a machine, or when diagnosing setup failures, also run `python scripts/check_environment.py`. Add `--require-tts` when narration is enabled.
 - Rendering requires Python 3.10 or newer plus `ffmpeg` and `ffprobe` on `PATH`.
 - Alibaba narration additionally requires the Python packages in `requirements.txt` and a locally configured `DASHSCOPE_API_KEY`. Never copy the key into this Skill, a project manifest, or a distributable archive.
 - Function 1 AI image generation uses the image-generation capability available to the running Codex environment. If it is unavailable, request local images instead of claiming that generation succeeded. Function 2 must not call any image- or video-generation model.
-- A material library is optional. When configured, read [the material-library reference](references/material-library.md). The helper accepts command-line settings, environment variables, or the per-user `~/.codex/script-to-matrix-video/material-library.json` profile. Remote access must use an existing SSH key or agent; never put a server password in this Skill, a project, a command, or an archive.
+- The material library is a required first-run dependency. Read [the material-library reference](references/material-library.md) when connecting, inspecting, searching, or fetching. The helper accepts command-line settings, environment variables, or the per-user `~/.codex/script-to-matrix-video/material-library.json` profile. Remote access must use an existing SSH key or agent; never put a server password in this Skill, a project, a command, or an archive.
 
 ## Inputs and inferred values
 
@@ -69,7 +70,7 @@ If the copy already contains a CTA, preserve its intent. Otherwise choose one CT
 1. Create a task-owned project folder outside the Skill directory and write `project.json` using [the project schema](references/project-schema.md). Preserve source copy verbatim in the manifest.
 2. Read [the complete workflow](references/workflow.md), then analyze the full copy before splitting it. Split by semantic beat, not sentence length. A scene may use one to three image assets.
 3. Choose one visual bible for the whole video. Read [the creative system](references/creative-system.md) before writing image prompts, motion, transitions, captions, cover copy, or CTA.
-4. If a material library is configured, read [the material-library reference](references/material-library.md), run `scripts/material_library.py inspect`, and search it per semantic scene. Consider only `可使用` records, visually inspect the strongest candidates, then copy approved images, videos, and optional BGM into the project. Preserve each `record_id` and relative source path in the manifest.
+4. Run `scripts/material_library.py inspect`, then search the connected library per semantic scene. Consider only `可使用` records, visually inspect the strongest candidates, then copy approved images, videos, and optional BGM into the project. Preserve each `record_id` and relative source path in the manifest.
 5. Generate the cover and any scene images still missing. Every prompt must combine the global visual bible with the current scene's narrative function and composition needs. Keep character, palette, lens language, and lighting consistent.
 6. When narration is enabled, run `scripts/aliyun_tts.py <project.json>`. It caches successful lines, records request IDs and exact durations, and stops after the initial request plus two retries per failed scene. Never print or store the API key. Skip this stage when `voice.enabled` is `false`.
 7. With narration, lock each scene duration only after TTS: `scene duration = probed audio duration + tail padding`. Without narration, set an explicit duration based on text reading time and visual complexity. Treat the resulting duration as the source of truth for motion, captions, and the edit.

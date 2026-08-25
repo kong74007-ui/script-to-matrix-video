@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect, search, and fetch approved assets from a Huangque-style media library.
+"""Connect, inspect, search, and fetch assets from a Huangque-style media library.
 
 The tool reads index.jsonl from a local library root or over SSH. Connection
 settings may come from command-line arguments, environment variables, or the
@@ -68,6 +68,21 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    connect_parser = subparsers.add_parser(
+        "connect", help="Validate and save this machine's material-library connection"
+    )
+    connect_source = connect_parser.add_mutually_exclusive_group(required=True)
+    connect_source.add_argument("--root", help="Local or mounted material-library root")
+    connect_source.add_argument("--host", help="SSH host or configured SSH alias")
+    connect_parser.add_argument("--user", help="SSH user; omit when the SSH alias defines it")
+    connect_parser.add_argument("--remote-root", help="Absolute material-library path on the SSH host")
+    connect_parser.add_argument(
+        "--profile",
+        type=Path,
+        default=DEFAULT_CONFIG_PATH,
+        help=f"Profile to write; defaults to {DEFAULT_CONFIG_PATH}",
+    )
+
     inspect_parser = subparsers.add_parser("inspect", help="Summarize the material index")
     add_source_args(inspect_parser)
 
@@ -106,16 +121,12 @@ def read_connection_profile(args: argparse.Namespace) -> dict[str, Any]:
     return profile
 
 
-def source_config(args: argparse.Namespace) -> tuple[Path | None, str | None, str | None]:
-    profile = read_connection_profile(args)
-    local_value = args.root or os.getenv("MATRIX_MATERIAL_LIBRARY_ROOT") or profile.get("root")
-    host = args.host or os.getenv("MATRIX_MATERIAL_LIBRARY_HOST") or profile.get("host")
-    user = args.user or os.getenv("MATRIX_MATERIAL_LIBRARY_USER") or profile.get("user")
-    remote_root = (
-        args.remote_root
-        or os.getenv("MATRIX_MATERIAL_LIBRARY_REMOTE_ROOT")
-        or profile.get("remote_root")
-    )
+def normalize_source(
+    local_value: str | None,
+    host: str | None,
+    user: str | None,
+    remote_root: str | None,
+) -> tuple[Path | None, str | None, str | None]:
     if local_value:
         root = Path(local_value).expanduser().resolve()
         return root, None, None
@@ -132,6 +143,18 @@ def source_config(args: argparse.Namespace) -> tuple[Path | None, str | None, st
     return None, f"{user}@{host}" if user else host, remote_root.rstrip("/")
 
 
+def source_config(args: argparse.Namespace) -> tuple[Path | None, str | None, str | None]:
+    profile = read_connection_profile(args)
+    return normalize_source(
+        args.root or os.getenv("MATRIX_MATERIAL_LIBRARY_ROOT") or profile.get("root"),
+        args.host or os.getenv("MATRIX_MATERIAL_LIBRARY_HOST") or profile.get("host"),
+        args.user or os.getenv("MATRIX_MATERIAL_LIBRARY_USER") or profile.get("user"),
+        args.remote_root
+        or os.getenv("MATRIX_MATERIAL_LIBRARY_REMOTE_ROOT")
+        or profile.get("remote_root"),
+    )
+
+
 def remote_cat(target: str, path: str) -> bytes:
     ssh = shutil.which("ssh")
     if not ssh:
@@ -146,8 +169,10 @@ def remote_cat(target: str, path: str) -> bytes:
     return result.stdout
 
 
-def read_index(args: argparse.Namespace) -> tuple[list[dict[str, Any]], tuple[Path | None, str | None, str | None]]:
-    local_root, target, remote_root = source_config(args)
+def read_index_from_source(
+    source: tuple[Path | None, str | None, str | None]
+) -> list[dict[str, Any]]:
+    local_root, target, remote_root = source
     if local_root:
         index_path = local_root / "index.jsonl"
         try:
@@ -169,7 +194,12 @@ def read_index(args: argparse.Namespace) -> tuple[list[dict[str, Any]], tuple[Pa
             records.append(record)
     if not records:
         raise RuntimeError("Material index is empty")
-    return records, (local_root, target, remote_root)
+    return records
+
+
+def read_index(args: argparse.Namespace) -> tuple[list[dict[str, Any]], tuple[Path | None, str | None, str | None]]:
+    source = source_config(args)
+    return read_index_from_source(source), source
 
 
 def orientation(record: dict[str, Any]) -> str:
@@ -218,8 +248,7 @@ def safe_relative_path(record: dict[str, Any]) -> PurePosixPath:
     return path
 
 
-def inspect_command(args: argparse.Namespace) -> dict[str, Any]:
-    records, _ = read_index(args)
+def summarize_records(records: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "ok": True,
         "total": len(records),
@@ -227,6 +256,47 @@ def inspect_command(args: argparse.Namespace) -> dict[str, Any]:
         "statuses": dict(Counter(str(item.get("状态") or "未设置") for item in records)),
         "orientations": dict(Counter(orientation(item) or "未设置" for item in records)),
     }
+
+
+def inspect_command(args: argparse.Namespace) -> dict[str, Any]:
+    records, _ = read_index(args)
+    return summarize_records(records)
+
+
+def connect_command(args: argparse.Namespace) -> dict[str, Any]:
+    if args.root and (args.user or args.remote_root):
+        raise RuntimeError("--user and --remote-root may only be used with --host")
+    if args.host and not args.remote_root:
+        raise RuntimeError("--remote-root is required with --host")
+    source = normalize_source(args.root, args.host, args.user, args.remote_root)
+    records = read_index_from_source(source)
+    local_root, _, remote_root = source
+    if local_root:
+        profile = {"root": str(local_root)}
+        source_kind = "local"
+    else:
+        profile = {"host": args.host, "remote_root": remote_root}
+        if args.user:
+            profile["user"] = args.user
+        source_kind = "ssh"
+
+    profile_path = args.profile.expanduser().resolve()
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = profile_path.with_name(f"{profile_path.name}.tmp")
+    temporary_path.write_text(
+        json.dumps(profile, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    os.replace(temporary_path, profile_path)
+
+    result = summarize_records(records)
+    result.update(
+        {
+            "connected": True,
+            "source": source_kind,
+            "profile": str(profile_path),
+        }
+    )
+    return result
 
 
 def search_command(args: argparse.Namespace) -> dict[str, Any]:
@@ -307,7 +377,9 @@ def fetch_command(args: argparse.Namespace) -> dict[str, Any]:
 
 def main() -> int:
     args = parse_args()
-    if args.command == "inspect":
+    if args.command == "connect":
+        result = connect_command(args)
+    elif args.command == "inspect":
         result = inspect_command(args)
     elif args.command == "search":
         result = search_command(args)
