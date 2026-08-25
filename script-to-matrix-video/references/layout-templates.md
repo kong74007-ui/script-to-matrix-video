@@ -170,6 +170,8 @@ With `bottom_text_mode: "captions"`, the bottom region shows timed `caption_chun
 
 For a pure graphic template without narration, set `voice.enabled` to `false`, use `bottom_text_mode: "fixed"`, provide concise `bottom_text`, and set explicit scene durations using the duration policy above. The MP4 keeps a silent AAC track for publishing compatibility.
 
+Top titles, fixed bottom copy, and overlays appear at full opacity on their first displayed frame. The renderer does not use text fade-in. A short fade-out and a template's optional `text_pop_in` scale motion may remain; this does not change media transitions.
+
 Supplied and library images should not contain conflicting top or bottom wording. Compose readable Chinese in the renderer. For `native-bold`, choose assets that survive a wide, near-full-width central crop. For `classic`, choose assets with more internal negative space around the subject. Never generate replacement media for this template.
 
 ## `full-frame`

@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -185,6 +186,8 @@ def check_layout_and_ass() -> None:
         assert "Style: TopText,Ma Shan Zheng" in ass
         assert "Style: BottomText,ZCOOL XiaoWei" in ass
         assert "Style: Kicker" in ass and "风物小记" in ass
+        text_fade_ins = [int(value) for value in re.findall(r"\\fad\((\d+),\d+\)", ass)]
+        assert text_fade_ins and all(value == 0 for value in text_fade_ins)
 
 
 def check_emphasis_protocol() -> None:

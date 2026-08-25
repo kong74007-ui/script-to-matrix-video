@@ -105,6 +105,7 @@ If the copy already contains a CTA, preserve its intent. Otherwise choose one CT
 - A `text-media-text` video's total duration may never be shorter than 8 seconds. The renderer calculates the copy-based target itself and extends the final scene to that target, so longer copy does not collapse to the 8-second floor. An explicit user duration below the calculated target does not override this guard.
 - Narration may not be cut to fit a visual. Extend or simplify the visual instead.
 - Prefer clean cuts, short dissolves, subtle push/slide transitions, and match-motion handoffs. Avoid random transition packs.
+- Render every title, fixed CTA, and overlay at full opacity from its first displayed frame. Do not apply text fade-in; a short fade-out and optional scale pop may remain. This rule does not disable media dissolves or scene transitions.
 - Captions should normally contain 7–14 Chinese characters per chunk and no more than two display lines. Break on meaning and punctuation.
 - Keep essential text inside mobile safe areas. Do not place CTA text against platform UI zones.
 - SFX should mark a real action, reveal, emphasis, or transition. Omit SFX when none improves comprehension.

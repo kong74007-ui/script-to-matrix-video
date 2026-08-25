@@ -1316,7 +1316,7 @@ def write_ass(
                     top_tag_parts = [
                         "\\an5",
                         f"\\pos({width // 2},{layout['top_text_y']})",
-                        "\\fad(120,100)",
+                        "\\fad(0,100)",
                         f"\\fs{top_size}",
                     ]
                     if layout["text_pop_in"]:
@@ -1350,7 +1350,7 @@ def write_ass(
             if 0 < font_size_override < 12:
                 raise RuntimeError("overlay.font_size must be 0 or at least 12")
             color = ass_primary_color(str(overlay.get("color", "#FFFFFF")))
-            tags = [f"\\an{alignment}", f"\\pos({x},{y})", "\\fad(120,120)", f"\\1c{color}"]
+            tags = [f"\\an{alignment}", f"\\pos({x},{y})", "\\fad(0,120)", f"\\1c{color}"]
             if font_size_override > 0:
                 tags.append(f"\\fs{font_size_override}")
             tag_block = "{" + "".join(tags) + "}"
@@ -1389,7 +1389,7 @@ def write_ass(
                 bottom_tag_parts = [
                     "\\an5",
                     f"\\pos({width // 2},{layout['bottom_text_y']})",
-                    "\\fad(160,100)",
+                    "\\fad(0,100)",
                     f"\\fs{bottom_size}",
                 ]
                 if layout["text_pop_in"]:
