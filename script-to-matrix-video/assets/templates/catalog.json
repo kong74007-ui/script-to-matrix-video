@@ -1,6 +1,7 @@
 {
   "version": 1,
   "emphasis_profiles": {
+    "native-bold": {"scale": 1.16, "min_scale": 1.05, "color": "#FFD400", "outline_width": 0, "outline_color": "#111111", "role_colors": {"number": "#FF453A", "contrast": "#FF453A", "pain": "#FF453A", "benefit": "#FFD400", "conclusion": "#FFD400", "cta": "#FFD400"}},
     "video-diary": {"scale": 1.12, "min_scale": 1.04, "color": "#D86F61", "outline_width": 3, "outline_color": "#FFF8F2", "role_colors": {"cta": "#7CA6A1"}},
     "minimal-headline": {"scale": 1.28, "min_scale": 1.08, "color": "#FF4D2E", "outline_width": 0, "outline_color": "#F7F6F2", "role_colors": {"contrast": "#111111"}},
     "airy-blush": {"scale": 1.14, "min_scale": 1.04, "color": "#D9778B", "outline_width": 6, "outline_color": "#F5C9D2"},
@@ -15,6 +16,14 @@
     "portrait-quote": {"scale": 1.22, "min_scale": 1.08, "color": "#D9B56E", "outline_width": 2, "outline_color": "#1E2630", "italic": true}
   },
   "templates": [
+    {
+      "id": "native-bold",
+      "name": "默认原生大字",
+      "description": "白色粗体、黄红语义强调与模糊素材背景，适合矩阵引流、知识口播、门店招商和普通信息流内容。",
+      "tags": ["默认", "原生大字", "矩阵引流", "知识口播"],
+      "render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 70, "subtitle_margin_v": 170},
+      "layout": {"preset": "text-media-text", "variant": "native-bold", "background_mode": "blurred-media", "background_color": "#11151C", "background_blur": 28, "background_brightness": -0.22, "background_saturation": 0.78, "band_color": "#101318", "top_band_opacity": 0.42, "bottom_band_opacity": 0.58, "top_text_color": "#FFFFFF", "bottom_text_color": "#FFFFFF", "text_outline_color": "#111111", "top_text_outline": 8, "bottom_text_outline": 7, "text_shadow": 2, "accent_color": "#FFD400", "secondary_accent_color": "#FF453A", "auto_highlight": true, "text_pop_in": true, "top_font": "Noto Sans SC", "bottom_font": "Noto Sans SC", "top_font_size": 80, "bottom_font_size": 70, "top_min_font_size": 52, "bottom_min_font_size": 46, "top_max_chars": 12, "top_max_lines": 4, "bottom_max_chars": 12, "bottom_max_lines": 3, "top_text_y": 270, "bottom_text_y": 1650, "bottom_text_mode": "fixed", "media_border_width": 0, "divider_height": 0, "media": {"x": 20, "y": 500, "width": 1040, "height": 940}, "surface_boxes": []}
+    },
     {
       "id": "video-diary",
       "name": "视频日记",

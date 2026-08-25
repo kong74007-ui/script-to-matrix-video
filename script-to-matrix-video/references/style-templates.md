@@ -16,6 +16,7 @@ The renderer merges the selected template first, then applies explicit project `
 
 | `template_id` | Name | Best for |
 | --- | --- | --- |
+| `native-bold` | 默认原生大字 | 矩阵引流、知识口播、门店招商、普通信息流 |
 | `video-diary` | 视频日记 | 日常记录、探店、过程复盘 |
 | `minimal-headline` | 极简大标题 | 观点、清单、短结论 |
 | `airy-blush` | 轻透雅粉 | 美学、情绪、服务介绍 |

@@ -2,7 +2,7 @@
 
 一个面向中文矩阵引流内容的 Codex Skill，输出可直接发布的 9:16 MP4。
 
-当前版本：`v1.7.1`
+当前版本：`v1.7.2`
 
 ## 两个独立功能
 
@@ -30,17 +30,17 @@
 
 批量渲染前必须运行 `scripts/validate_template_batch.py`，它会阻止单素材、无理由纯图片、A/B 素材重复、BGM 未轮换以及时长不足的任务进入渲染。
 
-## 12 套原创视觉模板
+## 13 套原创视觉模板
 
-`text-media-text` 现在可直接用稳定的 `template_id` 选择：视频日记、极简大标题、轻透雅粉、鲜黄亮蓝、商务深黑、黑金高级、数据对比、国风标题、撕边杂志、Vlog 手账、中英双语、人物金句。
+`text-media-text` 现在可直接用稳定的 `template_id` 选择：默认原生大字、视频日记、极简大标题、轻透雅粉、鲜黄亮蓝、商务深黑、黑金高级、数据对比、国风标题、撕边杂志、Vlog 手账、中英双语、人物金句。
 
 ```json
-{"layout": {"template_id": "black-gold-premium"}}
+{"layout": {"template_id": "native-bold"}}
 ```
 
 模板目录位于 `script-to-matrix-video/assets/templates/catalog.json`。渲染器先应用模板默认值，再应用项目显式覆盖；批量校验器使用同一份目录，因此网站或其他调用方以后只需要保存 `template_id`，不必复制整套版式参数。
 
-12 套模板现在都支持 `emphasis.v1` 语义重点：Codex 只输出原文中的重点区间和 `number / contrast / pain / benefit / conclusion / cta` 角色，模板目录决定放大、颜色、描边、荧光笔或下划线效果。未来黄雀 Agent 只需输出同一协议，无需修改渲染器。无效区间会被丢弃并回退到数字、日期、引号、转折和 CTA 的确定性规则；排版会先降低重点倍率、再降低基础字号，不截断文案。协议见 [semantic-emphasis.md](script-to-matrix-video/references/semantic-emphasis.md)。
+13 套模板现在都支持 `emphasis.v1` 语义重点：Codex 只输出原文中的重点区间和 `number / contrast / pain / benefit / conclusion / cta` 角色，模板目录决定放大、颜色、描边、荧光笔或下划线效果。未来黄雀 Agent 只需输出同一协议，无需修改渲染器。无效区间会被丢弃并回退到数字、日期、引号、转折和 CTA 的确定性规则；排版会先降低重点倍率、再降低基础字号，不截断文案。协议见 [semantic-emphasis.md](script-to-matrix-video/references/semantic-emphasis.md)。
 
 Skill 自带 `Noto Sans SC`、`ZCOOL XiaoWei`、`Ma Shan Zheng`、`ZCOOL KuaiLe` 四个 OFL 中文字体家族，并自动交给 FFmpeg 加载，不依赖运行电脑碰巧安装了什么字体。详细选择建议见 [视觉模板目录](script-to-matrix-video/references/style-templates.md)。
 
@@ -48,7 +48,9 @@ v1.7.0 同时修复了两项真实批量问题：中英混排会保留英文词�
 
 v1.7.1 将模板成片设为 Skill 默认路由：没有明确模式时不再询问二选一；只给主题时可先生成上方标题和下方 CTA，再使用客户或素材库素材直接成片。完整文案、配音和语义分镜仍可通过明确指令进入功能一。
 
-PR 会运行零付费模板回归：校验协议和 12 套重点档案，为全部 12 套模板生成真实 libass 首帧矩阵，再用 30/60fps 合成素材渲染鲜黄亮蓝、撕边杂志、国风标题三条 MP4 供审查。
+v1.7.2 把原本的默认 `native-bold` 版式登记为第 13 个稳定模板“默认原生大字”。默认项目现在直接使用 `template_id: native-bold`，保持白色粗体、黄红重点词、模糊素材背景和无分隔线。
+
+PR 会运行零付费模板回归：校验协议和 13 套重点档案，为全部 13 套模板生成真实 libass 首帧矩阵，再用 30/60fps 合成素材渲染鲜黄亮蓝、撕边杂志、国风标题三条 MP4 供审查。
 
 ## 模板案例视频
 
@@ -130,7 +132,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 ```text
 script-to-matrix-video/   Skill 本体
   assets/fonts/           4 个开源中文字体家族及许可证
-  assets/templates/       12 套原创模板目录
+  assets/templates/       13 套原创模板目录
   assets/examples/        12条模板案例视频与预览图
 install.ps1               Windows 安装器
 INSTALL.md                完整安装与连接配置

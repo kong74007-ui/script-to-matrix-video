@@ -24,8 +24,8 @@ foreach ($requiredPath in @($catalogPath, $fontSourcesPath)) {
 
 $catalog = Get-Content -LiteralPath $catalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $templateIds = @($catalog.templates | ForEach-Object { [string]$_.id })
-if ($catalog.version -ne 1 -or $templateIds.Count -ne 12 -or @($templateIds | Sort-Object -Unique).Count -ne 12) {
-    throw 'Template catalog must be version 1 with exactly 12 unique template IDs.'
+if ($catalog.version -ne 1 -or $templateIds.Count -ne 13 -or @($templateIds | Sort-Object -Unique).Count -ne 13) {
+    throw 'Template catalog must be version 1 with exactly 13 unique template IDs.'
 }
 
 $fontSources = Get-Content -LiteralPath $fontSourcesPath -Raw -Encoding UTF8 | ConvertFrom-Json

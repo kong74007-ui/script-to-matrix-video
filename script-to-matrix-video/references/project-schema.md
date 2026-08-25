@@ -150,7 +150,7 @@ Unknown values must fall back to `static` or `cut` and be recorded in the render
 
 For Agent-selected emphasis, use the top-level `emphasis.v1` object described in [semantic-emphasis.md](semantic-emphasis.md). Its `top` and `bottom` offsets must match the exact persistent scene copy. Scene-level highlight arrays remain backward compatible and take precedence. The renderer drops stale or invalid spans, falls back to conservative deterministic rules when appropriate, and records the resolved provider and span counts in `render_report.emphasis`.
 
-For one of the 12 bundled authored styles, set only a stable template identifier:
+For one of the 13 bundled authored styles, set only a stable template identifier:
 
 ```json
 {"layout": {"template_id": "black-gold-premium"}}

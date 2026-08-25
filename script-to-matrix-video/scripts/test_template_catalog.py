@@ -32,7 +32,7 @@ def check_real_catalog() -> None:
     ids = [item.get("id") for item in catalog.get("templates", []) if isinstance(item, dict)]
     profiles = catalog.get("emphasis_profiles") or {}
     assert catalog.get("version") == 1
-    assert len(ids) == 12 and len(ids) == len(set(ids)) and all(ids)
+    assert len(ids) == 13 and len(ids) == len(set(ids)) and all(ids)
     assert set(profiles) == set(ids)
     for template_id in ids:
         project, resolved_id = renderer.resolve_template({"layout": {"template_id": template_id}})
@@ -55,7 +55,7 @@ def check_template_resolution() -> None:
     warnings: list[str] = []
     assert renderer.resolve_layout({"layout": "invalid"}, 1080, 1920, warnings) is None
     assert warnings
-    bilingual, _ = renderer.wrap_layout_text("ONE STORY\n12种风格\n不只是换颜色", 13, 2)
+    bilingual, _ = renderer.wrap_layout_text("ONE STORY\n13种风格\n不只是换颜色", 13, 2)
     assert "ONE STORY" in bilingual
     with tempfile.TemporaryDirectory() as temp_value:
         temp = Path(temp_value)
@@ -460,7 +460,7 @@ def check_cli_dry_run_and_batch() -> None:
             "scenes": [
                 {
                     "id": "s01",
-                    "top_text": "同一套素材 12种风格",
+                    "top_text": "同一套素材 13种风格",
                     "bottom_text": "选择模板",
                     "duration": 8.0,
                     "media": [
@@ -600,7 +600,7 @@ def check_cli_dry_run_and_batch() -> None:
         assert "require at least 3 distinct BGM tracks" in repeated_bgm.stdout
         assert "reuse the same BGM" in repeated_bgm.stdout
 
-        project["scenes"][0]["top_text"] = "ONE STORY 12种风格 不只是换颜色"
+        project["scenes"][0]["top_text"] = "ONE STORY 13种风格 不只是换颜色"
         project["scenes"][0]["bottom_text"] = "PICK A STYLE 再批量生成"
         project_path.write_text(json.dumps(project, ensure_ascii=False), encoding="utf-8")
         batch_path.write_text(json.dumps({"jobs": [{"project": "project.json"}]}), encoding="utf-8")
