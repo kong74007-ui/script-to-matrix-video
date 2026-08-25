@@ -1,6 +1,6 @@
 ---
 name: script-to-matrix-video
-description: Create publishable multi-platform 9:16 Chinese lead-generation MP4s through two independent functions. Function 1 is full script-to-video with semantic storyboarding, approved image/video/BGM retrieval with AI-image fallback, optional Alibaba Cloud CosyVoice narration, subtitles, motion, transitions, and a first-frame cover. Function 2 is `text-media-text` template video with a persistent top title, centered client-supplied or approved-library media, bottom CTA, optional BGM, no narration by default, and single or batch variants; AI-generated media is forbidden in this function. Use for 文案一键成片、模板成片、上文字中素材下文字、批量矩阵视频、素材库自动剪辑、AI 图片口播视频 or 矩阵引流视频. Do not use for manual frame-accurate editing of supplied footage.
+description: Create publishable multi-platform 9:16 Chinese lead-generation MP4s through two independent functions, defaulting to `text-media-text` template video when the user does not name a mode. The default template function uses persistent top copy, approved client/library media, a bottom CTA, optional BGM, and no narration; AI-generated media is forbidden. Use full script-to-video only when the user explicitly requests a narrated, storyboarded, or complete-script production. Use for 文案一键成片、模板成片、上文字中素材下文字、批量矩阵视频、素材库自动剪辑、AI 图片口播视频 or 矩阵引流视频. Do not use for manual frame-accurate editing of supplied footage.
 ---
 
 # Script and Template Matrix Video
@@ -9,19 +9,21 @@ Create the final MP4, not merely a storyboard. Keep intermediate project files s
 
 ## Two independent functions
 
-### Function 1: Full script-to-video (`script-video`)
+Default route: use Function 2 (`text-media-text`) whenever the user invokes this Skill without naming a function. Do not ask the user to choose between the two functions when the default has enough input to proceed.
 
-Use when the user supplies a complete client script and asks for 文案一键成片、口播视频、知识讲解、素材库自动剪辑, or a fully assembled matrix video. Analyze the full context, split it into semantic scenes, retrieve or generate scene material, optionally synthesize narration, add subtitles, motion, transitions, SFX, BGM, and a dedicated first-frame cover.
+### Function 1: Full script-to-video (`script-video`, explicit mode)
+
+Use when the user explicitly asks for 文案一键成片、完整口播、配音、语义分镜、知识讲解完整版, or a complete client script preserved as a narrated/storyboarded production. Analyze the full context, split it into semantic scenes, retrieve or generate scene material, optionally synthesize narration, add subtitles, motion, transitions, SFX, BGM, and a dedicated first-frame cover.
 
 - Minimum input: the complete client copy.
 - Optional input: narration preference, platform, brand assets, material-library constraints, BGM preference, CTA, and style.
 - Output: one publishable MP4 by default, plus intermediates only when requested.
 
-### Function 2: Template video (`text-media-text`)
+### Function 2: Template video (`text-media-text`, default)
 
-Use when the user asks for 模板成片、上面文字中间素材下面文字, a fixed-title information card, or batch variants of that format. This function has its own inputs, workflow, and deliverables. It does not require a narration script or semantic storyboarding across a long article.
+Use by default for an unspecified “make a video” request, as well as when the user asks for 模板成片、上面文字中间素材下面文字, a fixed-title information card, or batch variants of that format. This function has its own inputs, workflow, and deliverables. It does not require a narration script or semantic storyboarding across a long article.
 
-- Minimum input: top title and bottom subtitle/CTA. Accept direct text, a table, or text extracted from supplied screenshots.
+- Minimum input: top title and bottom subtitle/CTA. Accept direct text, a table, or text extracted from supplied screenshots. If the user supplies only a topic and asks Codex to write the copy, draft both fields and continue. If the user supplies a title but no CTA, infer one using the constrained CTA rules below.
 - Optional input: background context, asset keywords, preferred image/video mix, BGM preference, duration, variant count, platform, brand style, and one bundled `template_id`.
 - Default behavior: `native-bold` 1080x1920 layout, no narration, fixed top and bottom text, central client-supplied or approved-library media, no yellow divider, restrained motion, and auto BGM unless the user asks for silence. When the user requests a visual style or wants choices, read [the style template catalog](references/style-templates.md) and select one of its 12 stable `template_id` values. For AI-selected large type and keyword treatment, read [the semantic emphasis contract](references/semantic-emphasis.md), analyze each copy once, and reuse that neutral result across templates. Never generate AI media for this function. Enforce an 8-second hard minimum; calculate longer copy from reading time instead of defaulting every output to 8 seconds. Use multiple distinct assets and include approved video material by default.
 - Single mode: generate one or more variants for one copy.
@@ -29,7 +31,7 @@ Use when the user asks for 模板成片、上面文字中间素材下面文字, 
 - Output: final MP4 files; for batch work, also return a ZIP and timing report unless the user requests individual files only.
 - Reference outputs: when the user asks to see examples or when visual calibration is needed, read [the template example index](references/template-examples.md). The bundled MP4s are accepted output references, not source material for new videos.
 
-Routing rule: an explicit top/middle/bottom layout request selects Function 2. Otherwise a full client script selects Function 1. If the user supplies a long script but explicitly requests the structured template, honor the layout and use Function 2 without asking them to restate the copy.
+Routing rule: Function 2 is the fallback whenever the mode is absent or ambiguous, including short requests such as “出个视频”, topic-only requests, headline/CTA copy, screenshots, tables, and ordinary matrix-video requests. Select Function 1 only when the user explicitly requests full-script production, narration/voiceover, semantic storyboarding, speech-synced subtitles, or preservation of a long script as a complete narrated video. An explicit mode always wins. Never switch a Function 2 job to Function 1 merely because library media is missing.
 
 ## Defaults
 
@@ -38,11 +40,11 @@ Routing rule: an explicit top/middle/bottom layout request selects Function 2. O
 - Use the native-feed, problem-solution light-motion style: readable, human, direct, and less polished than a cinematic ad or slide deck.
 - For Function 1, prefer client-supplied assets, then semantically relevant library records whose `状态` is `可使用`, then AI-generated images as fallback. For Function 2, stop after client and approved-library assets; AI generation is forbidden. Copy selected library files into the project before rendering.
 - Generate missing images with the available AI image-generation capability only for Function 1. Do not require a third-party image API.
-- Use Alibaba Cloud Bailian CosyVoice for Chinese narration by default. If the user asks for no narration, set `voice.enabled` to `false`, give every scene an explicit reading-duration, and render a silent AAC compatibility track without calling TTS.
-- Include burned-in Chinese subtitles and restrained semantic sound effects.
+- In Function 1, use Alibaba Cloud Bailian CosyVoice for Chinese narration by default. If the user asks for no narration, set `voice.enabled` to `false`, give every scene an explicit reading-duration, and render a silent AAC compatibility track without calling TTS. Function 2 defaults to no narration.
+- Function 1 includes burned-in Chinese subtitles and restrained semantic sound effects. Function 2 uses persistent top and bottom copy instead of speech-synced subtitles.
 - Set BGM to `auto` when a configured library has a suitable track and the user has not requested silence. An explicit no-BGM instruction always wins. With narration, keep music subordinate and enable ducking; without narration, use a restrained full music bed.
 - Derive total duration from the copy, semantic scenes, and actual synthesized audio. Do not force a target duration.
-- Generate a dedicated cover from the copy and use it as the first visible frame.
+- In Function 1, generate a dedicated cover from the copy and use it as the first visible frame. In Function 2, the completed template layout itself is the first visible frame.
 - Function 1 uses full-frame media by default. Function 2 uses the `text-media-text` layout in [the layout template reference](references/layout-templates.md), with its `native-bold` variant unless the user asks for a restrained editorial card style.
 - Return only the final MP4 to the user unless they request intermediate artifacts.
 
@@ -58,7 +60,7 @@ Routing rule: an explicit top/middle/bottom layout request selects Function 2. O
 
 For Function 1, the only required input is the client's complete copy. Infer the topic, audience, promise, tone, visual world, CTA, and reasonable scene count. Use supplied brand assets, required wording, products, offers, disclaimers, or platform constraints when present. Treat the complete copy as retrieval context; do not select material from a scene sentence in isolation.
 
-For Function 2, require a top title and bottom subtitle/CTA. Infer content context, visual direction, reading duration, and asset-search terms. When text comes from screenshots, extract visible copy and normalize obvious masking such as `小○子` only when the intended character is unambiguous; otherwise preserve the visible wording or ask for the missing term. Do not reproduce play buttons, progress bars, account labels, or other platform UI from screenshot references.
+For Function 2, use a top title and bottom subtitle/CTA. When the user asks Codex to create copy from a topic, generate these fields without asking them to choose a function; ask only for the topic when no subject can be inferred. Infer content context, visual direction, reading duration, and asset-search terms. When text comes from screenshots, extract visible copy and normalize obvious masking such as `小○子` only when the intended character is unambiguous; otherwise preserve the visible wording or ask for the missing term. Do not reproduce play buttons, progress bars, account labels, or other platform UI from screenshot references.
 
 If the copy already contains a CTA, preserve its intent. Otherwise choose one CTA from a constrained cross-platform pool and vary its wording: comment keyword, private message, follow for the next part, or save/share. Do not invent discounts, results, credentials, or guarantees.
 
