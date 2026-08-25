@@ -10,6 +10,9 @@ step.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+from functools import lru_cache
+import hashlib
 import json
 import math
 import os
@@ -21,13 +24,17 @@ import sys
 import tempfile
 from typing import Any
 
-from template_policy import recommended_duration, required_media_count
+from template_policy import fallback_emphasis, recommended_duration, required_media_count, resolve_emphasis
 
 
 SUPPORTED_MOTIONS = {"zoom-in", "zoom-out", "pan-left", "pan-right", "static"}
 SUPPORTED_TRANSITIONS = {"cut", "dissolve", "dip-black", "push"}
 SUPPORTED_LAYOUTS = {"full-frame", "text-media-text"}
 VIDEO_SUFFIXES = {".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"}
+SKILL_ROOT = Path(__file__).resolve().parent.parent
+TEMPLATE_CATALOG_PATH = SKILL_ROOT / "assets" / "templates" / "catalog.json"
+DEFAULT_FONTS_DIR = SKILL_ROOT / "assets" / "fonts"
+FONT_FAMILY_ALIASES = {"Microsoft YaHei": "Noto Sans SC"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -53,6 +60,19 @@ def load_json(path: Path) -> dict[str, Any]:
         raise RuntimeError(f"Invalid project JSON: {exc}") from exc
 
 
+def load_json_snapshot(path: Path) -> tuple[dict[str, Any], str]:
+    try:
+        raw = path.read_bytes()
+        payload = json.loads(raw.decode("utf-8"))
+    except FileNotFoundError as exc:
+        raise RuntimeError(f"Project manifest not found: {path}") from exc
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Invalid project JSON: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Project JSON root must be an object: {path}")
+    return payload, hashlib.sha256(raw).hexdigest()
+
+
 def save_json(path: Path, payload: dict[str, Any]) -> None:
     with tempfile.NamedTemporaryFile(
         mode="w", encoding="utf-8", newline="\n", dir=path.parent, suffix=".tmp", delete=False
@@ -66,8 +86,62 @@ def save_json(path: Path, payload: dict[str, Any]) -> None:
         temp_path.unlink(missing_ok=True)
 
 
+@contextmanager
+def unchanged_manifest_lock(path: Path, expected_sha256: str):
+    lock_path = path.with_name(f".{path.name}.lock")
+    try:
+        lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError as exc:
+        raise RuntimeError(f"Project manifest is locked by another process: {path}") from exc
+    try:
+        current = hashlib.sha256(path.read_bytes()).hexdigest()
+        if current != expected_sha256:
+            raise RuntimeError(f"Project manifest changed during processing: {path}")
+        yield
+    finally:
+        os.close(lock_fd)
+        lock_path.unlink(missing_ok=True)
+
+
+def save_json_if_unchanged(path: Path, payload: dict[str, Any], expected_sha256: str) -> str:
+    with unchanged_manifest_lock(path, expected_sha256):
+        save_json(path, payload)
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def publish_render_if_unchanged(
+    project_path: Path,
+    project: dict[str, Any],
+    expected_sha256: str,
+    candidate: Path,
+    output: Path,
+) -> str:
+    previous = candidate.with_name("previous-output.mp4")
+    with unchanged_manifest_lock(project_path, expected_sha256):
+        try:
+            if output.is_file():
+                os.replace(output, previous)
+            os.replace(candidate, output)
+            save_json(project_path, project)
+        except Exception:
+            output.unlink(missing_ok=True)
+            if previous.is_file():
+                os.replace(previous, output)
+            raise
+        previous.unlink(missing_ok=True)
+        return hashlib.sha256(project_path.read_bytes()).hexdigest()
+
+
+def manifest_path(value: str, label: str) -> Path:
+    text = value.strip()
+    if re.match(r"^[A-Za-z]:[\\/]", text) and os.name != "nt":
+        raise RuntimeError(f"{label} uses a Windows absolute path on this platform: {text}")
+    text = text.replace("\\", os.sep).replace("/", os.sep)
+    return Path(text)
+
+
 def resolve_input(root: Path, value: str, label: str) -> Path:
-    candidate = Path(value)
+    candidate = manifest_path(value, label)
     candidate = candidate.resolve() if candidate.is_absolute() else (root / candidate).resolve()
     if not candidate.is_file():
         raise RuntimeError(f"Missing {label}: {candidate}")
@@ -75,13 +149,152 @@ def resolve_input(root: Path, value: str, label: str) -> Path:
 
 
 def resolve_output(root: Path, value: str) -> Path:
-    candidate = Path(value)
+    candidate = manifest_path(value, "render output")
     candidate = candidate.resolve() if candidate.is_absolute() else (root / candidate).resolve()
     try:
         candidate.relative_to(root)
     except ValueError as exc:
         raise RuntimeError(f"Render output must stay inside project folder: {candidate}") from exc
     return candidate
+
+
+def merge_defaults(defaults: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
+    """Merge manifest fields over template defaults without mutating either input."""
+
+    merged = dict(defaults)
+    for key, value in overrides.items():
+        merged[key] = merge_defaults(merged[key], value) if isinstance(merged.get(key), dict) and isinstance(value, dict) else value
+    return merged
+
+
+def resolve_template(project: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
+    raw_layout = project.get("layout") or {}
+    if not isinstance(raw_layout, dict):
+        return project, None
+    template_id = raw_layout.get("template_id")
+    if template_id in (None, ""):
+        return project, None
+    template_id = str(template_id).strip()
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", template_id):
+        raise RuntimeError(f"Illegal template_id: {template_id!r}")
+    catalog = load_json(TEMPLATE_CATALOG_PATH)
+    if catalog.get("version") != 1 or not isinstance(catalog.get("templates"), list):
+        raise RuntimeError(f"Invalid template catalog: {TEMPLATE_CATALOG_PATH}")
+    templates = [item for item in catalog["templates"] if isinstance(item, dict)]
+    ids = [str(item.get("id") or "") for item in templates]
+    if len(ids) != len(set(ids)) or not template_id in ids:
+        raise RuntimeError(f"Unknown template_id: {template_id}")
+    template = next(item for item in templates if item["id"] == template_id)
+    template_layout = template.get("layout") or {}
+    template_render = template.get("render") or {}
+    if not isinstance(template_layout, dict) or not isinstance(template_render, dict):
+        raise RuntimeError(f"Invalid template defaults for {template_id}")
+    emphasis_profiles = catalog.get("emphasis_profiles") or {}
+    if not isinstance(emphasis_profiles, dict):
+        raise RuntimeError("Invalid emphasis_profiles in template catalog")
+    template_layout = dict(template_layout)
+    if template_id in emphasis_profiles:
+        if not isinstance(emphasis_profiles[template_id], dict):
+            raise RuntimeError(f"Invalid emphasis profile for {template_id}")
+        template_layout["emphasis_profile"] = emphasis_profiles[template_id]
+    resolved = dict(project)
+    resolved["layout"] = merge_defaults(template_layout, raw_layout)
+    render = project.get("render") or {}
+    if not isinstance(render, dict):
+        raise RuntimeError("render must be an object")
+    resolved["render"] = merge_defaults(template_render, render)
+    return resolved, template_id
+
+
+def resolve_fonts_dir(root: Path, render: dict[str, Any]) -> Path:
+    value = render.get("fonts_dir")
+    if value in (None, ""):
+        candidate = DEFAULT_FONTS_DIR.resolve()
+    else:
+        candidate = manifest_path(str(value), "fonts_dir")
+        candidate = candidate.resolve() if candidate.is_absolute() else (root / candidate).resolve()
+        try:
+            candidate.relative_to(root)
+        except ValueError as exc:
+            raise RuntimeError(f"fonts_dir must stay inside project folder: {candidate}") from exc
+    if not candidate.is_dir():
+        raise RuntimeError(f"fonts_dir is not a directory: {candidate}")
+    return candidate
+
+
+def ffmpeg_filter_path(path: Path, root: Path) -> str:
+    try:
+        value = path.relative_to(root).as_posix()
+    except ValueError as exc:
+        raise RuntimeError(f"FFmpeg filter input must be staged inside the project: {path}") from exc
+    if not re.fullmatch(r"[A-Za-z0-9._/\-]+", value):
+        raise RuntimeError(f"FFmpeg filter path contains unsupported characters: {value}")
+    return value
+
+
+@lru_cache(maxsize=64)
+def cached_file_sha256(path_value: str, size: int, mtime_ns: int) -> str:
+    digest = hashlib.sha256()
+    with Path(path_value).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def resolve_font_files(source: Path, families: set[str]) -> list[Path]:
+    font_files = [path for path in source.iterdir() if path.is_file() and path.suffix.lower() in {".ttf", ".otf", ".ttc"}]
+    source_manifest = source / "sources.json"
+    if source_manifest.is_file():
+        try:
+            font_sources = json.loads(source_manifest.read_text(encoding="utf-8"))["fonts"]
+            selected_families = {FONT_FAMILY_ALIASES.get(family, family) for family in families} | {"Noto Sans SC"}
+            source_families = [str(item["family"]) for item in font_sources]
+            if len(source_families) != len(set(source_families)):
+                raise RuntimeError(f"Bundled font source manifest has duplicate families: {source_manifest}")
+            missing_families = selected_families - set(source_families)
+            if missing_families:
+                raise RuntimeError(f"Bundled font families are missing: {', '.join(sorted(missing_families))}")
+            selected_sources = [item for item in font_sources if str(item["family"]) in selected_families]
+        except (KeyError, TypeError, json.JSONDecodeError) as exc:
+            raise RuntimeError(f"Invalid bundled font source manifest: {source_manifest}") from exc
+        font_files = []
+        for item in selected_sources:
+            filename = str(item.get("file") or "")
+            if Path(filename).name != filename:
+                raise RuntimeError(f"Bundled font source manifest contains an unsafe path: {filename}")
+            path = source / filename
+            if not path.is_file():
+                raise RuntimeError(f"Bundled font file is missing: {path}")
+            expected = str(item.get("sha256") or "").lower()
+            stat = path.stat()
+            actual = cached_file_sha256(str(path), stat.st_size, stat.st_mtime_ns)
+            if not re.fullmatch(r"[0-9a-f]{64}", expected) or actual != expected:
+                raise RuntimeError(f"Bundled font hash mismatch: {path}")
+            font_files.append(path)
+    if not font_files:
+        raise RuntimeError(f"fonts_dir contains no supported font files: {source}")
+    return font_files
+
+
+def stage_fonts(font_files: list[Path], destination: Path) -> Path:
+    staged = destination / "fonts"
+    staged.mkdir()
+    for source_file in font_files:
+        target = staged / source_file.name
+        try:
+            os.link(source_file, target)
+        except OSError:
+            shutil.copy2(source_file, target)
+    return staged
+
+
+def required_font_families(render: dict[str, Any], layout: dict[str, Any] | None) -> set[str]:
+    families = {validated_font(render.get("subtitle_font", "Microsoft YaHei"), "render.subtitle_font")}
+    if layout:
+        families.update(font for font in (layout["top_font"], layout["bottom_font"]) if font)
+        if layout["kicker"] and layout["kicker"]["font"]:
+            families.add(layout["kicker"]["font"])
+    return families
 
 
 def validate_tools() -> tuple[str, str]:
@@ -220,7 +433,7 @@ def transition_fade(transition: str) -> float:
 
 
 def split_caption(text: str, max_chars: int = 14) -> list[str]:
-    compact = re.sub(r"\s+", "", text.strip())
+    compact = re.sub(r"\s+", " ", text.strip())
     if not compact:
         return []
     phrases = [part for part in re.split(r"(?<=[，。！？；：,.!?;:])", compact) if part]
@@ -249,21 +462,137 @@ def ass_escape(text: str) -> str:
     return text.replace("\\", r"\\").replace("{", r"\{").replace("}", r"\}").replace("\n", r"\N")
 
 
-def wrap_layout_text(text: str, max_chars: int, max_lines: int) -> tuple[str, int]:
-    manual_lines = [re.sub(r"\s+", "", item.strip()) for item in re.split(r"\r?\n", text) if item.strip()]
+def wrap_layout_text(
+    text: str,
+    max_chars: int,
+    max_lines: int,
+    protected_terms: list[str] | None = None,
+) -> tuple[str, int]:
+    manual_lines = [re.sub(r"[ \t]+", " ", item.strip()) for item in re.split(r"\r?\n", text) if item.strip()]
     if len(manual_lines) > 1 and len(manual_lines) <= max_lines and max(map(len, manual_lines)) <= max_chars + 3:
         return "\n".join(manual_lines), max(map(len, manual_lines))
 
-    compact = re.sub(r"\s+", "", text.strip())
+    compact = ""
+    for line in manual_lines:
+        if compact and compact[-1].isascii() and compact[-1].isalnum() and line[0].isascii() and line[0].isalnum():
+            compact += " "
+        compact += line
     if not compact:
         return "", 0
     effective_max = max(max_chars, math.ceil(len(compact) / max_lines))
-    chunks = split_caption(compact, max_chars=effective_max)
-    if len(chunks) > max_lines:
-        effective_max = math.ceil(len(compact) / max_lines)
-        chunks = [compact[index : index + effective_max] for index in range(0, len(compact), effective_max)]
-    chunks = chunks[:max_lines]
+    protected = sorted({term for term in protected_terms or [] if term and term in compact}, key=len, reverse=True)
+    if protected:
+        tokens: list[str] = []
+        cursor = 0
+        while cursor < len(compact):
+            matched = next((term for term in protected if compact.startswith(term, cursor)), None)
+            token = matched or compact[cursor]
+            tokens.append(token)
+            cursor += len(token)
+
+        def pack(width: int) -> list[str]:
+            packed: list[str] = []
+            line = ""
+            for token in tokens:
+                if line and len(line) + len(token) > width:
+                    packed.append(line)
+                    line = token
+                else:
+                    line += token
+            if line:
+                packed.append(line)
+            return packed
+
+        effective_max = max(effective_max, max(map(len, protected), default=0))
+        chunks = pack(effective_max)
+        while len(chunks) > max_lines and effective_max < len(compact):
+            effective_max += 1
+            chunks = pack(effective_max)
+    else:
+        chunks = split_caption(compact, max_chars=effective_max)
+        if len(chunks) > max_lines:
+            effective_max = math.ceil(len(compact) / max_lines)
+            chunks = [compact[index : index + effective_max] for index in range(0, len(compact), effective_max)]
     return "\n".join(chunks), max(map(len, chunks), default=0)
+
+
+def wrap_highlighted_text(
+    text: str,
+    max_chars: int,
+    max_lines: int,
+    highlights: list[dict[str, Any]],
+) -> tuple[str, int, list[dict[str, Any]]]:
+    """Wrap exact semantic spans as indivisible tokens and retain render offsets."""
+
+    exact = [
+        (index, item)
+        for index, item in enumerate(highlights)
+        if type(item.get("source_start")) is int and type(item.get("source_end")) is int
+    ]
+    if not exact:
+        wrapped, longest = wrap_layout_text(
+            text, max_chars, max_lines, [str(item.get("text") or "") for item in highlights]
+        )
+        return wrapped, longest, highlights
+
+    tokens: list[tuple[str, int | None, bool]] = []
+    cursor = 0
+    for item_index, item in sorted(exact, key=lambda value: int(value[1]["source_start"])):
+        start, end = int(item["source_start"]), int(item["source_end"])
+        if start < cursor or end <= start or end > len(text) or text[start:end] != item["text"]:
+            raise RuntimeError("resolved emphasis span no longer matches the displayed source text")
+        if "\n" in item["text"] or "\r" in item["text"]:
+            raise RuntimeError("emphasis spans cannot cross manual line breaks")
+        for char in text[cursor:start]:
+            tokens.append((char, None, char in "\r\n"))
+        tokens.append((text[start:end], item_index, False))
+        cursor = end
+    for char in text[cursor:]:
+        tokens.append((char, None, char in "\r\n"))
+
+    visible_length = sum(len(value) for value, _, forced in tokens if not forced)
+    widest_token = max((len(value) for value, _, forced in tokens if not forced), default=0)
+    width = max(max_chars, widest_token, math.ceil(visible_length / max_lines))
+
+    def pack(line_width: int) -> list[list[tuple[str, int | None, bool]]]:
+        lines: list[list[tuple[str, int | None, bool]]] = [[]]
+        line_length = 0
+        for token in tokens:
+            value, _, forced = token
+            if forced:
+                if lines[-1]:
+                    lines.append([])
+                line_length = 0
+                continue
+            if lines[-1] and line_length + len(value) > line_width:
+                lines.append([])
+                line_length = 0
+            lines[-1].append(token)
+            line_length += len(value)
+        return [line for line in lines if line]
+
+    lines = pack(width)
+    while len(lines) > max_lines and width < max(1, visible_length):
+        width += 1
+        lines = pack(width)
+    if len(lines) > max_lines:
+        raise RuntimeError(f"layout text needs {len(lines)} lines but the template allows {max_lines}; shorten or split it")
+
+    adjusted = [dict(item) for item in highlights]
+    parts: list[str] = []
+    position = 0
+    for line_index, line in enumerate(lines):
+        if line_index:
+            parts.append("\n")
+            position += 1
+        for value, item_index, _ in line:
+            if item_index is not None:
+                adjusted[item_index]["render_start"] = position
+                adjusted[item_index]["render_end"] = position + len(value)
+            parts.append(value)
+            position += len(value)
+    wrapped = "".join(parts)
+    return wrapped, max((sum(len(value) for value, _, _ in line) for line in lines), default=0), adjusted
 
 
 def ass_primary_color(value: str) -> str:
@@ -284,70 +613,286 @@ def ffmpeg_color_alpha(value: str, default: str, opacity: float) -> str:
     return f"{ffmpeg_color(value, default)}@{min(1.0, max(0.0, opacity)):.3f}"
 
 
+def styled_highlight(
+    text: str,
+    role: str,
+    layout: dict[str, Any],
+    occurrence: int | None = None,
+    source_start: int | None = None,
+    source_end: int | None = None,
+    overrides: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    profile = layout["emphasis_profile"]
+    overrides = overrides or {}
+    role_colors = profile["role_colors"]
+    try:
+        scale = float(overrides.get("scale", profile["scale"]))
+        min_scale = float(overrides.get("min_scale", profile["min_scale"]))
+        angle = float(overrides.get("angle", profile["angle"]))
+        outline_width = int(overrides.get("outline_width", profile["outline_width"]))
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("highlight style scale, angle, and outline width must be numeric") from exc
+    return {
+        "text": text,
+        "role": role,
+        "occurrence": occurrence,
+        "source_start": source_start,
+        "source_end": source_end,
+        "color": validated_color(
+            overrides.get("color") or role_colors.get(role) or profile["color"], "highlight.color"
+        ),
+        "scale": min(1.5, max(1.0, scale)),
+        "min_scale": min(1.2, max(1.0, min(min_scale, scale))),
+        "outline_width": min(16, max(0, outline_width)),
+        "outline_color": validated_color(
+            overrides.get("outline_color") or profile["outline_color"], "highlight.outline_color"
+        ),
+        "underline": bool(overrides.get("underline", profile["underline"])),
+        "italic": bool(overrides.get("italic", profile["italic"])),
+        "bold": bool(overrides.get("bold", profile["bold"])),
+        "angle": min(8.0, max(-8.0, angle)),
+    }
+
+
 def normalize_highlights(
-    scene: dict[str, Any], field: str, text: str, layout: dict[str, Any]
-) -> list[tuple[str, str]]:
+    scene: dict[str, Any],
+    field: str,
+    text: str,
+    layout: dict[str, Any],
+    emphasis: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     raw = scene.get(field)
-    highlights: list[tuple[str, str]] = []
+    highlights: list[dict[str, Any]] = []
+    base_outline = layout["top_text_outline"] if field == "top_highlights" else layout["bottom_text_outline"]
+
+    def legacy_highlight(term: str, color: str) -> dict[str, Any]:
+        return styled_highlight(
+            term,
+            "conclusion",
+            layout,
+            overrides={
+                "color": color,
+                "scale": 1,
+                "min_scale": 1,
+                "outline_width": base_outline,
+                "outline_color": layout["text_outline_color"],
+                "underline": False,
+                "italic": False,
+                "bold": True,
+                "angle": 0,
+            },
+        )
+
     if isinstance(raw, list):
         for index, item in enumerate(raw):
             if isinstance(item, dict):
                 term = str(item.get("text") or "").strip()
                 color = str(item.get("color") or layout["accent_color"])
+                if term:
+                    highlights.append(legacy_highlight(term, color))
             else:
                 term = str(item).strip()
                 color = layout["accent_color"] if index % 2 == 0 else layout["secondary_accent_color"]
-            if term:
-                highlights.append((term, color))
+                if term:
+                    highlights.append(legacy_highlight(term, color))
         return highlights
 
-    if not layout["auto_highlight"]:
+    region = "top" if field == "top_highlights" else "bottom"
+    region_valid = bool(emphasis and emphasis.get("region_valid", {}).get(region))
+    canonical_text = str(emphasis.get(f"{region}_text") or "") if emphasis else ""
+    if emphasis and emphasis.get("input_valid") and region_valid and text == canonical_text:
+        for span in emphasis.get(region, []):
+            term = str(span.get("text") or "")
+            if not term:
+                continue
+            highlights.append(
+                styled_highlight(
+                    term,
+                    str(span["role"]),
+                    layout,
+                    source_start=int(span["start"]),
+                    source_end=int(span["end"]),
+                )
+            )
+        return highlights
+
+    invalid_semantic_region = bool(
+        emphasis and emphasis.get("input_present") and not region_valid
+    )
+    if not invalid_semantic_region:
+        if not layout["auto_highlight"]:
+            return []
+        candidates: list[str] = []
+        candidates.extend(re.findall(r"\d+(?:\.\d+)?%?", text))
+        candidates.extend(
+            match.strip() for match in re.findall(r"[“\"「『]([^”\"」』]{1,10})[”\"」』]", text)
+        )
+        if region == "bottom" and "：" in text:
+            tail = text.rsplit("：", 1)[-1].strip("。！!？? ，,")
+            if 1 <= len(tail) <= 8:
+                candidates.append(tail)
+        for index, term in enumerate(dict.fromkeys(term for term in candidates if term)):
+            color = layout["accent_color"] if index % 2 == 0 else layout["secondary_accent_color"]
+            highlights.append(legacy_highlight(term, color))
+        return highlights
+
+    if not emphasis:
         return []
-
-    candidates: list[str] = []
-    candidates.extend(re.findall(r"\d+(?:\.\d+)?%?", text))
-    candidates.extend(match.strip() for match in re.findall(r"[“\"「『]([^”\"」』]{1,10})[”\"」』]", text))
-    if field == "bottom_highlights" and "：" in text:
-        tail = text.rsplit("：", 1)[-1].strip("。！!？? ，,")
-        if 1 <= len(tail) <= 8:
-            candidates.append(tail)
-
-    seen: set[str] = set()
-    for index, term in enumerate(candidates):
-        if not term or term in seen:
-            continue
-        seen.add(term)
-        color = layout["accent_color"] if index % 2 == 0 else layout["secondary_accent_color"]
-        highlights.append((term, color))
+    for span in fallback_emphasis(text, region):
+        term = str(span["text"])
+        highlights.append(
+            styled_highlight(
+                term,
+                str(span["role"]),
+                layout,
+                source_start=int(span["start"]),
+                source_end=int(span["end"]),
+            )
+        )
     return highlights
 
 
-def ass_highlight_text(text: str, highlights: list[tuple[str, str]], base_color: str) -> str:
-    intervals: list[tuple[int, int, str]] = []
+def highlight_intervals(
+    text: str, highlights: list[dict[str, Any]]
+) -> list[tuple[int, int, dict[str, Any]]]:
+    intervals: list[tuple[int, int, dict[str, Any]]] = []
     occupied = [False] * len(text)
-    for term, color in sorted(highlights, key=lambda item: len(item[0]), reverse=True):
+    direct = [
+        item
+        for item in highlights
+        if type(item.get("render_start")) is int and type(item.get("render_end")) is int
+    ]
+    for item in sorted(direct, key=lambda value: int(value["render_start"])):
+        start, end = int(item["render_start"]), int(item["render_end"])
+        if start < 0 or end <= start or end > len(text) or text[start:end] != item["text"]:
+            raise RuntimeError("wrapped emphasis span no longer matches the rendered text")
+        if any(occupied[start:end]):
+            raise RuntimeError("wrapped emphasis spans overlap")
+        intervals.append((start, end, item))
+        for index in range(start, end):
+            occupied[index] = True
+
+    for item in sorted(
+        (value for value in highlights if value not in direct),
+        key=lambda value: len(str(value.get("text") or "")),
+        reverse=True,
+    ):
+        term = str(item.get("text") or "")
+        wanted = item.get("occurrence")
+        occurrence = 0
         cursor = 0
         while term and cursor < len(text):
             start = text.find(term, cursor)
             if start < 0:
                 break
             end = start + len(term)
-            if not any(occupied[start:end]):
-                intervals.append((start, end, color))
+            if (wanted is None or occurrence == wanted) and not any(occupied[start:end]):
+                intervals.append((start, end, item))
                 for index in range(start, end):
                     occupied[index] = True
-            cursor = end
+                if wanted is not None:
+                    break
+            occurrence += 1
+            cursor = start + 1 if wanted is not None else end
+    return sorted(intervals, key=lambda value: value[0])
+
+
+def weighted_line_length(text: str, highlights: list[dict[str, Any]]) -> float:
+    intervals = highlight_intervals(text, highlights)
+    longest = 0.0
+    line_start = 0
+    for line in text.split("\n"):
+        line_end = line_start + len(line)
+        weighted = float(len(line))
+        for start, end, item in intervals:
+            overlap = max(0, min(end, line_end) - max(start, line_start))
+            weighted += overlap * (float(item["scale"]) - 1.0)
+        longest = max(longest, weighted)
+        line_start = line_end + 1
+    return longest
+
+
+def fit_emphasis(
+    text: str,
+    highlights: list[dict[str, Any]],
+    font_size: int,
+    min_font_size: int,
+    default_font_size: int,
+    max_chars: int,
+) -> tuple[int, list[dict[str, Any]]]:
+    """Fit in two passes: reduce emphasis scale first, then the base size."""
+
+    fitted = [dict(item) for item in highlights]
+    capacity = max_chars * default_font_size / max(1, font_size)
+    desired = weighted_line_length(text, fitted)
+    if desired <= capacity:
+        return font_size, fitted
+
+    if not fitted:
+        required_size = math.floor(default_font_size * max_chars / max(1.0, desired))
+        if required_size < min_font_size:
+            raise RuntimeError("layout text cannot fit at the minimum font size; shorten or split it")
+        return required_size, fitted
+
+    minimum = [dict(item, scale=min(float(item["scale"]), float(item["min_scale"]))) for item in fitted]
+    minimum_width = weighted_line_length(text, minimum)
+    if minimum_width <= capacity and desired > minimum_width:
+        ratio = (capacity - minimum_width) / (desired - minimum_width)
+        for item, low in zip(fitted, minimum):
+            item["scale"] = float(low["scale"]) + (float(item["scale"]) - float(low["scale"])) * ratio
+        return font_size, fitted
+
+    fitted = minimum
+    font_size = max(min_font_size, math.floor(default_font_size * max_chars / max(1.0, minimum_width)))
+    capacity = max_chars * default_font_size / max(1, font_size)
+    if weighted_line_length(text, fitted) > capacity:
+        for item in fitted:
+            item["scale"] = 1.0
+        plain_width = weighted_line_length(text, fitted)
+        required_size = math.floor(default_font_size * max_chars / max(1.0, plain_width))
+        if required_size < min_font_size:
+            raise RuntimeError("layout text cannot fit at the minimum font size; shorten or split it")
+        font_size = required_size
+    final_capacity = max_chars * default_font_size / max(1, font_size)
+    if weighted_line_length(text, fitted) > final_capacity + 0.001:
+        raise RuntimeError("layout text still overflows after fitting; shorten or split it")
+    return font_size, fitted
+
+
+def ass_highlight_text(
+    text: str,
+    highlights: list[dict[str, Any]],
+    base_color: str,
+    base_outline_width: int = 0,
+    base_outline_color: str = "#000000",
+) -> str:
+    intervals = highlight_intervals(text, highlights)
     if not intervals:
         return ass_escape(text)
 
-    intervals.sort(key=lambda item: item[0])
     parts: list[str] = []
     cursor = 0
     base = ass_primary_color(base_color)
-    for start, end, color in intervals:
+    base_outline = ass_primary_color(base_outline_color)
+    for start, end, item in intervals:
         if start > cursor:
             parts.append(ass_escape(text[cursor:start]))
-        parts.append(f"{{\\1c{ass_primary_color(color)}}}{ass_escape(text[start:end])}{{\\1c{base}}}")
+        scale = round(float(item["scale"]) * 100)
+        tags = (
+            f"\\1c{ass_primary_color(str(item['color']))}"
+            f"\\fscx{scale}\\fscy{scale}"
+            f"\\bord{int(item['outline_width'])}"
+            f"\\3c{ass_primary_color(str(item['outline_color']))}"
+            f"\\u{1 if item['underline'] else 0}"
+            f"\\i{1 if item['italic'] else 0}"
+            f"\\b{1 if item['bold'] else 0}"
+            f"\\frz{float(item['angle']):.2f}"
+        )
+        reset = (
+            f"\\1c{base}\\fscx100\\fscy100\\bord{base_outline_width}\\3c{base_outline}"
+            "\\u0\\i0\\b1\\frz0"
+        )
+        parts.append(f"{{{tags}}}{ass_escape(text[start:end])}{{{reset}}}")
         cursor = end
     if cursor < len(text):
         parts.append(ass_escape(text[cursor:]))
@@ -369,6 +914,131 @@ def nonnegative_even_int(value: Any, default: int) -> int:
         parsed = default
     parsed = max(0, parsed)
     return parsed - parsed % 2
+
+
+def validated_color(value: Any, label: str) -> str:
+    color = str(value).strip()
+    if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
+        raise RuntimeError(f"{label} must be a #RRGGBB color")
+    return color
+
+
+def validated_font(value: Any, label: str, allow_empty: bool = False) -> str:
+    font = str(value or "").strip()
+    if allow_empty and not font:
+        return ""
+    if not re.fullmatch(r"[\w .\-]{1,120}", font):
+        raise RuntimeError(f"{label} contains unsupported characters")
+    return font
+
+
+def bounded_int(value: Any, label: str, default: int, minimum: int, maximum: int) -> int:
+    try:
+        parsed = int(default if value is None else value)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"{label} must be an integer") from exc
+    if not minimum <= parsed <= maximum:
+        raise RuntimeError(f"{label} must be between {minimum} and {maximum}")
+    return parsed
+
+
+def resolve_emphasis_profile(raw: Any, accent: str, secondary: str) -> dict[str, Any]:
+    if raw is None:
+        raw = {}
+    if not isinstance(raw, dict):
+        raise RuntimeError("layout.emphasis_profile must be an object")
+    try:
+        scale = float(raw.get("scale", 1.16))
+        min_scale = float(raw.get("min_scale", 1.05))
+        angle = float(raw.get("angle", 0))
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("layout.emphasis_profile scale and angle must be numeric") from exc
+    if not 1 <= scale <= 1.5 or not 1 <= min_scale <= min(scale, 1.2) or not -8 <= angle <= 8:
+        raise RuntimeError("layout.emphasis_profile scale or angle is outside the supported range")
+    role_colors = raw.get("role_colors") or {}
+    if not isinstance(role_colors, dict):
+        raise RuntimeError("layout.emphasis_profile.role_colors must be an object")
+    unknown_roles = set(role_colors) - {"number", "contrast", "pain", "benefit", "conclusion", "cta"}
+    if unknown_roles:
+        raise RuntimeError(f"layout.emphasis_profile.role_colors contains unsupported roles: {sorted(unknown_roles)}")
+    resolved_roles = {
+        "number": secondary,
+        "contrast": secondary,
+        "pain": secondary,
+        "benefit": accent,
+        "conclusion": accent,
+        "cta": accent,
+    }
+    for role, color in role_colors.items():
+        resolved_roles[role] = validated_color(color, f"layout.emphasis_profile.role_colors.{role}")
+    return {
+        "scale": scale,
+        "min_scale": min_scale,
+        "color": validated_color(raw.get("color", accent), "layout.emphasis_profile.color"),
+        "outline_width": bounded_int(
+            raw.get("outline_width"), "layout.emphasis_profile.outline_width", 0, 0, 16
+        ),
+        "outline_color": validated_color(
+            raw.get("outline_color", "#000000"), "layout.emphasis_profile.outline_color"
+        ),
+        "underline": bool(raw.get("underline", False)),
+        "italic": bool(raw.get("italic", False)),
+        "bold": bool(raw.get("bold", True)),
+        "angle": angle,
+        "role_colors": resolved_roles,
+    }
+
+
+def resolve_kicker(raw: Any, width: int, height: int) -> dict[str, Any] | None:
+    if raw in (None, False):
+        return None
+    if not isinstance(raw, dict):
+        raise RuntimeError("layout.kicker must be an object")
+    text = str(raw.get("text") or "").strip()
+    if not text or len(text) > 120:
+        raise RuntimeError("layout.kicker.text must contain 1-120 characters")
+    try:
+        x, y = int(raw.get("x", 40)), int(raw.get("y", 40))
+        font_size, padding = int(raw.get("font_size", 36)), int(raw.get("padding", 12))
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("layout.kicker positions and sizes must be integers") from exc
+    if not 0 <= x <= width or not 0 <= y <= height or not 12 <= font_size <= height // 2 or not 0 <= padding <= 120:
+        raise RuntimeError("layout.kicker values are outside the canvas or reasonable range")
+    return {
+        "text": text,
+        "x": x,
+        "y": y,
+        "font_size": font_size,
+        "color": validated_color(raw.get("color", "#FFFFFF"), "layout.kicker.color"),
+        "background_color": validated_color(raw.get("background_color", "#111111"), "layout.kicker.background_color"),
+        "font": validated_font(raw.get("font"), "layout.kicker.font", allow_empty=True),
+        "padding": padding,
+    }
+
+
+def resolve_surface_boxes(raw: Any, width: int, height: int) -> list[dict[str, Any]]:
+    if raw in (None, False):
+        return []
+    if not isinstance(raw, list) or len(raw) > 24:
+        raise RuntimeError("layout.surface_boxes must contain at most 24 rectangles")
+    boxes: list[dict[str, Any]] = []
+    for index, item in enumerate(raw, start=1):
+        if not isinstance(item, dict):
+            raise RuntimeError(f"layout.surface_boxes[{index}] must be an object")
+        try:
+            x, y = int(item.get("x")), int(item.get("y"))
+            box_width, box_height = int(item.get("width")), int(item.get("height"))
+            opacity = float(item.get("opacity", 1))
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError(f"layout.surface_boxes[{index}] needs numeric geometry") from exc
+        if x < 0 or y < 0 or box_width <= 0 or box_height <= 0 or x + box_width > width or y + box_height > height or not 0 <= opacity <= 1:
+            raise RuntimeError(f"layout.surface_boxes[{index}] must stay within the canvas")
+        boxes.append({
+            "x": x, "y": y, "width": box_width, "height": box_height,
+            "color": validated_color(item.get("color", "#000000"), f"layout.surface_boxes[{index}].color"),
+            "opacity": opacity,
+        })
+    return boxes
 
 
 def resolve_layout(
@@ -423,6 +1093,19 @@ def resolve_layout(
         warnings.append(f"unsupported background_mode {background_mode!r}; used 'solid'")
         background_mode = "solid"
 
+    top_font_size = bounded_int(raw.get("top_font_size"), "layout.top_font_size", 80 if native_bold else 76, 12, height // 2)
+    bottom_font_size = bounded_int(raw.get("bottom_font_size"), "layout.bottom_font_size", 70 if native_bold else 62, 12, height // 2)
+    top_min_font_size = min(
+        top_font_size,
+        bounded_int(raw.get("top_min_font_size"), "layout.top_min_font_size", 52 if native_bold else 48, 12, height // 2),
+    )
+    bottom_min_font_size = min(
+        bottom_font_size,
+        bounded_int(raw.get("bottom_min_font_size"), "layout.bottom_min_font_size", 46 if native_bold else 42, 12, height // 2),
+    )
+
+    accent_color = str(raw.get("accent_color", "#FFD400" if native_bold else "#D97745"))
+    secondary_accent_color = str(raw.get("secondary_accent_color", "#FF453A"))
     return {
         "preset": preset,
         "variant": variant,
@@ -446,10 +1129,12 @@ def resolve_layout(
         "media_height": media_height,
         "top_text_y": top_y,
         "bottom_text_y": bottom_y,
-        "top_font_size": int(raw.get("top_font_size", 80 if native_bold else 76)),
-        "bottom_font_size": int(raw.get("bottom_font_size", 70 if native_bold else 62)),
-        "top_min_font_size": int(raw.get("top_min_font_size", 52 if native_bold else 48)),
-        "bottom_min_font_size": int(raw.get("bottom_min_font_size", 46 if native_bold else 42)),
+        "top_font": validated_font(raw.get("top_font"), "layout.top_font", allow_empty=True),
+        "bottom_font": validated_font(raw.get("bottom_font"), "layout.bottom_font", allow_empty=True),
+        "top_font_size": top_font_size,
+        "bottom_font_size": bottom_font_size,
+        "top_min_font_size": top_min_font_size,
+        "bottom_min_font_size": bottom_min_font_size,
         "top_max_chars": max(6, int(raw.get("top_max_chars", 12))),
         "top_max_lines": min(4, max(1, int(raw.get("top_max_lines", 4 if native_bold else 2)))),
         "bottom_max_chars": max(6, int(raw.get("bottom_max_chars", 12 if native_bold else 14))),
@@ -460,11 +1145,16 @@ def resolve_layout(
         "top_text_outline": min(12, max(0, int(raw.get("top_text_outline", 8 if native_bold else 0)))),
         "bottom_text_outline": min(12, max(0, int(raw.get("bottom_text_outline", 7 if native_bold else 0)))),
         "text_shadow": min(6, max(0, int(raw.get("text_shadow", 2 if native_bold else 0)))),
-        "accent_color": str(raw.get("accent_color", "#FFD400" if native_bold else "#D97745")),
-        "secondary_accent_color": str(raw.get("secondary_accent_color", "#FF453A")),
+        "accent_color": accent_color,
+        "secondary_accent_color": secondary_accent_color,
+        "emphasis_profile": resolve_emphasis_profile(
+            raw.get("emphasis_profile"), accent_color, secondary_accent_color
+        ),
         "auto_highlight": bool(raw.get("auto_highlight", native_bold)),
         "text_pop_in": bool(raw.get("text_pop_in", native_bold)),
         "bottom_text_mode": bottom_mode,
+        "kicker": resolve_kicker(raw.get("kicker"), width, height),
+        "surface_boxes": resolve_surface_boxes(raw.get("surface_boxes"), width, height),
     }
 
 
@@ -475,11 +1165,12 @@ def write_ass(
     height: int,
     timeline: list[dict[str, Any]],
     layout: dict[str, Any] | None,
+    emphasis: dict[str, Any] | None = None,
 ) -> None:
     render = project.get("render", {})
-    font = str(render.get("subtitle_font", "Microsoft YaHei"))
-    font_size = int(render.get("subtitle_font_size", 70))
-    margin_v = int(render.get("subtitle_margin_v", 250))
+    font = validated_font(render.get("subtitle_font", "Microsoft YaHei"), "render.subtitle_font")
+    font_size = bounded_int(render.get("subtitle_font_size"), "render.subtitle_font_size", 70, 12, height // 2)
+    margin_v = bounded_int(render.get("subtitle_margin_v"), "render.subtitle_margin_v", 250, 0, height)
     lines = [
         "[Script Info]",
         "ScriptType: v4.00+",
@@ -499,12 +1190,19 @@ def write_ass(
         top_color = ass_primary_color(layout["top_text_color"])
         bottom_color = ass_primary_color(layout["bottom_text_color"])
         outline_color = ass_primary_color(layout["text_outline_color"])
+        top_font = layout["top_font"] or font
+        bottom_font = layout["bottom_font"] or font
         lines.extend(
             [
-                f"Style: TopText,{font},{layout['top_font_size']},{top_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['top_text_outline']},{layout['text_shadow']},5,54,54,0,1",
-                f"Style: BottomText,{font},{layout['bottom_font_size']},{bottom_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['bottom_text_outline']},{layout['text_shadow']},5,54,54,0,1",
+                f"Style: TopText,{top_font},{layout['top_font_size']},{top_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['top_text_outline']},{layout['text_shadow']},5,54,54,0,1",
+                f"Style: BottomText,{bottom_font},{layout['bottom_font_size']},{bottom_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['bottom_text_outline']},{layout['text_shadow']},5,54,54,0,1",
             ]
         )
+        kicker = layout["kicker"]
+        if kicker:
+            lines.append(
+                f"Style: Kicker,{kicker['font'] or font},{kicker['font_size']},{ass_primary_color(kicker['color'])},&H00000000,{ass_primary_color(kicker['background_color'])},{ass_primary_color(kicker['background_color'])},-1,0,0,0,100,100,0,0,3,{kicker['padding']},0,7,0,0,0,1"
+            )
     lines.extend(
         [
             "",
@@ -512,6 +1210,13 @@ def write_ass(
             "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
         ]
     )
+
+    if layout and layout["kicker"] and timeline:
+        kicker = layout["kicker"]
+        end = timeline[-1]["start"] + timeline[-1]["duration"]
+        lines.append(
+            f"Dialogue: 3,{ass_time(0)},{ass_time(end)},Kicker,,0,0,0,,{{\\an7\\pos({kicker['x']},{kicker['y']})}}{ass_escape(kicker['text'])}"
+        )
 
     cover_title = str(project.get("cover", {}).get("title") or "").strip()
     cover_end = 0.0
@@ -529,28 +1234,48 @@ def write_ass(
         )
         cover_max_chars = layout["top_max_chars"] if layout else 10
         cover_max_lines = layout["top_max_lines"] if layout else 2
-        cover_text, cover_longest = wrap_layout_text(cover_title, cover_max_chars, cover_max_lines)
         if layout:
+            cover_highlights = (
+                normalize_highlights(
+                    timeline[0]["scene"], "top_highlights", cover_title, layout, emphasis
+                )
+                if cover_replaces_first_title
+                else []
+            )
+            cover_text, cover_longest, cover_highlights = wrap_highlighted_text(
+                cover_title,
+                cover_max_chars,
+                cover_max_lines,
+                cover_highlights,
+            )
             cover_size = max(
                 layout["top_min_font_size"],
                 round(layout["top_font_size"] * min(1.0, layout["top_max_chars"] / max(1, cover_longest))),
+            )
+            cover_size, cover_highlights = fit_emphasis(
+                cover_text,
+                cover_highlights,
+                cover_size,
+                layout["top_min_font_size"],
+                layout["top_font_size"],
+                layout["top_max_chars"],
             )
             cover_tag_parts = [f"\\an5", f"\\pos({width // 2},{layout['top_text_y']})", f"\\fs{cover_size}"]
             if layout["text_pop_in"]:
                 cover_tag_parts.extend(["\\fscx94", "\\fscy94", "\\t(0,220,\\fscx100\\fscy100)"])
             cover_tags = "{" + "".join(cover_tag_parts) + "}"
-            cover_highlights = (
-                normalize_highlights(timeline[0]["scene"], "top_highlights", cover_text, layout)
-                if cover_replaces_first_title
-                else []
-            )
             cover_rendered = ass_highlight_text(
-                cover_text, cover_highlights, layout["top_text_color"]
+                cover_text,
+                cover_highlights,
+                layout["top_text_color"],
+                layout["top_text_outline"],
+                layout["text_outline_color"],
             )
             lines.append(
                 f"Dialogue: 1,{ass_time(0)},{ass_time(cover_end)},TopText,,0,0,0,,{cover_tags}{cover_rendered}"
             )
         else:
+            cover_text, _ = wrap_layout_text(cover_title, cover_max_chars, cover_max_lines)
             lines.append(
                 f"Dialogue: 1,{ass_time(0)},{ass_time(cover_end)},Cover,,0,0,0,,{ass_escape(cover_text)}"
             )
@@ -563,12 +1288,26 @@ def write_ass(
                 fallback = scene.get("caption_chunks") or split_caption(str(scene.get("text") or ""), max_chars=12)
                 top_text = str(fallback[0]).strip() if fallback else ""
             if top_text:
-                top_text, top_longest = wrap_layout_text(
-                    top_text, max_chars=layout["top_max_chars"], max_lines=layout["top_max_lines"]
+                top_highlights = normalize_highlights(
+                    scene, "top_highlights", top_text, layout, emphasis
+                )
+                top_text, top_longest, top_highlights = wrap_highlighted_text(
+                    top_text,
+                    layout["top_max_chars"],
+                    layout["top_max_lines"],
+                    top_highlights,
                 )
                 top_size = max(
                     layout["top_min_font_size"],
                     round(layout["top_font_size"] * min(1.0, layout["top_max_chars"] / max(1, top_longest))),
+                )
+                top_size, top_highlights = fit_emphasis(
+                    top_text,
+                    top_highlights,
+                    top_size,
+                    layout["top_min_font_size"],
+                    layout["top_font_size"],
+                    layout["top_max_chars"],
                 )
                 top_start = entry["start"]
                 if entry is timeline[0] and cover_title:
@@ -583,12 +1322,19 @@ def write_ass(
                     if layout["text_pop_in"]:
                         top_tag_parts.extend(["\\fscx94", "\\fscy94", "\\t(0,220,\\fscx100\\fscy100)"])
                     top_tags = "{" + "".join(top_tag_parts) + "}"
-                    top_highlights = normalize_highlights(scene, "top_highlights", top_text, layout)
-                    top_rendered = ass_highlight_text(top_text, top_highlights, layout["top_text_color"])
+                    top_rendered = ass_highlight_text(
+                        top_text,
+                        top_highlights,
+                        layout["top_text_color"],
+                        layout["top_text_outline"],
+                        layout["text_outline_color"],
+                    )
                     lines.append(
                         f"Dialogue: 1,{ass_time(top_start)},{ass_time(entry['start'] + entry['duration'])},TopText,,0,0,0,,{top_tags}{top_rendered}"
                     )
         for overlay in scene.get("overlays") or []:
+            if not isinstance(overlay, dict):
+                raise RuntimeError("scene overlays must contain objects")
             text = str(overlay.get("text") or "").strip()
             if not text:
                 continue
@@ -596,11 +1342,13 @@ def write_ass(
             relative_end = min(entry["duration"], float(overlay.get("end", entry["duration"])))
             if relative_end <= relative_start:
                 continue
-            x = int(overlay.get("x", width // 2))
-            y = int(overlay.get("y", height // 2))
+            x = bounded_int(overlay.get("x"), "overlay.x", width // 2, 0, width)
+            y = bounded_int(overlay.get("y"), "overlay.y", height // 2, 0, height)
             style = "Info" if str(overlay.get("style", "overlay")).lower() == "info" else "Overlay"
-            alignment = int(overlay.get("alignment", 7 if style == "Info" else 5))
-            font_size_override = int(overlay.get("font_size", 0))
+            alignment = bounded_int(overlay.get("alignment"), "overlay.alignment", 7 if style == "Info" else 5, 1, 9)
+            font_size_override = bounded_int(overlay.get("font_size"), "overlay.font_size", 0, 0, height // 2)
+            if 0 < font_size_override < 12:
+                raise RuntimeError("overlay.font_size must be 0 or at least 12")
             color = ass_primary_color(str(overlay.get("color", "#FFFFFF")))
             tags = [f"\\an{alignment}", f"\\pos({x},{y})", "\\fad(120,120)", f"\\1c{color}"]
             if font_size_override > 0:
@@ -613,10 +1361,14 @@ def write_ass(
         fixed_bottom_text = str(scene.get("bottom_text") or "").strip() if layout else ""
         if layout and (layout["bottom_text_mode"] == "fixed" or fixed_bottom_text):
             fixed_bottom_text = fixed_bottom_text or str(scene.get("text") or "").strip()
-            fixed_bottom_text, bottom_longest = wrap_layout_text(
+            bottom_highlights = normalize_highlights(
+                scene, "bottom_highlights", fixed_bottom_text, layout, emphasis
+            )
+            fixed_bottom_text, bottom_longest, bottom_highlights = wrap_highlighted_text(
                 fixed_bottom_text,
-                max_chars=layout["bottom_max_chars"],
-                max_lines=layout["bottom_max_lines"],
+                layout["bottom_max_chars"],
+                layout["bottom_max_lines"],
+                bottom_highlights,
             )
             if fixed_bottom_text:
                 bottom_size = max(
@@ -625,6 +1377,14 @@ def write_ass(
                         layout["bottom_font_size"]
                         * min(1.0, layout["bottom_max_chars"] / max(1, bottom_longest))
                     ),
+                )
+                bottom_size, bottom_highlights = fit_emphasis(
+                    fixed_bottom_text,
+                    bottom_highlights,
+                    bottom_size,
+                    layout["bottom_min_font_size"],
+                    layout["bottom_font_size"],
+                    layout["bottom_max_chars"],
                 )
                 bottom_tag_parts = [
                     "\\an5",
@@ -635,9 +1395,12 @@ def write_ass(
                 if layout["text_pop_in"]:
                     bottom_tag_parts.extend(["\\fscx96", "\\fscy96", "\\t(0,260,\\fscx100\\fscy100)"])
                 bottom_tags = "{" + "".join(bottom_tag_parts) + "}"
-                bottom_highlights = normalize_highlights(scene, "bottom_highlights", fixed_bottom_text, layout)
                 bottom_rendered = ass_highlight_text(
-                    fixed_bottom_text, bottom_highlights, layout["bottom_text_color"]
+                    fixed_bottom_text,
+                    bottom_highlights,
+                    layout["bottom_text_color"],
+                    layout["bottom_text_outline"],
+                    layout["text_outline_color"],
                 )
                 lines.append(
                     f"Dialogue: 0,{ass_time(entry['start'])},{ass_time(entry['start'] + entry['duration'])},BottomText,,0,0,0,,{bottom_tags}{bottom_rendered}"
@@ -657,8 +1420,14 @@ def write_ass(
             part = narration_duration * weight / total_weight
             end = entry["start"] + narration_duration if index == len(chunks) - 1 else cursor + part
             if layout:
-                caption_text, caption_longest = wrap_layout_text(
-                    chunk, max_chars=layout["bottom_max_chars"], max_lines=layout["bottom_max_lines"]
+                bottom_highlights = normalize_highlights(
+                    scene, "bottom_highlights", chunk, layout, emphasis
+                )
+                caption_text, caption_longest, bottom_highlights = wrap_highlighted_text(
+                    chunk,
+                    layout["bottom_max_chars"],
+                    layout["bottom_max_lines"],
+                    bottom_highlights,
                 )
                 caption_size = max(
                     layout["bottom_min_font_size"],
@@ -667,10 +1436,21 @@ def write_ass(
                         * min(1.0, layout["bottom_max_chars"] / max(1, caption_longest))
                     ),
                 )
+                caption_size, bottom_highlights = fit_emphasis(
+                    caption_text,
+                    bottom_highlights,
+                    caption_size,
+                    layout["bottom_min_font_size"],
+                    layout["bottom_font_size"],
+                    layout["bottom_max_chars"],
+                )
                 bottom_tags = f"{{\\an5\\pos({width // 2},{layout['bottom_text_y']})\\fs{caption_size}}}"
-                bottom_highlights = normalize_highlights(scene, "bottom_highlights", caption_text, layout)
                 caption_rendered = ass_highlight_text(
-                    caption_text, bottom_highlights, layout["bottom_text_color"]
+                    caption_text,
+                    bottom_highlights,
+                    layout["bottom_text_color"],
+                    layout["bottom_text_outline"],
+                    layout["text_outline_color"],
                 )
                 lines.append(
                     f"Dialogue: 0,{ass_time(cursor)},{ass_time(end)},BottomText,,0,0,0,,{bottom_tags}{caption_rendered}"
@@ -749,10 +1529,16 @@ def render_media_segment(
             surface_filters.append(
                 f"drawbox=x=0:y={divider_y}:w=iw:h={layout['divider_height']}:color={color}:t=fill"
             )
+        for box in layout["surface_boxes"]:
+            color = ffmpeg_color_alpha(box["color"], "000000", box["opacity"])
+            surface_filters.append(
+                f"drawbox=x={box['x']}:y={box['y']}:w={box['width']}:h={box['height']}:color={color}:t=fill"
+            )
 
         if layout["background_mode"] == "blurred-media":
             blur = layout["background_blur"]
             background_filters = [
+                f"fps={fps}",
                 f"scale={width}:{height}:force_original_aspect_ratio=increase",
                 f"crop={width}:{height}",
                 f"gblur=sigma={blur:.2f}:steps=2" if blur > 0 else "null",
@@ -1019,25 +1805,34 @@ def main() -> int:
     args = parse_args()
     project_path = args.project.resolve()
     root = project_path.parent
-    project = load_json(project_path)
+    source_project, source_sha256 = load_json_snapshot(project_path)
+    project, template_id = resolve_template(source_project)
     ffmpeg, ffprobe = validate_tools()
 
     canvas = project.get("canvas", {})
+    if not isinstance(canvas, dict):
+        raise RuntimeError("canvas must be an object")
     width = int(canvas.get("width", 1080))
     height = int(canvas.get("height", 1920))
     fps = int(canvas.get("fps", 30))
     if width <= 0 or height <= 0 or fps <= 0 or width % 2 or height % 2:
         raise RuntimeError("Canvas width and height must be positive even integers; fps must be positive")
     scenes = project.get("scenes")
-    if not isinstance(scenes, list) or not scenes:
-        raise RuntimeError("project.json must contain a non-empty scenes array")
+    if not isinstance(scenes, list) or not scenes or any(not isinstance(scene, dict) for scene in scenes):
+        raise RuntimeError("project.json must contain a non-empty array of scene objects")
 
     render = project.setdefault("render", {})
+    if not isinstance(render, dict):
+        raise RuntimeError("render must be an object")
+    fonts_dir = resolve_fonts_dir(root, render)
     crf = int(render.get("crf", 18))
     preset = str(render.get("preset", "medium"))
     output = resolve_output(root, str(render.get("output", "output/final.mp4")))
     warnings: list[str] = []
     layout = resolve_layout(project, width, height, warnings)
+    emphasis, emphasis_warnings = resolve_emphasis(project, scenes)
+    warnings.extend(emphasis_warnings)
+    font_files = resolve_font_files(fonts_dir, required_font_families(render, layout))
     voice_config = project.get("voice") or {}
     voice_enabled = not (isinstance(voice_config, dict) and voice_config.get("enabled") is False)
     bgm = resolve_bgm(project, root, voice_enabled, warnings)
@@ -1051,6 +1846,8 @@ def main() -> int:
         scene["id"] = scene_id
         duration = float(scene.get("duration") or 0)
         audio_duration = float(scene.get("audio_duration") or 0)
+        if not math.isfinite(duration) or not math.isfinite(audio_duration):
+            raise RuntimeError(f"Scene {scene_id} duration values must be finite numbers")
         if voice_enabled:
             if duration <= 0 or audio_duration <= 0:
                 raise RuntimeError(f"Scene {scene_id} has no locked TTS duration; run aliyun_tts.py first")
@@ -1166,6 +1963,17 @@ def main() -> int:
                     "layout": layout["preset"] if layout else "full-frame",
                     "layout_variant": layout["variant"] if layout else None,
                     "background_mode": layout["background_mode"] if layout else None,
+                    "template_id": template_id,
+                    "emphasis": {
+                        "schema_version": emphasis["schema_version"],
+                        "provider": emphasis["provider"],
+                        "prompt_version": emphasis["prompt_version"],
+                        "source_hash": emphasis["source_hash"],
+                        "input_valid": emphasis["input_valid"],
+                        "top_count": len(emphasis["top"]),
+                        "bottom_count": len(emphasis["bottom"]),
+                    },
+                    "fonts_dir": str(fonts_dir),
                     "voice_enabled": voice_enabled,
                     "bgm_enabled": bgm is not None,
                     "bgm_path": str(bgm["path"]) if bgm else None,
@@ -1278,10 +2086,14 @@ def main() -> int:
             ]
         )
         ass_path = temp / "captions.ass"
-        write_ass(project, ass_path, width, height, timeline, layout)
-        relative_ass = ass_path.relative_to(root).as_posix().replace("'", r"\'")
-        subtitle_filter = f"subtitles=filename='{relative_ass}'"
-        captioned = temp / "captioned.mp4" if bgm else output
+        write_ass(project, ass_path, width, height, timeline, layout, emphasis)
+        staged_fonts = stage_fonts(font_files, temp)
+        subtitle_filter = (
+            f"subtitles=filename='{ffmpeg_filter_path(ass_path, root)}':"
+            f"fontsdir='{ffmpeg_filter_path(staged_fonts, root)}'"
+        )
+        candidate = temp / "final.mp4"
+        captioned = temp / "captioned.mp4" if bgm else candidate
         run(
             [
                 ffmpeg,
@@ -1316,37 +2128,47 @@ def main() -> int:
                 ffmpeg=ffmpeg,
                 ffprobe=ffprobe,
                 source_video=captioned,
-                output=output,
+                output=candidate,
                 duration=cursor,
                 bgm=bgm,
                 mix_program_audio=voice_enabled
                 or any(bool(item["scene"].get("sfx")) for item in prepared),
             )
-
-    report = probe_media(ffprobe, output)
-    if report["video_codec"] != "h264" or report["audio_codec"] != "aac":
-        raise RuntimeError(f"Unexpected final codecs: {report}")
-    if report["width"] != width or report["height"] != height or report["duration"] <= 0:
-        raise RuntimeError(f"Final media probe did not match the project canvas: {report}")
-    report["output"] = output.relative_to(root).as_posix()
-    report["layout"] = layout["preset"] if layout else "full-frame"
-    report["layout_variant"] = layout["variant"] if layout else None
-    report["background_mode"] = layout["background_mode"] if layout else None
-    report["voice_enabled"] = voice_enabled
-    report["bgm_enabled"] = bgm is not None
-    if bgm:
-        report["bgm"] = {
-            "path": bgm["path"].relative_to(root).as_posix()
-            if bgm["path"].is_relative_to(root)
-            else str(bgm["path"]),
-            "loop_mode": bgm["loop_mode"],
-            "loop_count": bgm["config"].get("loop_count"),
-            "target_lufs": bgm["config"].get("resolved_target_lufs"),
-            "ducking": bgm["ducking"],
+        report = probe_media(ffprobe, candidate)
+        if report["video_codec"] != "h264" or report["audio_codec"] != "aac":
+            raise RuntimeError(f"Unexpected final codecs: {report}")
+        if report["width"] != width or report["height"] != height or report["duration"] <= 0:
+            raise RuntimeError(f"Final media probe did not match the project canvas: {report}")
+        report["output"] = output.relative_to(root).as_posix()
+        report["layout"] = layout["preset"] if layout else "full-frame"
+        report["layout_variant"] = layout["variant"] if layout else None
+        report["background_mode"] = layout["background_mode"] if layout else None
+        report["template_id"] = template_id
+        report["emphasis"] = {
+            "schema_version": emphasis["schema_version"],
+            "provider": emphasis["provider"],
+            "prompt_version": emphasis["prompt_version"],
+            "source_hash": emphasis["source_hash"],
+            "input_valid": emphasis["input_valid"],
+            "top_count": len(emphasis["top"]),
+            "bottom_count": len(emphasis["bottom"]),
         }
-    report["warnings"] = warnings
-    project["render_report"] = report
-    save_json(project_path, project)
+        report["fonts_dir"] = str(fonts_dir)
+        report["voice_enabled"] = voice_enabled
+        report["bgm_enabled"] = bgm is not None
+        if bgm:
+            report["bgm"] = {
+                "path": bgm["path"].relative_to(root).as_posix()
+                if bgm["path"].is_relative_to(root)
+                else str(bgm["path"]),
+                "loop_mode": bgm["loop_mode"],
+                "loop_count": bgm["config"].get("loop_count"),
+                "target_lufs": bgm["config"].get("resolved_target_lufs"),
+                "ducking": bgm["ducking"],
+            }
+        report["warnings"] = warnings
+        source_project["render_report"] = report
+        publish_render_if_unchanged(project_path, source_project, source_sha256, candidate, output)
     print(json.dumps({"ok": True, **report}, ensure_ascii=False))
     return 0
 

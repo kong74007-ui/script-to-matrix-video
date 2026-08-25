@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "emphasis_profiles": {
+    "video-diary": {"scale": 1.12, "min_scale": 1.04, "color": "#D86F61", "outline_width": 3, "outline_color": "#FFF8F2", "role_colors": {"cta": "#7CA6A1"}},
+    "minimal-headline": {"scale": 1.28, "min_scale": 1.08, "color": "#FF4D2E", "outline_width": 0, "outline_color": "#F7F6F2", "role_colors": {"contrast": "#111111"}},
+    "airy-blush": {"scale": 1.14, "min_scale": 1.04, "color": "#D9778B", "outline_width": 6, "outline_color": "#F5C9D2"},
+    "yellow-blue-pop": {"scale": 1.24, "min_scale": 1.08, "color": "#FFF32D", "outline_width": 8, "outline_color": "#083287", "role_colors": {"contrast": "#FF7146", "pain": "#FF7146"}},
+    "business-black": {"scale": 1.14, "min_scale": 1.04, "color": "#4FA3FF", "outline_width": 2, "outline_color": "#172433"},
+    "black-gold-premium": {"scale": 1.14, "min_scale": 1.04, "color": "#CDA65A", "outline_width": 1, "outline_color": "#806230"},
+    "data-compare": {"scale": 1.34, "min_scale": 1.10, "color": "#2563EB", "outline_width": 0, "outline_color": "#F2F6FF", "role_colors": {"contrast": "#FF5B5B", "pain": "#FF5B5B"}},
+    "chinese-title": {"scale": 1.22, "min_scale": 1.08, "color": "#B7352C", "outline_width": 4, "outline_color": "#F3EAD7", "role_colors": {"contrast": "#B7352C", "pain": "#B7352C"}},
+    "torn-magazine": {"scale": 1.18, "min_scale": 1.06, "color": "#191815", "outline_width": 12, "outline_color": "#F8D35C", "underline": true, "angle": -1.5, "role_colors": {"contrast": "#F04438"}},
+    "vlog-journal": {"scale": 1.18, "min_scale": 1.06, "color": "#FF9C5A", "outline_width": 5, "outline_color": "#FFFCEB", "underline": true, "angle": -1.0, "role_colors": {"benefit": "#62B8AE"}},
+    "bilingual-split": {"scale": 1.16, "min_scale": 1.05, "color": "#E64C3C", "outline_width": 0, "outline_color": "#EEF2F5", "underline": true, "role_colors": {"benefit": "#1C6DB2"}},
+    "portrait-quote": {"scale": 1.22, "min_scale": 1.08, "color": "#D9B56E", "outline_width": 2, "outline_color": "#1E2630", "italic": true}
+  },
+  "templates": [
+    {
+      "id": "video-diary",
+      "name": "视频日记",
+      "description": "日期题签与温暖留白，适合日常记录、探店与过程复盘。",
+      "tags": ["日记", "生活", "温暖"],
+      "render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 62, "subtitle_margin_v": 186},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#FFF8F2", "band_color": "#FFF8F2", "top_text_color": "#342E2A", "bottom_text_color": "#5E514A", "text_outline_color": "#FFF8F2", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 0, "accent_color": "#D86F61", "secondary_accent_color": "#7CA6A1", "auto_highlight": false, "text_pop_in": false, "top_font": "ZCOOL XiaoWei", "bottom_font": "Noto Sans SC", "top_font_size": 82, "bottom_font_size": 58, "top_min_font_size": 56, "bottom_min_font_size": 42, "top_max_chars": 13, "top_max_lines": 2, "bottom_max_chars": 16, "bottom_max_lines": 2, "top_text_y": 286, "bottom_text_y": 1690, "bottom_text_mode": "fixed", "media_border_width": 8, "media_border_color": "#E8CFC4", "media": {"x": 76, "y": 480, "width": 928, "height": 1050}, "kicker": {"text": "TODAY'S NOTE", "x": 92, "y": 128, "font_size": 28, "color": "#FFF8F2", "background_color": "#D86F61", "font": "Noto Sans SC", "padding": 16}, "surface_boxes": [{"x": 76, "y": 98, "width": 330, "height": 70, "color": "#D86F61", "opacity": 1}, {"x": 76, "y": 1570, "width": 928, "height": 4, "color": "#E8CFC4", "opacity": 1}]}
+    },
+    {
+      "id": "minimal-headline",
+      "name": "极简大标题",
+      "description": "留白中的超大标题与横向媒体，适合观点、清单和短结论。",
+      "tags": ["极简", "观点", "标题"],
+      "render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 64, "subtitle_margin_v": 170},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#F7F6F2", "band_color": "#F7F6F2", "top_text_color": "#111111", "bottom_text_color": "#111111", "text_outline_color": "#F7F6F2", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 0, "accent_color": "#FF4D2E", "secondary_accent_color": "#111111", "auto_highlight": false, "text_pop_in": true, "top_font": "Noto Sans SC", "bottom_font": "Noto Sans SC", "top_font_size": 108, "bottom_font_size": 58, "top_min_font_size": 64, "bottom_min_font_size": 42, "top_max_chars": 8, "top_max_lines": 3, "bottom_max_chars": 17, "bottom_max_lines": 2, "top_text_y": 278, "bottom_text_y": 1688, "bottom_text_mode": "fixed", "media_border_width": 0, "media": {"x": 54, "y": 590, "width": 972, "height": 800}, "kicker": {"text": "01 / IDEA", "x": 64, "y": 126, "font_size": 26, "color": "#FF4D2E", "background_color": "#F7F6F2", "font": "Noto Sans SC", "padding": 0}, "surface_boxes": [{"x": 54, "y": 486, "width": 76, "height": 12, "color": "#FF4D2E", "opacity": 1}, {"x": 54, "y": 1450, "width": 972, "height": 2, "color": "#161616", "opacity": 0.35}]}
+    },
+    {
+      "id": "airy-blush",
+      "name": "轻透雅粉",
+      "description": "雾粉色半透层与小题签，适合美学、情绪和服务介绍。",
+      "tags": ["雅粉", "轻透", "美学"],
+      "render": {"subtitle_font": "ZCOOL XiaoWei", "subtitle_font_size": 60, "subtitle_margin_v": 178},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#FCEFF2", "band_color": "#FCEFF2", "top_text_color": "#6E3E4B", "bottom_text_color": "#6E3E4B", "text_outline_color": "#FCEFF2", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 1, "accent_color": "#D9778B", "secondary_accent_color": "#A878A1", "auto_highlight": false, "text_pop_in": false, "top_font": "ZCOOL XiaoWei", "bottom_font": "Noto Sans SC", "top_font_size": 88, "bottom_font_size": 60, "top_min_font_size": 54, "bottom_min_font_size": 42, "top_max_chars": 12, "top_max_lines": 2, "bottom_max_chars": 15, "bottom_max_lines": 2, "top_text_y": 300, "bottom_text_y": 1684, "bottom_text_mode": "fixed", "media_border_width": 6, "media_border_color": "#F5C9D2", "media": {"x": 92, "y": 500, "width": 896, "height": 980}, "kicker": {"text": "SOFT EDIT", "x": 106, "y": 142, "font_size": 26, "color": "#FFFFFF", "background_color": "#D9778B", "font": "Noto Sans SC", "padding": 14}, "surface_boxes": [{"x": 740, "y": 118, "width": 246, "height": 180, "color": "#F5C9D2", "opacity": 0.56}, {"x": 92, "y": 1510, "width": 896, "height": 6, "color": "#D9778B", "opacity": 0.72}]}
+    },
+    {
+      "id": "yellow-blue-pop",
+      "name": "鲜黄亮蓝",
+      "description": "高反差黄蓝分区，适合活动提醒、知识点和年轻化清单。",
+      "tags": ["鲜亮", "活动", "清单"],
+      "render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 66, "subtitle_margin_v": 176},
+      "layout": {"preset": "text-media-text", "variant": "native-bold", "background_mode": "solid", "background_color": "#1455D9", "band_color": "#1455D9", "top_band_opacity": 1, "bottom_band_y": 1490, "bottom_band_opacity": 1, "top_text_color": "#FFFFFF", "bottom_text_color": "#FFF32D", "text_outline_color": "#083287", "top_text_outline": 4, "bottom_text_outline": 3, "text_shadow": 1, "accent_color": "#FFF32D", "secondary_accent_color": "#FF7146", "auto_highlight": true, "text_pop_in": true, "top_font": "Noto Sans SC", "bottom_font": "Noto Sans SC", "top_font_size": 92, "bottom_font_size": 66, "top_min_font_size": 58, "bottom_min_font_size": 44, "top_max_chars": 10, "top_max_lines": 3, "bottom_max_chars": 14, "bottom_max_lines": 2, "top_text_y": 286, "bottom_text_y": 1680, "bottom_text_mode": "fixed", "media_border_width": 10, "media_border_color": "#FFF32D", "media": {"x": 42, "y": 520, "width": 996, "height": 900}, "kicker": {"text": "NEW / NOW", "x": 64, "y": 126, "font_size": 28, "color": "#1455D9", "background_color": "#FFF32D", "font": "Noto Sans SC", "padding": 16}, "surface_boxes": [{"x": 790, "y": 104, "width": 210, "height": 210, "color": "#FFF32D", "opacity": 1}, {"x": 0, "y": 1490, "width": 1080, "height": 38, "color": "#FFF32D", "opacity": 1}]}
+    },
+    {
+      "id": "business-black",
+      "name": "商务深黑",
+      "description": "冷黑灰框架与蓝色数据标签，适合方案、复盘和专业服务。",
+      "tags": ["商务", "深黑", "专业"],
+      "render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 60, "subtitle_margin_v": 182},
+      "layout": {"preset": "text-media-text", "variant": "native-bold", "background_mode": "solid", "background_color": "#0C1017", "band_color": "#0C1017", "top_band_opacity": 1, "bottom_band_y": 1504, "bottom_band_opacity": 1, "top_text_color": "#F3F6FA", "bottom_text_color": "#C9D7E9", "text_outline_color": "#0C1017", "top_text_outline": 1, "bottom_text_outline": 1, "text_shadow": 1, "accent_color": "#4FA3FF", "secondary_accent_color": "#8D99A8", "auto_highlight": true, "text_pop_in": false, "top_font": "Noto Sans SC", "bottom_font": "Noto Sans SC", "top_font_size": 84, "bottom_font_size": 60, "top_min_font_size": 54, "bottom_min_font_size": 42, "top_max_chars": 12, "top_max_lines": 2, "bottom_max_chars": 16, "bottom_max_lines": 2, "top_text_y": 290, "bottom_text_y": 1692, "bottom_text_mode": "fixed", "media_border_width": 2, "media_border_color": "#314254", "media": {"x": 64, "y": 510, "width": 952, "height": 930}, "kicker": {"text": "INSIGHT / 2026", "x": 76, "y": 128, "font_size": 24, "color": "#0C1017", "background_color": "#4FA3FF", "font": "Noto Sans SC", "padding": 14}, "surface_boxes": [{"x": 64, "y": 430, "width": 952, "height": 2, "color": "#4FA3FF", "opacity": 0.72}, {"x": 64, "y": 1512, "width": 210, "height": 52, "color": "#172433", "opacity": 1}]}
+    },
+    {
+      "id": "black-gold-premium",
+      "name": "黑金高级",
+      "description": "低饱和黑金与细线留白，适合高客单服务、品牌与人物介绍。",
+      "tags": ["黑金", "高级", "品牌"],
+      "render": {"subtitle_font": "ZCOOL XiaoWei", "subtitle_font_size": 58, "subtitle_margin_v": 184},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#14110E", "band_color": "#14110E", "top_text_color": "#E9D8A7", "bottom_text_color": "#F3E6C0", "text_outline_color": "#14110E", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 1, "accent_color": "#CDA65A", "secondary_accent_color": "#806230", "auto_highlight": false, "text_pop_in": false, "top_font": "ZCOOL XiaoWei", "bottom_font": "Noto Sans SC", "top_font_size": 90, "bottom_font_size": 58, "top_min_font_size": 56, "bottom_min_font_size": 42, "top_max_chars": 11, "top_max_lines": 2, "bottom_max_chars": 16, "bottom_max_lines": 2, "top_text_y": 288, "bottom_text_y": 1694, "bottom_text_mode": "fixed", "media_border_width": 4, "media_border_color": "#CDA65A", "media": {"x": 86, "y": 502, "width": 908, "height": 970}, "kicker": {"text": "SELECTED", "x": 96, "y": 132, "font_size": 24, "color": "#14110E", "background_color": "#CDA65A", "font": "Noto Sans SC", "padding": 14}, "surface_boxes": [{"x": 86, "y": 450, "width": 908, "height": 2, "color": "#CDA65A", "opacity": 0.9}, {"x": 86, "y": 1518, "width": 908, "height": 2, "color": "#CDA65A", "opacity": 0.9}, {"x": 960, "y": 116, "width": 34, "height": 180, "color": "#806230", "opacity": 0.7}]}
+    },
+    {
+      "id": "data-compare",
+      "name": "数据对比",
+      "description": "双彩比较条和紧凑数据层，适合前后对照、选择题与案例结果。",
+      "tags": ["数据", "对比", "案例"],
+      "render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 62, "subtitle_margin_v": 174},
+      "layout": {"preset": "text-media-text", "variant": "native-bold", "background_mode": "solid", "background_color": "#F2F6FF", "band_color": "#F2F6FF", "top_band_opacity": 1, "bottom_band_y": 1510, "bottom_band_opacity": 1, "top_text_color": "#17284A", "bottom_text_color": "#17284A", "text_outline_color": "#F2F6FF", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 0, "accent_color": "#2563EB", "secondary_accent_color": "#FF5B5B", "auto_highlight": true, "text_pop_in": true, "top_font": "Noto Sans SC", "bottom_font": "Noto Sans SC", "top_font_size": 86, "bottom_font_size": 62, "top_min_font_size": 56, "bottom_min_font_size": 44, "top_max_chars": 12, "top_max_lines": 2, "bottom_max_chars": 14, "bottom_max_lines": 2, "top_text_y": 300, "bottom_text_y": 1682, "bottom_text_mode": "fixed", "media_border_width": 0, "media": {"x": 42, "y": 550, "width": 996, "height": 860}, "kicker": {"text": "DATA CHECK", "x": 58, "y": 132, "font_size": 24, "color": "#FFFFFF", "background_color": "#2563EB", "font": "Noto Sans SC", "padding": 14}, "surface_boxes": [{"x": 42, "y": 454, "width": 604, "height": 20, "color": "#2563EB", "opacity": 1}, {"x": 646, "y": 454, "width": 392, "height": 20, "color": "#FF5B5B", "opacity": 1}, {"x": 42, "y": 1460, "width": 996, "height": 6, "color": "#2563EB", "opacity": 0.82}]}
+    },
+    {
+      "id": "chinese-title",
+      "name": "国风标题",
+      "description": "书法题签、宣纸浅底和朱红印记，适合文化、器物与节气内容。",
+      "tags": ["国风", "文化", "雅致"],
+      "render": {"subtitle_font": "ZCOOL XiaoWei", "subtitle_font_size": 60, "subtitle_margin_v": 182},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#F3EAD7", "band_color": "#F3EAD7", "top_text_color": "#33251C", "bottom_text_color": "#4C3828", "text_outline_color": "#F3EAD7", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 0, "accent_color": "#B7352C", "secondary_accent_color": "#61745A", "auto_highlight": false, "text_pop_in": false, "top_font": "Ma Shan Zheng", "bottom_font": "ZCOOL XiaoWei", "top_font_size": 110, "bottom_font_size": 60, "top_min_font_size": 68, "bottom_min_font_size": 44, "top_max_chars": 8, "top_max_lines": 2, "bottom_max_chars": 15, "bottom_max_lines": 2, "top_text_y": 300, "bottom_text_y": 1690, "bottom_text_mode": "fixed", "media_border_width": 4, "media_border_color": "#B7A68B", "media": {"x": 76, "y": 520, "width": 928, "height": 930}, "kicker": {"text": "风物小记", "x": 84, "y": 128, "font_size": 30, "color": "#F3EAD7", "background_color": "#B7352C", "font": "Ma Shan Zheng", "padding": 14}, "surface_boxes": [{"x": 904, "y": 128, "width": 82, "height": 82, "color": "#B7352C", "opacity": 0.9}, {"x": 76, "y": 1490, "width": 928, "height": 2, "color": "#B7A68B", "opacity": 1}]}
+    },
+    {
+      "id": "torn-magazine",
+      "name": "撕边杂志",
+      "description": "偏移纸张块与编辑角标，适合趋势、穿搭和专题选题。",
+      "tags": ["杂志", "撕边", "趋势"],
+      "render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 60, "subtitle_margin_v": 176},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#E9E4DA", "band_color": "#E9E4DA", "top_text_color": "#191815", "bottom_text_color": "#191815", "text_outline_color": "#E9E4DA", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 0, "accent_color": "#F04438", "secondary_accent_color": "#25314B", "auto_highlight": false, "text_pop_in": true, "top_font": "Noto Sans SC", "bottom_font": "Noto Sans SC", "top_font_size": 88, "bottom_font_size": 60, "top_min_font_size": 56, "bottom_min_font_size": 42, "top_max_chars": 11, "top_max_lines": 2, "bottom_max_chars": 15, "bottom_max_lines": 2, "top_text_y": 294, "bottom_text_y": 1688, "bottom_text_mode": "fixed", "media_border_width": 12, "media_border_color": "#FFFFFF", "media": {"x": 104, "y": 510, "width": 872, "height": 940}, "kicker": {"text": "THE EDIT", "x": 100, "y": 124, "font_size": 24, "color": "#FFFFFF", "background_color": "#25314B", "font": "Noto Sans SC", "padding": 14}, "surface_boxes": [{"x": 64, "y": 420, "width": 216, "height": 190, "color": "#F04438", "opacity": 0.9}, {"x": 812, "y": 1370, "width": 226, "height": 120, "color": "#25314B", "opacity": 0.96}, {"x": 92, "y": 574, "width": 28, "height": 34, "color": "#E9E4DA", "opacity": 1}, {"x": 94, "y": 684, "width": 24, "height": 48, "color": "#E9E4DA", "opacity": 1}, {"x": 92, "y": 828, "width": 30, "height": 38, "color": "#E9E4DA", "opacity": 1}, {"x": 96, "y": 1044, "width": 22, "height": 52, "color": "#E9E4DA", "opacity": 1}, {"x": 960, "y": 620, "width": 28, "height": 46, "color": "#E9E4DA", "opacity": 1}, {"x": 964, "y": 778, "width": 24, "height": 32, "color": "#E9E4DA", "opacity": 1}, {"x": 958, "y": 948, "width": 30, "height": 44, "color": "#E9E4DA", "opacity": 1}, {"x": 964, "y": 1188, "width": 24, "height": 50, "color": "#E9E4DA", "opacity": 1}]}
+    },
+    {
+      "id": "vlog-journal",
+      "name": "Vlog 手账",
+      "description": "彩色便签和轻松手写强调，适合旅行、打卡与过程分享。",
+      "tags": ["Vlog", "手账", "轻松"],
+      "render": {"subtitle_font": "ZCOOL KuaiLe", "subtitle_font_size": 60, "subtitle_margin_v": 178},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#FFFCEB", "band_color": "#FFFCEB", "top_text_color": "#29445A", "bottom_text_color": "#29445A", "text_outline_color": "#FFFCEB", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 1, "accent_color": "#FF9C5A", "secondary_accent_color": "#62B8AE", "auto_highlight": false, "text_pop_in": true, "top_font": "ZCOOL KuaiLe", "bottom_font": "Noto Sans SC", "top_font_size": 88, "bottom_font_size": 58, "top_min_font_size": 56, "bottom_min_font_size": 42, "top_max_chars": 11, "top_max_lines": 2, "bottom_max_chars": 15, "bottom_max_lines": 2, "top_text_y": 300, "bottom_text_y": 1690, "bottom_text_mode": "fixed", "media_border_width": 8, "media_border_color": "#29445A", "media": {"x": 84, "y": 520, "width": 912, "height": 920}, "kicker": {"text": "WEEKEND LOG", "x": 96, "y": 134, "font_size": 24, "color": "#29445A", "background_color": "#F8D35C", "font": "ZCOOL KuaiLe", "padding": 14}, "surface_boxes": [{"x": 780, "y": 118, "width": 178, "height": 76, "color": "#62B8AE", "opacity": 0.9}, {"x": 70, "y": 1454, "width": 250, "height": 34, "color": "#FF9C5A", "opacity": 0.9}]}
+    },
+    {
+      "id": "bilingual-split",
+      "name": "中英双语",
+      "description": "中英文分层与冷白栅格，适合品牌表达、术语解释和国际化内容。",
+      "tags": ["双语", "品牌", "栅格"],
+      "render": {"subtitle_font": "Noto Sans SC", "subtitle_font_size": 58, "subtitle_margin_v": 180},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#EEF2F5", "band_color": "#EEF2F5", "top_text_color": "#17212B", "bottom_text_color": "#17212B", "text_outline_color": "#EEF2F5", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 0, "accent_color": "#E64C3C", "secondary_accent_color": "#1C6DB2", "auto_highlight": false, "text_pop_in": false, "top_font": "Noto Sans SC", "bottom_font": "Noto Sans SC", "top_font_size": 82, "bottom_font_size": 58, "top_min_font_size": 54, "bottom_min_font_size": 42, "top_max_chars": 13, "top_max_lines": 2, "bottom_max_chars": 17, "bottom_max_lines": 2, "top_text_y": 294, "bottom_text_y": 1686, "bottom_text_mode": "fixed", "media_border_width": 2, "media_border_color": "#AEBBC6", "media": {"x": 60, "y": 530, "width": 960, "height": 900}, "kicker": {"text": "GLOBAL NOTE", "x": 72, "y": 128, "font_size": 24, "color": "#EEF2F5", "background_color": "#1C6DB2", "font": "Noto Sans SC", "padding": 14}, "surface_boxes": [{"x": 60, "y": 454, "width": 960, "height": 2, "color": "#1C6DB2", "opacity": 0.85}, {"x": 60, "y": 1490, "width": 960, "height": 2, "color": "#E64C3C", "opacity": 0.85}, {"x": 904, "y": 112, "width": 116, "height": 58, "color": "#E64C3C", "opacity": 1}]}
+    },
+    {
+      "id": "portrait-quote",
+      "name": "人物金句",
+      "description": "人像竖窗、引号和金色强调，适合访谈、观点摘录与人物故事。",
+      "tags": ["人物", "金句", "访谈"],
+      "render": {"subtitle_font": "ZCOOL XiaoWei", "subtitle_font_size": 62, "subtitle_margin_v": 180},
+      "layout": {"preset": "text-media-text", "variant": "classic", "background_mode": "solid", "background_color": "#1E2630", "band_color": "#1E2630", "top_text_color": "#F4F0E5", "bottom_text_color": "#F4F0E5", "text_outline_color": "#1E2630", "top_text_outline": 0, "bottom_text_outline": 0, "text_shadow": 1, "accent_color": "#D9B56E", "secondary_accent_color": "#9AB1C1", "auto_highlight": false, "text_pop_in": false, "top_font": "ZCOOL XiaoWei", "bottom_font": "Noto Sans SC", "top_font_size": 86, "bottom_font_size": 62, "top_min_font_size": 54, "bottom_min_font_size": 44, "top_max_chars": 12, "top_max_lines": 2, "bottom_max_chars": 15, "bottom_max_lines": 2, "top_text_y": 300, "bottom_text_y": 1690, "bottom_text_mode": "fixed", "media_border_width": 6, "media_border_color": "#D9B56E", "media": {"x": 148, "y": 470, "width": 784, "height": 1050}, "kicker": {"text": "人物说", "x": 162, "y": 128, "font_size": 30, "color": "#1E2630", "background_color": "#D9B56E", "font": "ZCOOL XiaoWei", "padding": 14}, "surface_boxes": [{"x": 74, "y": 464, "width": 42, "height": 166, "color": "#D9B56E", "opacity": 0.9}, {"x": 964, "y": 1360, "width": 42, "height": 166, "color": "#D9B56E", "opacity": 0.9}]}
+    }
+  ]
+}

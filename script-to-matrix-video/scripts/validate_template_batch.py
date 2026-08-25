@@ -6,12 +6,24 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import tempfile
 from typing import Any
 
-from template_policy import infer_media_type, recommended_duration, required_media_count
+from render_video import (
+    manifest_path,
+    load_json_snapshot,
+    required_font_families,
+    resolve_font_files,
+    resolve_fonts_dir,
+    resolve_input,
+    resolve_layout,
+    resolve_template,
+    save_json_if_unchanged,
+)
+from template_policy import infer_media_type, recommended_duration, required_media_count, resolve_emphasis
 
 
 def parse_args() -> argparse.Namespace:
@@ -49,13 +61,11 @@ def save_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def resolve_relative(root: Path, value: str) -> Path:
-    candidate = Path(value.replace("\\", "/"))
+    candidate = manifest_path(value, "batch project path")
     return candidate.resolve() if candidate.is_absolute() else (root / candidate).resolve()
 
 
-def file_identity(path: Path, fallback: str) -> str:
-    if not path.is_file():
-        return fallback
+def file_identity(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -81,14 +91,19 @@ def normalize_jobs(batch: dict[str, Any], manifest_path: Path) -> list[dict[str,
         if not project_value:
             raise RuntimeError(f"Batch job {index} has no project path")
         job["_index"] = index
-        job["_project_path"] = resolve_relative(manifest_path.parent, project_value)
+        project_path = resolve_relative(manifest_path.parent, project_value)
+        try:
+            project_path.relative_to(manifest_path.parent.resolve())
+        except ValueError as exc:
+            raise RuntimeError(f"Batch project path must stay inside the batch folder: {project_path}") from exc
+        job["_project_path"] = project_path
         jobs.append(job)
     return jobs
 
 
 def collect_media(project: dict[str, Any], project_path: Path) -> list[dict[str, str]]:
     results: list[dict[str, str]] = []
-    for scene in project.get("scenes") or []:
+    for scene_index, scene in enumerate(project.get("scenes") or [], start=1):
         values = scene.get("media") or scene.get("images") or []
         for value in values:
             if isinstance(value, dict):
@@ -99,21 +114,31 @@ def collect_media(project: dict[str, Any], project_path: Path) -> list[dict[str,
                 raw_path = str(value)
                 record_id = ""
                 explicit = ""
-            resolved = resolve_relative(project_path.parent, raw_path)
-            identity = f"record:{record_id}" if record_id else file_identity(resolved, str(resolved).casefold())
+            resolved = resolve_input(project_path.parent, raw_path, f"scene {scene_index} media")
+            identity = f"record:{record_id}" if record_id else file_identity(resolved)
             results.append({"identity": identity, "type": infer_media_type(raw_path, explicit), "path": raw_path})
     return results
 
 
 def bgm_identity(project: dict[str, Any], project_path: Path) -> str | None:
     bgm = project.get("bgm")
-    if not isinstance(bgm, dict) or bgm.get("enabled") is False or not bgm.get("path"):
+    if bgm in (None, False):
         return None
+    if bgm is True:
+        raise RuntimeError("BGM is enabled but has no local path")
+    if not isinstance(bgm, dict):
+        raise RuntimeError("bgm must be an object")
+    enabled = bgm.get("enabled", bool(bgm.get("path") or bgm.get("local_path")))
+    if enabled is False or str(enabled).strip().lower() in {"false", "off", "no", "0"}:
+        return None
+    raw_path = str(bgm.get("path") or bgm.get("local_path") or "").strip()
+    if not raw_path:
+        raise RuntimeError("BGM is enabled but has no local path")
+    resolved = resolve_input(project_path.parent, raw_path, "BGM")
     record_id = str(bgm.get("record_id") or "")
     if record_id:
         return f"record:{record_id}"
-    resolved = resolve_relative(project_path.parent, str(bgm["path"]))
-    return file_identity(resolved, str(resolved).casefold())
+    return file_identity(resolved)
 
 
 def main() -> int:
@@ -131,7 +156,8 @@ def main() -> int:
         project_path: Path = job["_project_path"]
         label = str(job.get("job_id") or project_path.stem or f"job-{job['_index']}")
         try:
-            project = load_json(project_path)
+            source_project, source_sha256 = load_json_snapshot(project_path)
+            project, template_id = resolve_template(source_project)
         except RuntimeError as exc:
             errors.append(f"{label}: {exc}")
             continue
@@ -140,17 +166,27 @@ def main() -> int:
             errors.append(f"{label}: layout.preset must be text-media-text")
             continue
         scenes = project.get("scenes")
-        if not isinstance(scenes, list) or not scenes:
-            errors.append(f"{label}: project has no scenes")
+        if not isinstance(scenes, list) or not scenes or any(not isinstance(scene, dict) for scene in scenes):
+            errors.append(f"{label}: project must contain a non-empty array of scene objects")
             continue
+        emphasis, emphasis_warnings = resolve_emphasis(project, scenes)
+        warnings.extend(f"{label}: {warning}" for warning in emphasis_warnings)
 
         target = recommended_duration(scenes)
-        current = sum(max(0.0, float(scene.get("duration") or 0)) for scene in scenes)
+        try:
+            durations = [float(scene.get("duration") or 0) for scene in scenes]
+        except (TypeError, ValueError) as exc:
+            errors.append(f"{label}: scene duration must be numeric: {exc}")
+            continue
+        if any(not math.isfinite(duration) or duration < 0 for duration in durations):
+            errors.append(f"{label}: scene durations must be finite non-negative numbers")
+            continue
+        current = sum(durations)
         fixed = False
         if current + 0.001 < target:
             if args.fix_duration:
                 scenes[-1]["duration"] = round(float(scenes[-1].get("duration") or 0) + target - current, 3)
-                save_json(project_path, project)
+                source_sha256 = save_json_if_unchanged(project_path, source_project, source_sha256)
                 current = target
                 fixed = True
                 warnings.append(f"{label}: duration extended to {target:.1f}s")
@@ -159,7 +195,22 @@ def main() -> int:
                     f"{label}: duration {current:.1f}s is below the copy-based target {target:.1f}s; rerun with --fix-duration"
                 )
 
-        media = collect_media(project, project_path)
+        render = project.get("render") or {}
+        if not isinstance(render, dict):
+            errors.append(f"{label}: render must be an object")
+            continue
+        try:
+            fonts_dir = resolve_fonts_dir(project_path.parent, render)
+            canvas = project.get("canvas") or {}
+            resolved_layout = resolve_layout(
+                project, int(canvas.get("width", 1080)), int(canvas.get("height", 1920)), []
+            )
+            font_files = resolve_font_files(fonts_dir, required_font_families(render, resolved_layout))
+            media = collect_media(project, project_path)
+            bgm_id = bgm_identity(project, project_path)
+        except RuntimeError as exc:
+            errors.append(f"{label}: {exc}")
+            continue
         identities = frozenset(item["identity"] for item in media)
         required = required_media_count(max(current, target))
         if len(identities) < required:
@@ -182,13 +233,15 @@ def main() -> int:
         if copy_id:
             variant_media.setdefault(copy_id, []).append((variant_id, identities, label))
 
-        bgm_id = bgm_identity(project, project_path)
         if bgm_id:
             bgm_sequence.append((label, bgm_id))
         summaries.append(
             {
                 "job": label,
                 "project": str(project_path),
+                "template_id": template_id,
+                "fonts_dir": str(fonts_dir),
+                "font_files": [path.name for path in font_files],
                 "duration": round(current, 3),
                 "copy_target_duration": target,
                 "duration_fixed": fixed,
@@ -196,6 +249,12 @@ def main() -> int:
                 "required_media": required,
                 "video_media": video_count,
                 "bgm_identity": bgm_id,
+                "emphasis": {
+                    "provider": emphasis["provider"],
+                    "input_valid": emphasis["input_valid"],
+                    "top_count": len(emphasis["top"]),
+                    "bottom_count": len(emphasis["bottom"]),
+                },
             }
         )
 

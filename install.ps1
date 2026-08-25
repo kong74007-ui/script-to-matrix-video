@@ -13,9 +13,54 @@ if (-not (Test-Path -LiteralPath $sourceEntry -PathType Leaf)) {
     throw "Skill files are incomplete: $sourceEntry was not found. Extract the complete archive before installing."
 }
 
+$catalogPath = Join-Path $sourceSkill 'assets\templates\catalog.json'
+$fontRoot = Join-Path $sourceSkill 'assets\fonts'
+$fontSourcesPath = Join-Path $fontRoot 'sources.json'
+foreach ($requiredPath in @($catalogPath, $fontSourcesPath)) {
+    if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
+        throw "Skill v1.7 runtime files are incomplete: $requiredPath was not found."
+    }
+}
+
+$catalog = Get-Content -LiteralPath $catalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$templateIds = @($catalog.templates | ForEach-Object { [string]$_.id })
+if ($catalog.version -ne 1 -or $templateIds.Count -ne 12 -or @($templateIds | Sort-Object -Unique).Count -ne 12) {
+    throw 'Template catalog must be version 1 with exactly 12 unique template IDs.'
+}
+
+$fontSources = Get-Content -LiteralPath $fontSourcesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+if (@($fontSources.fonts).Count -ne 4) {
+    throw 'Font source manifest must contain exactly four bundled font families.'
+}
+foreach ($font in $fontSources.fonts) {
+    $fontName = [string]$font.file
+    $licenseName = [string]$font.license_file
+    if ([IO.Path]::GetFileName($fontName) -ne $fontName -or [IO.Path]::GetFileName($licenseName) -ne $licenseName) {
+        throw 'Font source manifest contains an unsafe file path.'
+    }
+    $fontPath = Join-Path $fontRoot $fontName
+    $licensePath = Join-Path $fontRoot $licenseName
+    if (-not (Test-Path -LiteralPath $fontPath -PathType Leaf) -or -not (Test-Path -LiteralPath $licensePath -PathType Leaf)) {
+        throw "Bundled font or license is missing: $fontName"
+    }
+    $actualHash = (Get-FileHash -LiteralPath $fontPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($actualHash -ne ([string]$font.sha256).ToLowerInvariant()) {
+        throw "Bundled font hash mismatch: $fontName"
+    }
+}
+
 $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
 if (-not $pythonCommand) {
     throw 'Python 3.10 or newer is required. Install Python, reopen PowerShell, and run this installer again.'
+}
+
+& $pythonCommand.Source (Join-Path $sourceSkill 'scripts\check_environment.py')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Source Skill environment validation failed; the existing installation was not changed.'
+}
+& $pythonCommand.Source (Join-Path $sourceSkill 'scripts\test_template_catalog.py')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Source Skill catalog/font validation failed; the existing installation was not changed.'
 }
 
 New-Item -ItemType Directory -Force -Path $DestinationRoot | Out-Null
