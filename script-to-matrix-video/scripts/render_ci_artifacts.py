@@ -28,6 +28,15 @@ def run(command: list[str]) -> str:
     return result.stdout.strip()
 
 
+def absolute_filter_path(path: Path) -> str:
+    """Escape an absolute path for a quoted FFmpeg filter option."""
+
+    value = path.resolve().as_posix()
+    if any(character in value for character in ("'", "\n", "\r")):
+        raise RuntimeError(f"FFmpeg filter path contains unsupported characters: {value}")
+    return value.replace("\\", "\\\\").replace(":", "\\:")
+
+
 def span(text: str, term: str, role: str) -> dict[str, object]:
     start = text.index(term)
     return {
@@ -102,7 +111,10 @@ def render_profile_stills(output: Path, ffmpeg: str, source: Path) -> tuple[list
             emphasis,
         )
         preview = still_root / f"{template_id}.png"
-        subtitle_filter = f"subtitles=filename='{ass_path}':fontsdir='{renderer.DEFAULT_FONTS_DIR}'"
+        subtitle_filter = (
+            f"subtitles=filename='{absolute_filter_path(ass_path)}':"
+            f"fontsdir='{absolute_filter_path(renderer.DEFAULT_FONTS_DIR)}'"
+        )
         run(
             [
                 ffmpeg,
