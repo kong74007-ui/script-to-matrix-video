@@ -1,21 +1,86 @@
 {
-  "source_repository": "mixed",
-  "source_commit": "user-font-bundle-20260826",
-  "license": "Per-font license; see each font entry",
+  "schema_version": 2,
+  "license": "Per-font license and provenance; see each entry",
   "fonts": [
-    {"family":"Noto Sans SC","file":"NotoSansSC-Variable.ttf","sha256":"a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da","source":"https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf","license_file":"OFL-NotoSansSC.txt"},
-    {"family":"ZCOOL XiaoWei","file":"ZCOOLXiaoWei-Regular.ttf","sha256":"a42b620140f493db42f741351dfbf343c0936d58588ee8004b8b2a218d997ff1","source":"https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/zcoolxiaowei/ZCOOLXiaoWei-Regular.ttf","license_file":"OFL-ZCOOLXiaoWei.txt"},
-    {"family":"Ma Shan Zheng","file":"MaShanZheng-Regular.ttf","sha256":"6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb","source":"https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/mashanzheng/MaShanZheng-Regular.ttf","license_file":"OFL-MaShanZheng.txt"},
-    {"family":"ZCOOL KuaiLe","file":"ZCOOLKuaiLe-Regular.ttf","sha256":"812a6fc1fe54b6d73a419245c32dfeba8aa33104d5be90d1cf6af082007cb71d","source":"https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/zcoolkuaile/ZCOOLKuaiLe-Regular.ttf","license_file":"OFL-ZCOOLKuaiLe.txt"},
-    {"family":"zihunbiantaoti","file":"ZiHunBianTaoTi.ttf","sha256":"24758548d8324539d96dd84f08636ce39804f7ff870d55b139c5a538d1f4cc70","source":"user-provided cover font bundle","license_file":"USER-PROVIDED-FONT-AUTHORIZATION.md"},
-    {"family":"Smiley Sans Oblique","file":"SmileySans-Oblique.ttf","sha256":"6b02399b62585f4a250b34b6261f490dac9cf7de2153ebf85cfc872f59e731d6","source":"user-provided cover font bundle","license_file":"OFL-UserProvided.txt"},
-    {"family":"DaigoMinteuA","file":"DaigoMinteuA.ttf","sha256":"aa8c386a5cb242ea231456cab58c51d647ec301b5b64fa5ecc19a89c99918b4f","source":"user-provided cover font bundle","license_file":"USER-PROVIDED-FONT-AUTHORIZATION.md"},
-    {"family":"Gen Jyuu Gothic Heavy","file":"GenJyuuGothic-Heavy.ttf","sha256":"e1e677d1adbdec6378bf25f964cfa032abe946e26d9fe491ead3e861d44ef69a","source":"user-provided cover font bundle","license_file":"OFL-UserProvided.txt"},
-    {"family":"GenSenRounded TW H","file":"GenSenRounded-H.ttc","sha256":"544126564263af7d53ca6e6b24b54c6e7864e0afaf9bd4f04a7599fbf5726f01","source":"user-provided cover font bundle","license_file":"OFL-UserProvided.txt"},
-    {"family":"HouZunSongTi","file":"HouZunSongTi.ttf","sha256":"a8da090729ed88ce167b3c2ede46db71e2acea77ae0365d3ab55f27d289ebd4b","source":"user-provided cover font bundle","license_file":"OFL-UserProvided.txt"},
-    {"family":"AaHouDiHei","file":"AaHouDiHei.ttf","sha256":"6c42bffb6f773537050c5c2e1dd55f6839c7621f6327833cddf5b054f9c718ad","source":"user-provided cover font bundle","license_file":"USER-PROVIDED-FONT-AUTHORIZATION.md"},
-    {"family":"Pangmenzhengdaoqingsongti","file":"PangmenZhengdaoQingsong.otf","sha256":"08bd799d2a7bcf68a13e5e7dbee8d473455315d7705db9cbb67b3d5669c73cca","source":"user-provided cover font bundle","license_file":"USER-PROVIDED-FONT-AUTHORIZATION.md"},
-    {"family":"Kingnam Bobo","file":"KingnamBobo-Bold.ttf","sha256":"9d026bd778ede6839cae8e38b3410c2a68bfbd0eaad32f5c0b6f0dd86970a634","source":"user-provided cover font bundle","license_file":"USER-PROVIDED-FONT-AUTHORIZATION.md"},
-    {"family":"YS HelloFont BangBangTi","file":"YSHelloFontBangBangTi.otf","sha256":"58e42c127cd05b6c3d0e8777e09c6ca2ef6d3919498b5cb4f9b54132db42c23d","source":"user-provided cover font bundle","license_file":"USER-PROVIDED-FONT-AUTHORIZATION.md"}
+    {
+      "family": "Noto Sans SC", "file": "NotoSansSC-Variable.ttf",
+      "sha256": "a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
+      "version": "2.004-H2",
+      "source": "https://github.com/google/fonts/blob/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf",
+      "source_ref": "ec626514f79f831f1ab848a82114a0ce7e2d6372",
+      "copyright": "Copyright 2014-2021 Adobe (http://www.adobe.com/)",
+      "license": "SIL Open Font License 1.1", "license_file": "OFL-NotoSansSC.txt",
+      "reserved_font_names": ["Source"]
+    },
+    {
+      "family": "ZCOOL XiaoWei", "file": "ZCOOLXiaoWei-Regular.ttf",
+      "sha256": "a42b620140f493db42f741351dfbf343c0936d58588ee8004b8b2a218d997ff1",
+      "version": "1.000",
+      "source": "https://github.com/google/fonts/blob/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/zcoolxiaowei/ZCOOLXiaoWei-Regular.ttf",
+      "source_ref": "ec626514f79f831f1ab848a82114a0ce7e2d6372",
+      "copyright": "Copyright 2018 The ZCOOL XiaoWei Project Authors",
+      "license": "SIL Open Font License 1.1", "license_file": "OFL-ZCOOLXiaoWei.txt",
+      "reserved_font_names": []
+    },
+    {
+      "family": "Ma Shan Zheng", "file": "MaShanZheng-Regular.ttf",
+      "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+      "version": "2.003",
+      "source": "https://github.com/google/fonts/blob/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/mashanzheng/MaShanZheng-Regular.ttf",
+      "source_ref": "ec626514f79f831f1ab848a82114a0ce7e2d6372",
+      "copyright": "Copyright 2018 The Ma Shan Zheng Project Authors",
+      "license": "SIL Open Font License 1.1", "license_file": "OFL-MaShanZheng.txt",
+      "reserved_font_names": []
+    },
+    {
+      "family": "ZCOOL KuaiLe", "file": "ZCOOLKuaiLe-Regular.ttf",
+      "sha256": "812a6fc1fe54b6d73a419245c32dfeba8aa33104d5be90d1cf6af082007cb71d",
+      "version": "2.001",
+      "source": "https://github.com/google/fonts/blob/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/zcoolkuaile/ZCOOLKuaiLe-Regular.ttf",
+      "source_ref": "ec626514f79f831f1ab848a82114a0ce7e2d6372",
+      "copyright": "Copyright 2018 The ZCOOL KuaiLe Project Authors",
+      "license": "SIL Open Font License 1.1", "license_file": "OFL-ZCOOLKuaiLe.txt",
+      "reserved_font_names": []
+    },
+    {
+      "family": "Smiley Sans Oblique", "file": "SmileySans-Oblique.ttf",
+      "sha256": "6b02399b62585f4a250b34b6261f490dac9cf7de2153ebf85cfc872f59e731d6",
+      "version": "1.0.0",
+      "source": "https://github.com/atelier-anchor/smiley-sans/releases/tag/v1.0.0",
+      "source_ref": "b027a6c546de41aabb71879bb4d66187c229581a",
+      "copyright": "Copyright (c) 2022 atelierAnchor",
+      "license": "SIL Open Font License 1.1", "license_file": "OFL-SmileySans.txt",
+      "reserved_font_names": ["Smiley", "得意黑"]
+    },
+    {
+      "family": "Gen Jyuu Gothic Heavy", "file": "GenJyuuGothic-Heavy.ttf",
+      "sha256": "e1e677d1adbdec6378bf25f964cfa032abe946e26d9fe491ead3e861d44ef69a",
+      "version": "1.002.20150607",
+      "source": "https://github.com/googlefonts/chinese/blob/358a6fc9d17e8920f71f2b300f89e50cd90c9b22/fonts/genjyuugothic/GenJyuuGothic-Heavy.ttf",
+      "source_ref": "358a6fc9d17e8920f71f2b300f89e50cd90c9b22",
+      "copyright": "Source Han Sans Copyright 2014-2015 Adobe; M+ OUTLINE FONTS Copyright 2015 M+ FONTS PROJECT",
+      "license": "SIL Open Font License 1.1", "license_file": "OFL-GenJyuuGothic.txt",
+      "notice_file": "NOTICE-GenJyuuGothic.txt", "reserved_font_names": ["Source"]
+    },
+    {
+      "family": "GenSenRounded TW H", "file": "GenSenRounded-H.ttc",
+      "sha256": "544126564263af7d53ca6e6b24b54c6e7864e0afaf9bd4f04a7599fbf5726f01",
+      "version": "1.501",
+      "source": "https://github.com/ButTaiwan/gensen-font/blob/acebaf82794658991b83998db7a57eee6c32bbd8/ttc/GenSenRounded-H.ttc",
+      "source_ref": "acebaf82794658991b83998db7a57eee6c32bbd8",
+      "copyright": "Copyright 2014-2019 Adobe (http://www.adobe.com/)",
+      "license": "SIL Open Font License 1.1", "license_file": "OFL-GenSenRounded.txt",
+      "notice_file": "NOTICE-GenSenRounded.md", "reserved_font_names": ["Source"]
+    },
+    {
+      "family": "HouZunSongTi", "file": "HouZunSongTi.ttf",
+      "sha256": "a8da090729ed88ce167b3c2ede46db71e2acea77ae0365d3ab55f27d289ebd4b",
+      "version": "2.001",
+      "source": "https://www.houzun.com/sheji/51.aspx",
+      "source_ref": "publisher-release-2023-11-13",
+      "copyright": "Copyright (c) 2023 Houzun; Source Han Serif copyright retained in license notice",
+      "license": "SIL Open Font License 1.1", "license_file": "OFL-HouZunSongTi.txt",
+      "notice_file": "NOTICE-HouZunSongTi.md", "reserved_font_names": ["Source"]
+    }
   ]
 }

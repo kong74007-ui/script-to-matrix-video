@@ -444,20 +444,42 @@ def check_paths_and_fonts() -> None:
 
 
 def check_cover_font_bundle() -> None:
-    expected = {
-        "Noto Sans SC", "ZCOOL XiaoWei", "Ma Shan Zheng", "ZCOOL KuaiLe",
-        "zihunbiantaoti", "Smiley Sans Oblique", "DaigoMinteuA", "Gen Jyuu Gothic Heavy",
-        "GenSenRounded TW H", "HouZunSongTi", "AaHouDiHei",
-        "Pangmenzhengdaoqingsongti", "Kingnam Bobo", "YS HelloFont BangBangTi",
+    expected_metadata = {
+        "Noto Sans SC": ("OFL-NotoSansSC.txt", {"Source"}),
+        "ZCOOL XiaoWei": ("OFL-ZCOOLXiaoWei.txt", set()),
+        "Ma Shan Zheng": ("OFL-MaShanZheng.txt", set()),
+        "ZCOOL KuaiLe": ("OFL-ZCOOLKuaiLe.txt", set()),
+        "Smiley Sans Oblique": ("OFL-SmileySans.txt", {"Smiley", "得意黑"}),
+        "Gen Jyuu Gothic Heavy": ("OFL-GenJyuuGothic.txt", {"Source"}),
+        "GenSenRounded TW H": ("OFL-GenSenRounded.txt", {"Source"}),
+        "HouZunSongTi": ("OFL-HouZunSongTi.txt", {"Source"}),
     }
+    expected = set(expected_metadata)
     manifest = json.loads((renderer.DEFAULT_FONTS_DIR / "sources.json").read_text(encoding="utf-8"))
+    assert manifest["schema_version"] == 2
     records = manifest["fonts"]
     assert {str(item["family"]) for item in records} == expected
     files = renderer.resolve_font_files(renderer.DEFAULT_FONTS_DIR, expected)
     assert len(files) == len(expected)
     for item in records:
+        assert len(str(item["sha256"])) == 64
+        assert len(str(item["source_ref"])) >= 12
+        assert str(item["source"]).startswith("https://")
+        assert str(item["version"]).strip()
+        assert str(item["copyright"]).strip()
+        assert item["license"] == "SIL Open Font License 1.1"
+        assert isinstance(item["reserved_font_names"], list)
+        expected_license, expected_reserved_names = expected_metadata[item["family"]]
+        assert item["license_file"] == expected_license
+        assert set(item["reserved_font_names"]) == expected_reserved_names
         license_file = renderer.DEFAULT_FONTS_DIR / str(item["license_file"])
         assert license_file.is_file() and license_file.stat().st_size > 0
+        license_text = license_file.read_text(encoding="utf-8")
+        assert "SIL OPEN FONT LICENSE Version 1.1" in license_text
+        notice_name = item.get("notice_file")
+        if notice_name:
+            notice_file = renderer.DEFAULT_FONTS_DIR / str(notice_name)
+            assert notice_file.is_file() and notice_file.stat().st_size > 0
 
 
 def check_cli_dry_run_and_batch() -> None:

@@ -40,12 +40,21 @@ Use the profile as a restrained hierarchy, not decoration on every word. The ren
 
 ## Fonts
 
-The Skill bundles four SIL Open Font License families and passes `assets/fonts` to FFmpeg/libass automatically:
+The Skill bundles eight SIL Open Font License families and passes `assets/fonts` to FFmpeg/libass automatically:
 
 - `Noto Sans SC`: functional body and business display;
 - `ZCOOL XiaoWei`: editorial and refined titles;
 - `Ma Shan Zheng`: Chinese-style title cards;
 - `ZCOOL KuaiLe`: playful Vlog and journal emphasis.
+- `Smiley Sans Oblique`: modern posters and light editorial layouts;
+- `Gen Jyuu Gothic Heavy`: restrained business and data layouts;
+- `GenSenRounded TW H`: rounded supporting copy;
+- `HouZunSongTi`: premium and Chinese-style serif titles.
+
+Every bundled file has a pinned upstream source, version, SHA-256, copyright,
+license, and Reserved Font Name record in `assets/fonts/sources.json`. Commercial
+fonts without verifiable redistribution permission are intentionally excluded
+from the public repository and must use a project-local private font directory.
 
 Use `layout.top_font` and `layout.bottom_font` only when a project must override the selected template. A custom `render.fonts_dir` must point to a directory inside that project so the project remains self-contained.
 
