@@ -1233,14 +1233,11 @@ def preflight_layout_text(source_project: dict[str, Any]) -> dict[str, Any]:
     emphasis, emphasis_warnings = resolve_emphasis(project, scenes)
     warnings.extend(emphasis_warnings)
     regions: list[dict[str, Any]] = []
-    seen: set[tuple[str, str]] = set()
     for scene in scenes:
         for region in ("top", "bottom"):
             text = str(scene.get(f"{region}_text") or "").strip()
-            key = (region, text)
-            if not text or key in seen:
+            if not text:
                 continue
-            seen.add(key)
             highlights = normalize_highlights(
                 scene, f"{region}_highlights", text, layout, emphasis
             )
@@ -1256,6 +1253,7 @@ def preflight_layout_text(source_project: dict[str, Any]) -> dict[str, Any]:
             regions.append(
                 {
                     "field": f"{region}_text",
+                    "scene_id": str(scene.get("id") or ""),
                     "font_size": font_size,
                     "lines": wrapped.count("\n") + 1,
                 }
