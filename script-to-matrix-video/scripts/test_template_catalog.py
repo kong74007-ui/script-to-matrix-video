@@ -443,6 +443,23 @@ def check_paths_and_fonts() -> None:
         assert media[0]["identity"] == media[1]["identity"]
 
 
+def check_cover_font_bundle() -> None:
+    expected = {
+        "Noto Sans SC", "ZCOOL XiaoWei", "Ma Shan Zheng", "ZCOOL KuaiLe",
+        "zihunbiantaoti", "Smiley Sans Oblique", "DaigoMinteuA", "Gen Jyuu Gothic Heavy",
+        "GenSenRounded TW H", "HouZunSongTi", "AaHouDiHei",
+        "Pangmenzhengdaoqingsongti", "Kingnam Bobo", "YS HelloFont BangBangTi",
+    }
+    manifest = json.loads((renderer.DEFAULT_FONTS_DIR / "sources.json").read_text(encoding="utf-8"))
+    records = manifest["fonts"]
+    assert {str(item["family"]) for item in records} == expected
+    files = renderer.resolve_font_files(renderer.DEFAULT_FONTS_DIR, expected)
+    assert len(files) == len(expected)
+    for item in records:
+        license_file = renderer.DEFAULT_FONTS_DIR / str(item["license_file"])
+        assert license_file.is_file() and license_file.stat().st_size > 0
+
+
 def check_cli_dry_run_and_batch() -> None:
     with tempfile.TemporaryDirectory() as temp_value:
         temp = Path(temp_value)
@@ -822,6 +839,7 @@ if __name__ == "__main__":
     check_layout_and_ass()
     check_emphasis_protocol()
     check_paths_and_fonts()
+    check_cover_font_bundle()
     check_cli_dry_run_and_batch()
     check_concurrency_and_boundaries()
     check_real_render()
