@@ -41,7 +41,28 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project", type=Path, help="Path to project.json")
     parser.add_argument("--dry-run", action="store_true", help="Validate and report without rendering")
+    parser.add_argument(
+        "--layout-preflight",
+        action="store_true",
+        help="Validate template text layout only; do not inspect media or invoke ffmpeg",
+    )
     return parser.parse_args()
+
+
+class LayoutTextError(RuntimeError):
+    """A persistent template text region cannot fit at its configured minimum size."""
+
+    def __init__(self, field: str) -> None:
+        self.field = field
+        super().__init__(f"{field} cannot fit at the minimum font size")
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "ok": False,
+            "code": "text_overflow",
+            "field": self.field,
+            "error": str(self),
+        }
 
 
 def run(command: list[str], cwd: Path | None = None) -> None:
@@ -859,6 +880,39 @@ def fit_emphasis(
     return font_size, fitted
 
 
+def fit_wrapped_layout_text(
+    text: str,
+    longest: int,
+    highlights: list[dict[str, Any]],
+    layout: dict[str, Any],
+    region: str,
+) -> tuple[int, list[dict[str, Any]]]:
+    """Fit one already-wrapped persistent region with the renderer's exact rules."""
+
+    if region not in {"top", "bottom"}:
+        raise ValueError(f"unsupported layout text region: {region}")
+    default_size = int(layout[f"{region}_font_size"])
+    min_size = int(layout[f"{region}_min_font_size"])
+    max_chars = int(layout[f"{region}_max_chars"])
+    font_size = max(
+        min_size,
+        round(default_size * min(1.0, max_chars / max(1, longest))),
+    )
+    try:
+        return fit_emphasis(
+            text,
+            highlights,
+            font_size,
+            min_size,
+            default_size,
+            max_chars,
+        )
+    except RuntimeError as exc:
+        if "fit" in str(exc) or "overflow" in str(exc):
+            raise LayoutTextError(f"{region}_text") from exc
+        raise
+
+
 def ass_highlight_text(
     text: str,
     highlights: list[dict[str, Any]],
@@ -1158,6 +1212,62 @@ def resolve_layout(
     }
 
 
+def preflight_layout_text(source_project: dict[str, Any]) -> dict[str, Any]:
+    """Validate persistent template copy without media, fonts, ffmpeg, or rendering."""
+
+    project, template_id = resolve_template(source_project)
+    canvas = project.get("canvas", {})
+    if not isinstance(canvas, dict):
+        raise RuntimeError("canvas must be an object")
+    width = int(canvas.get("width", 1080))
+    height = int(canvas.get("height", 1920))
+    if width <= 0 or height <= 0 or width % 2 or height % 2:
+        raise RuntimeError("Canvas width and height must be positive even integers")
+    scenes = project.get("scenes")
+    if not isinstance(scenes, list) or not scenes or any(not isinstance(scene, dict) for scene in scenes):
+        raise RuntimeError("project.json must contain a non-empty array of scene objects")
+    warnings: list[str] = []
+    layout = resolve_layout(project, width, height, warnings)
+    if not layout:
+        raise RuntimeError("layout preflight requires a text-media-text template")
+    emphasis, emphasis_warnings = resolve_emphasis(project, scenes)
+    warnings.extend(emphasis_warnings)
+    regions: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for scene in scenes:
+        for region in ("top", "bottom"):
+            text = str(scene.get(f"{region}_text") or "").strip()
+            key = (region, text)
+            if not text or key in seen:
+                continue
+            seen.add(key)
+            highlights = normalize_highlights(
+                scene, f"{region}_highlights", text, layout, emphasis
+            )
+            wrapped, longest, highlights = wrap_highlighted_text(
+                text,
+                layout[f"{region}_max_chars"],
+                layout[f"{region}_max_lines"],
+                highlights,
+            )
+            font_size, _ = fit_wrapped_layout_text(
+                wrapped, longest, highlights, layout, region
+            )
+            regions.append(
+                {
+                    "field": f"{region}_text",
+                    "font_size": font_size,
+                    "lines": wrapped.count("\n") + 1,
+                }
+            )
+    return {
+        "ok": True,
+        "template_id": template_id,
+        "regions": regions,
+        "warnings": warnings,
+    }
+
+
 def write_ass(
     project: dict[str, Any],
     path: Path,
@@ -1248,17 +1358,12 @@ def write_ass(
                 cover_max_lines,
                 cover_highlights,
             )
-            cover_size = max(
-                layout["top_min_font_size"],
-                round(layout["top_font_size"] * min(1.0, layout["top_max_chars"] / max(1, cover_longest))),
-            )
-            cover_size, cover_highlights = fit_emphasis(
+            cover_size, cover_highlights = fit_wrapped_layout_text(
                 cover_text,
+                cover_longest,
                 cover_highlights,
-                cover_size,
-                layout["top_min_font_size"],
-                layout["top_font_size"],
-                layout["top_max_chars"],
+                layout,
+                "top",
             )
             cover_tag_parts = [f"\\an5", f"\\pos({width // 2},{layout['top_text_y']})", f"\\fs{cover_size}"]
             if layout["text_pop_in"]:
@@ -1297,17 +1402,12 @@ def write_ass(
                     layout["top_max_lines"],
                     top_highlights,
                 )
-                top_size = max(
-                    layout["top_min_font_size"],
-                    round(layout["top_font_size"] * min(1.0, layout["top_max_chars"] / max(1, top_longest))),
-                )
-                top_size, top_highlights = fit_emphasis(
+                top_size, top_highlights = fit_wrapped_layout_text(
                     top_text,
+                    top_longest,
                     top_highlights,
-                    top_size,
-                    layout["top_min_font_size"],
-                    layout["top_font_size"],
-                    layout["top_max_chars"],
+                    layout,
+                    "top",
                 )
                 top_start = entry["start"]
                 if entry is timeline[0] and cover_title:
@@ -1371,20 +1471,12 @@ def write_ass(
                 bottom_highlights,
             )
             if fixed_bottom_text:
-                bottom_size = max(
-                    layout["bottom_min_font_size"],
-                    round(
-                        layout["bottom_font_size"]
-                        * min(1.0, layout["bottom_max_chars"] / max(1, bottom_longest))
-                    ),
-                )
-                bottom_size, bottom_highlights = fit_emphasis(
+                bottom_size, bottom_highlights = fit_wrapped_layout_text(
                     fixed_bottom_text,
+                    bottom_longest,
                     bottom_highlights,
-                    bottom_size,
-                    layout["bottom_min_font_size"],
-                    layout["bottom_font_size"],
-                    layout["bottom_max_chars"],
+                    layout,
+                    "bottom",
                 )
                 bottom_tag_parts = [
                     "\\an5",
@@ -1429,20 +1521,12 @@ def write_ass(
                     layout["bottom_max_lines"],
                     bottom_highlights,
                 )
-                caption_size = max(
-                    layout["bottom_min_font_size"],
-                    round(
-                        layout["bottom_font_size"]
-                        * min(1.0, layout["bottom_max_chars"] / max(1, caption_longest))
-                    ),
-                )
-                caption_size, bottom_highlights = fit_emphasis(
+                caption_size, bottom_highlights = fit_wrapped_layout_text(
                     caption_text,
+                    caption_longest,
                     bottom_highlights,
-                    caption_size,
-                    layout["bottom_min_font_size"],
-                    layout["bottom_font_size"],
-                    layout["bottom_max_chars"],
+                    layout,
+                    "bottom",
                 )
                 bottom_tags = f"{{\\an5\\pos({width // 2},{layout['bottom_text_y']})\\fs{caption_size}}}"
                 caption_rendered = ass_highlight_text(
@@ -1806,6 +1890,9 @@ def main() -> int:
     project_path = args.project.resolve()
     root = project_path.parent
     source_project, source_sha256 = load_json_snapshot(project_path)
+    if args.layout_preflight:
+        print(json.dumps(preflight_layout_text(source_project), ensure_ascii=False))
+        return 0
     project, template_id = resolve_template(source_project)
     ffmpeg, ffprobe = validate_tools()
 
@@ -2176,6 +2263,9 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
+    except LayoutTextError as exc:
+        print(json.dumps(exc.as_dict(), ensure_ascii=False), file=sys.stderr)
+        raise SystemExit(1)
     except Exception as exc:
         print(json.dumps({"ok": False, "error": str(exc)[:4000]}, ensure_ascii=False), file=sys.stderr)
         raise SystemExit(1)
