@@ -189,6 +189,37 @@ def check_layout_and_ass() -> None:
         text_fade_ins = [int(value) for value in re.findall(r"\\fad\((\d+),\d+\)", ass)]
         assert text_fade_ins and all(value == 0 for value in text_fade_ins)
 
+        top = "大健康行业的私域复购率是40%，美妆只有15%。选赛道这件事，数据不会骗人。"
+        bottom = "评论区扣勾兑"
+        native_project, _ = renderer.resolve_template(
+            {
+                "layout": {"template_id": "native-bold"},
+                "cover": {"title": top},
+                "render": {"subtitle_font": "Noto Sans SC"},
+            }
+        )
+        native_layout = renderer.resolve_layout(native_project, 1080, 1920, [])
+        assert native_layout and native_layout["top_text_layout"] == "hero-number"
+        native_ass_path = temp / "native.ass"
+        renderer.write_ass(
+            native_project,
+            native_ass_path,
+            1080,
+            1920,
+            [{"scene": {"top_text": top, "bottom_text": bottom}, "start": 0.0, "duration": 8.0}],
+            native_layout,
+        )
+        native_ass = native_ass_path.read_text(encoding="utf-8-sig")
+        assert "\\an7\\pos(90,176)" in native_ass
+        assert "\\an7\\pos(90,278)" in native_ass and "\\fs300" in native_ass
+        assert "\\1c&H0000D4FF&}40%" in native_ass
+        assert "\\1c&H003A45FF&" in native_ass and "15%" in native_ass
+        assert "数据不会骗人" in native_ass
+        native_plain = re.sub(r"\{[^}]*\}", "", native_ass).replace(r"\N", "")
+        assert "美妆只有15%。选赛道这件事，数据不会骗人。" in native_plain
+        assert "\\an7\\pos(90,1740)" in native_ass and "评论区扣勾兑" in native_ass
+        assert "\\fscx94" not in native_ass and "\\fscx96" not in native_ass
+
 
 def check_emphasis_protocol() -> None:
     top = "不是所有字都该一样大"

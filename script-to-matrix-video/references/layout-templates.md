@@ -22,7 +22,7 @@ This template is an independent production function, not merely a styling option
 
 The template has two variants:
 
-- `native-bold`: the default for new projects. It uses strong Chinese display text, thick dark outlines, yellow/red keyword emphasis, a blurred continuation of the current image behind the text bands, near-full-width central media, and a restrained text scale-in.
+- `native-bold`: the default for new projects. It uses a left-aligned data hierarchy, an oversized yellow primary statistic, red comparison numbers, white supporting copy, a blurred continuation of the current image behind the text bands, and near-full-width central media. Text is fully opaque from its first frame and does not scale in.
 - `classic`: the original warm solid-background editorial card. Use only when the user asks for a calm, minimal, or premium information-card treatment.
 
 The default `native-bold` configuration is also registered in the style catalog as `template_id: native-bold`. Prefer `{"layout":{"template_id":"native-bold"}}` for new default projects; use explicit layout fields only when the project needs a deliberate override.
@@ -49,11 +49,12 @@ Do not reproduce player chrome from visual references. Play buttons, progress ba
 
 Default 1080×1920 structure:
 
-- Top information band: `y=0–500`; title center near `y=270`.
-- Media region: `x=20`, `y=500`, `width=1040`, `height=940`.
-- Bottom information band: `y=1440–1920`; CTA center near `y=1650`.
-- Keep essential text above `y=1750` and away from the first 80 px.
-- Use 2–4 intentional title lines and 1–3 CTA/caption lines.
+- Left safe edge: `x=90`; all persistent copy uses the same visual axis.
+- Top title near `y=176`; primary number near `y=278`; short red accent bar at `y=540`; supporting comparison copy near `y=590`.
+- Media region: `x=20`, `y=720`, `width=1040`, `height=860`.
+- Bottom CTA starts near `x=90`, `y=1740`.
+- Keep essential text away from the first 80 px and below `y=1840`.
+- The renderer chooses the first semantic `number` span, or the first deterministic numeric expression, as the hero. It never invents a value. With no number, it renders the complete title as a left-aligned block.
 
 ```json
 {
@@ -66,8 +67,8 @@ Default 1080×1920 structure:
     "background_brightness": -0.22,
     "background_saturation": 0.78,
     "band_color": "#101318",
-    "top_band_opacity": 0.42,
-    "bottom_band_opacity": 0.58,
+    "top_band_opacity": 0.52,
+    "bottom_band_opacity": 0.62,
     "top_text_color": "#FFFFFF",
     "bottom_text_color": "#FFFFFF",
     "text_outline_color": "#111111",
@@ -77,27 +78,49 @@ Default 1080×1920 structure:
     "accent_color": "#FFD400",
     "secondary_accent_color": "#FF453A",
     "auto_highlight": true,
-    "text_pop_in": true,
+    "text_pop_in": false,
+    "text_alignment": "left",
+    "top_text_layout": "hero-number",
+    "top_text_x": 90,
+    "bottom_text_x": 90,
+    "right_safe_margin": 72,
     "top_font_size": 80,
-    "bottom_font_size": 70,
+    "bottom_font_size": 64,
     "top_min_font_size": 52,
     "bottom_min_font_size": 46,
     "top_max_chars": 12,
     "top_max_lines": 4,
-    "bottom_max_chars": 12,
+    "bottom_max_chars": 15,
     "bottom_max_lines": 3,
-    "top_text_y": 270,
-    "bottom_text_y": 1650,
+    "top_text_y": 176,
+    "hero_text_y": 278,
+    "hero_font_size": 300,
+    "hero_min_font_size": 112,
+    "hero_color": "#FFD400",
+    "hero_outline": 8,
+    "hero_title_font_size": 68,
+    "hero_title_min_font_size": 48,
+    "hero_title_outline": 2,
+    "hero_title_max_chars": 18,
+    "hero_title_max_lines": 2,
+    "hero_support_text_y": 590,
+    "hero_support_font_size": 58,
+    "hero_support_min_font_size": 44,
+    "hero_support_max_chars": 17,
+    "hero_support_max_lines": 3,
+    "bottom_text_y": 1740,
     "bottom_text_mode": "fixed",
     "media_border_width": 0,
     "divider_height": 0,
-    "divider_color": "#FFD400",
     "media": {
       "x": 20,
-      "y": 500,
+      "y": 720,
       "width": 1040,
-      "height": 940
-    }
+      "height": 860
+    },
+    "surface_boxes": [
+      {"x": 90, "y": 540, "width": 190, "height": 14, "color": "#FF453A", "opacity": 1}
+    ]
   }
 }
 ```
@@ -106,12 +129,11 @@ Write each scene's display copy with intentional line breaks and a small number 
 
 ```json
 {
-  "top_text": "大健康行业私域复购率 40%\n美妆只有 15%\n选赛道这件事\n数据不会骗人",
+  "top_text": "大健康行业私域复购率是40%，美妆只有15%。选赛道这件事，数据不会骗人。",
   "bottom_text": "现在还想进军这个赛道？\n评论区回复：关键词",
   "top_highlights": [
     {"text": "40%", "color": "#FFD400"},
-    {"text": "15%", "color": "#FF453A"},
-    {"text": "数据不会骗人", "color": "#FFD400"}
+    {"text": "15%", "color": "#FF453A"}
   ],
   "bottom_highlights": [
     {"text": "关键词", "color": "#FFD400"}

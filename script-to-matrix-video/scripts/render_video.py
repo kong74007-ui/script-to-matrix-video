@@ -705,15 +705,15 @@ def normalize_highlights(
             term = str(span.get("text") or "")
             if not term:
                 continue
-            highlights.append(
-                styled_highlight(
-                    term,
-                    str(span["role"]),
-                    layout,
-                    source_start=int(span["start"]),
-                    source_end=int(span["end"]),
-                )
+            highlight = styled_highlight(
+                term,
+                str(span["role"]),
+                layout,
+                source_start=int(span["start"]),
+                source_end=int(span["end"]),
             )
+            highlight["priority"] = int(span.get("priority", 999))
+            highlights.append(highlight)
         return highlights
 
     invalid_semantic_region = bool(
@@ -897,6 +897,184 @@ def ass_highlight_text(
     if cursor < len(text):
         parts.append(ass_escape(text[cursor:]))
     return "".join(parts)
+
+
+def fit_plain_text_size(
+    text: str,
+    font_size: int,
+    min_font_size: int,
+    max_chars: int,
+) -> int:
+    """Fit a wrapped plain-text block without silently dropping copy."""
+
+    longest = max((len(line) for line in text.split("\n")), default=0)
+    return max(min_font_size, round(font_size * min(1.0, max_chars / max(1, longest))))
+
+
+def split_hero_number_copy(
+    text: str,
+    highlights: list[dict[str, Any]],
+    layout: dict[str, Any],
+) -> tuple[str, str, str, list[dict[str, Any]]]:
+    """Split display copy into title, hero number, and supporting copy.
+
+    Semantic number spans win. When semantic emphasis is unavailable, the first
+    percentage, money value, year, or plain number becomes the hero. The source
+    sentence is only re-punctuated for display; no substantive phrase is cut.
+    """
+
+    intervals = highlight_intervals(text, highlights)
+    candidates: list[tuple[int, int, int, int, dict[str, Any] | None]] = []
+    for start, end, item in intervals:
+        term = text[start:end]
+        if item.get("role") == "number" or re.fullmatch(r"(?:[¥￥$])?\d+(?:\.\d+)?(?:%|％|万|亿|年)?", term):
+            role_rank = 0 if item.get("role") == "number" else 1
+            priority = int(item.get("priority", 999)) if str(item.get("priority", "")).isdigit() else 999
+            candidates.append((role_rank, priority, start, end, item))
+    if not candidates:
+        match = re.search(r"(?:[¥￥$])?\d+(?:\.\d+)?(?:%|％|万|亿|年)?", text)
+        if match:
+            candidates.append((2, 999, match.start(), match.end(), None))
+    if not candidates:
+        return text.strip(), "", "", []
+
+    _, _, hero_start, hero_end, _ = min(candidates, key=lambda value: value[:4])
+    title = text[:hero_start].strip(" \t\r\n，,。；;：:、")
+    # Copulas are layout glue immediately before a large statistic. Removing
+    # them keeps the display concise without changing the underlying claim.
+    title = re.sub(r"(?:是|为|达到|高达|约)$", "", title).rstrip()
+
+    support_start = hero_end
+    while support_start < len(text) and text[support_start] in " \t\r\n，,。；;：:、":
+        support_start += 1
+    support = text[support_start:].strip()
+    if "\n" not in support:
+        clause_break = re.search(r"[。！？!?](?=.)", support)
+        if clause_break:
+            support = support[: clause_break.end()] + "\n" + support[clause_break.end() :]
+
+    support_highlights: list[dict[str, Any]] = []
+    for start, end, item in intervals:
+        if start < support_start or end > len(text):
+            continue
+        numeric = bool(
+            item.get("role") == "number"
+            or re.fullmatch(
+                r"\d+(?:\.\d+)?(?:%|％|万|亿|年)?", str(item.get("text") or "")
+            )
+        )
+        if not numeric:
+            continue
+        shifted = dict(item)
+        shifted.pop("render_start", None)
+        shifted.pop("render_end", None)
+        shifted.pop("source_start", None)
+        shifted.pop("source_end", None)
+        shifted["color"] = layout["secondary_accent_color"]
+        support_highlights.append(shifted)
+
+    if support and not support_highlights:
+        for match in re.finditer(r"\d+(?:\.\d+)?(?:%|％|万|亿|年)?", support):
+            support_highlights.append(
+                styled_highlight(
+                    match.group(0),
+                    "number",
+                    layout,
+                    overrides={"color": layout["secondary_accent_color"], "scale": 1.08},
+                )
+            )
+    return title, text[hero_start:hero_end], support, support_highlights
+
+
+def append_hero_number_events(
+    lines: list[str],
+    scene: dict[str, Any],
+    text: str,
+    start: float,
+    end: float,
+    width: int,
+    layout: dict[str, Any],
+    emphasis: dict[str, Any] | None,
+) -> None:
+    """Render the reusable left-aligned title / statistic / support hierarchy."""
+
+    highlights = normalize_highlights(scene, "top_highlights", text, layout, emphasis)
+    title, hero, support, support_highlights = split_hero_number_copy(text, highlights, layout)
+    x = layout["top_text_x"]
+
+    if not hero:
+        wrapped, _ = wrap_layout_text(title, layout["top_max_chars"], layout["top_max_lines"])
+        size = fit_plain_text_size(
+            wrapped, layout["top_font_size"], layout["top_min_font_size"], layout["top_max_chars"]
+        )
+        lines.append(
+            f"Dialogue: 1,{ass_time(start)},{ass_time(end)},TopText,,0,0,0,,"
+            f"{{\\an7\\pos({x},{layout['top_text_y']})\\fad(0,100)\\fs{size}}}{ass_escape(wrapped)}"
+        )
+        return
+
+    if title:
+        title, _ = wrap_layout_text(
+            title, layout["hero_title_max_chars"], layout["hero_title_max_lines"]
+        )
+        title_size = fit_plain_text_size(
+            title,
+            layout["hero_title_font_size"],
+            layout["hero_title_min_font_size"],
+            layout["hero_title_max_chars"],
+        )
+        lines.append(
+            f"Dialogue: 1,{ass_time(start)},{ass_time(end)},TopText,,0,0,0,,"
+            f"{{\\an7\\pos({x},{layout['top_text_y']})\\fad(0,100)\\fs{title_size}"
+            f"\\bord{layout['hero_title_outline']}}}{ass_escape(title)}"
+        )
+
+    available = max(120, width - x - layout["right_safe_margin"])
+    weighted_chars = sum(0.68 if char.isascii() else 1.0 for char in hero)
+    hero_size = min(
+        layout["hero_font_size"],
+        max(layout["hero_min_font_size"], math.floor(available / max(1.0, weighted_chars))),
+    )
+    lines.append(
+        f"Dialogue: 1,{ass_time(start)},{ass_time(end)},TopText,,0,0,0,,"
+        f"{{\\an7\\pos({x},{layout['hero_text_y']})\\fad(0,100)\\fs{hero_size}"
+        f"\\bord{layout['hero_outline']}"
+        f"\\1c{ass_primary_color(layout['hero_color'])}}}{ass_escape(hero)}"
+    )
+
+    if support:
+        support, longest, support_highlights = wrap_highlighted_text(
+            support,
+            layout["hero_support_max_chars"],
+            layout["hero_support_max_lines"],
+            support_highlights,
+        )
+        support_size = max(
+            layout["hero_support_min_font_size"],
+            round(
+                layout["hero_support_font_size"]
+                * min(1.0, layout["hero_support_max_chars"] / max(1, longest))
+            ),
+        )
+        support_size, support_highlights = fit_emphasis(
+            support,
+            support_highlights,
+            support_size,
+            layout["hero_support_min_font_size"],
+            layout["hero_support_font_size"],
+            layout["hero_support_max_chars"],
+        )
+        rendered = ass_highlight_text(
+            support,
+            support_highlights,
+            layout["top_text_color"],
+            layout["top_text_outline"],
+            layout["text_outline_color"],
+        )
+        lines.append(
+            f"Dialogue: 1,{ass_time(start)},{ass_time(end)},TopText,,0,0,0,,"
+            f"{{\\an7\\pos({x},{layout['hero_support_text_y']})\\fad(0,100)\\fs{support_size}}}{rendered}"
+        )
 
 
 def even_int(value: Any, default: int) -> int:
@@ -1106,6 +1284,14 @@ def resolve_layout(
 
     accent_color = str(raw.get("accent_color", "#FFD400" if native_bold else "#D97745"))
     secondary_accent_color = str(raw.get("secondary_accent_color", "#FF453A"))
+    text_alignment = str(raw.get("text_alignment", "center")).strip().lower()
+    if text_alignment not in {"center", "left"}:
+        warnings.append(f"unsupported text_alignment {text_alignment!r}; used 'center'")
+        text_alignment = "center"
+    top_text_layout = str(raw.get("top_text_layout", "block")).strip().lower()
+    if top_text_layout not in {"block", "hero-number"}:
+        warnings.append(f"unsupported top_text_layout {top_text_layout!r}; used 'block'")
+        top_text_layout = "block"
     return {
         "preset": preset,
         "variant": variant,
@@ -1129,6 +1315,26 @@ def resolve_layout(
         "media_height": media_height,
         "top_text_y": top_y,
         "bottom_text_y": bottom_y,
+        "text_alignment": text_alignment,
+        "top_text_layout": top_text_layout,
+        "top_text_x": bounded_int(raw.get("top_text_x"), "layout.top_text_x", 90, 0, width),
+        "bottom_text_x": bounded_int(raw.get("bottom_text_x"), "layout.bottom_text_x", 90, 0, width),
+        "right_safe_margin": bounded_int(raw.get("right_safe_margin"), "layout.right_safe_margin", 72, 0, width // 2),
+        "hero_text_y": bounded_int(raw.get("hero_text_y"), "layout.hero_text_y", 278, 0, height),
+        "hero_font_size": bounded_int(raw.get("hero_font_size"), "layout.hero_font_size", 238, 48, height // 2),
+        "hero_min_font_size": bounded_int(raw.get("hero_min_font_size"), "layout.hero_min_font_size", 112, 36, height // 2),
+        "hero_color": validated_color(raw.get("hero_color", accent_color), "layout.hero_color"),
+        "hero_outline": bounded_int(raw.get("hero_outline"), "layout.hero_outline", 8, 0, 16),
+        "hero_title_font_size": bounded_int(raw.get("hero_title_font_size"), "layout.hero_title_font_size", 64, 12, height // 2),
+        "hero_title_min_font_size": bounded_int(raw.get("hero_title_min_font_size"), "layout.hero_title_min_font_size", 48, 12, height // 2),
+        "hero_title_outline": bounded_int(raw.get("hero_title_outline"), "layout.hero_title_outline", 2, 0, 16),
+        "hero_title_max_chars": max(6, int(raw.get("hero_title_max_chars", 18))),
+        "hero_title_max_lines": min(2, max(1, int(raw.get("hero_title_max_lines", 2)))),
+        "hero_support_text_y": bounded_int(raw.get("hero_support_text_y"), "layout.hero_support_text_y", 574, 0, height),
+        "hero_support_font_size": bounded_int(raw.get("hero_support_font_size"), "layout.hero_support_font_size", 58, 12, height // 2),
+        "hero_support_min_font_size": bounded_int(raw.get("hero_support_min_font_size"), "layout.hero_support_min_font_size", 44, 12, height // 2),
+        "hero_support_max_chars": max(6, int(raw.get("hero_support_max_chars", 17))),
+        "hero_support_max_lines": min(3, max(1, int(raw.get("hero_support_max_lines", 3)))),
         "top_font": validated_font(raw.get("top_font"), "layout.top_font", allow_empty=True),
         "bottom_font": validated_font(raw.get("bottom_font"), "layout.bottom_font", allow_empty=True),
         "top_font_size": top_font_size,
@@ -1232,9 +1438,18 @@ def write_ass(
             if cover_replaces_first_title
             else min(1.2, timeline[0]["duration"])
         )
+        layered_cover = bool(
+            layout
+            and cover_replaces_first_title
+            and layout["top_text_layout"] == "hero-number"
+        )
+        if layered_cover:
+            # The layered title is already the first-frame cover; do not render a
+            # duplicate centered cover event on top of it.
+            cover_end = 0.0
         cover_max_chars = layout["top_max_chars"] if layout else 10
         cover_max_lines = layout["top_max_lines"] if layout else 2
-        if layout:
+        if layout and not layered_cover:
             cover_highlights = (
                 normalize_highlights(
                     timeline[0]["scene"], "top_highlights", cover_title, layout, emphasis
@@ -1260,7 +1475,9 @@ def write_ass(
                 layout["top_font_size"],
                 layout["top_max_chars"],
             )
-            cover_tag_parts = [f"\\an5", f"\\pos({width // 2},{layout['top_text_y']})", f"\\fs{cover_size}"]
+            cover_alignment = 7 if layout["text_alignment"] == "left" else 5
+            cover_x = layout["top_text_x"] if cover_alignment == 7 else width // 2
+            cover_tag_parts = [f"\\an{cover_alignment}", f"\\pos({cover_x},{layout['top_text_y']})", f"\\fs{cover_size}"]
             if layout["text_pop_in"]:
                 cover_tag_parts.extend(["\\fscx94", "\\fscy94", "\\t(0,220,\\fscx100\\fscy100)"])
             cover_tags = "{" + "".join(cover_tag_parts) + "}"
@@ -1274,7 +1491,7 @@ def write_ass(
             lines.append(
                 f"Dialogue: 1,{ass_time(0)},{ass_time(cover_end)},TopText,,0,0,0,,{cover_tags}{cover_rendered}"
             )
-        else:
+        elif not layout:
             cover_text, _ = wrap_layout_text(cover_title, cover_max_chars, cover_max_lines)
             lines.append(
                 f"Dialogue: 1,{ass_time(0)},{ass_time(cover_end)},Cover,,0,0,0,,{ass_escape(cover_text)}"
@@ -1288,50 +1505,64 @@ def write_ass(
                 fallback = scene.get("caption_chunks") or split_caption(str(scene.get("text") or ""), max_chars=12)
                 top_text = str(fallback[0]).strip() if fallback else ""
             if top_text:
-                top_highlights = normalize_highlights(
-                    scene, "top_highlights", top_text, layout, emphasis
-                )
-                top_text, top_longest, top_highlights = wrap_highlighted_text(
-                    top_text,
-                    layout["top_max_chars"],
-                    layout["top_max_lines"],
-                    top_highlights,
-                )
-                top_size = max(
-                    layout["top_min_font_size"],
-                    round(layout["top_font_size"] * min(1.0, layout["top_max_chars"] / max(1, top_longest))),
-                )
-                top_size, top_highlights = fit_emphasis(
-                    top_text,
-                    top_highlights,
-                    top_size,
-                    layout["top_min_font_size"],
-                    layout["top_font_size"],
-                    layout["top_max_chars"],
-                )
                 top_start = entry["start"]
                 if entry is timeline[0] and cover_title:
                     top_start += cover_end
                 if top_start < entry["start"] + entry["duration"]:
-                    top_tag_parts = [
-                        "\\an5",
-                        f"\\pos({width // 2},{layout['top_text_y']})",
-                        "\\fad(0,100)",
-                        f"\\fs{top_size}",
-                    ]
-                    if layout["text_pop_in"]:
-                        top_tag_parts.extend(["\\fscx94", "\\fscy94", "\\t(0,220,\\fscx100\\fscy100)"])
-                    top_tags = "{" + "".join(top_tag_parts) + "}"
-                    top_rendered = ass_highlight_text(
-                        top_text,
-                        top_highlights,
-                        layout["top_text_color"],
-                        layout["top_text_outline"],
-                        layout["text_outline_color"],
-                    )
-                    lines.append(
-                        f"Dialogue: 1,{ass_time(top_start)},{ass_time(entry['start'] + entry['duration'])},TopText,,0,0,0,,{top_tags}{top_rendered}"
-                    )
+                    if layout["top_text_layout"] == "hero-number":
+                        append_hero_number_events(
+                            lines,
+                            scene,
+                            top_text,
+                            top_start,
+                            entry["start"] + entry["duration"],
+                            width,
+                            layout,
+                            emphasis,
+                        )
+                    else:
+                        top_highlights = normalize_highlights(
+                            scene, "top_highlights", top_text, layout, emphasis
+                        )
+                        top_text, top_longest, top_highlights = wrap_highlighted_text(
+                            top_text,
+                            layout["top_max_chars"],
+                            layout["top_max_lines"],
+                            top_highlights,
+                        )
+                        top_size = max(
+                            layout["top_min_font_size"],
+                            round(layout["top_font_size"] * min(1.0, layout["top_max_chars"] / max(1, top_longest))),
+                        )
+                        top_size, top_highlights = fit_emphasis(
+                            top_text,
+                            top_highlights,
+                            top_size,
+                            layout["top_min_font_size"],
+                            layout["top_font_size"],
+                            layout["top_max_chars"],
+                        )
+                        top_alignment = 7 if layout["text_alignment"] == "left" else 5
+                        top_x = layout["top_text_x"] if top_alignment == 7 else width // 2
+                        top_tag_parts = [
+                            f"\\an{top_alignment}",
+                            f"\\pos({top_x},{layout['top_text_y']})",
+                            "\\fad(0,100)",
+                            f"\\fs{top_size}",
+                        ]
+                        if layout["text_pop_in"]:
+                            top_tag_parts.extend(["\\fscx94", "\\fscy94", "\\t(0,220,\\fscx100\\fscy100)"])
+                        top_tags = "{" + "".join(top_tag_parts) + "}"
+                        top_rendered = ass_highlight_text(
+                            top_text,
+                            top_highlights,
+                            layout["top_text_color"],
+                            layout["top_text_outline"],
+                            layout["text_outline_color"],
+                        )
+                        lines.append(
+                            f"Dialogue: 1,{ass_time(top_start)},{ass_time(entry['start'] + entry['duration'])},TopText,,0,0,0,,{top_tags}{top_rendered}"
+                        )
         for overlay in scene.get("overlays") or []:
             if not isinstance(overlay, dict):
                 raise RuntimeError("scene overlays must contain objects")
@@ -1386,9 +1617,11 @@ def write_ass(
                     layout["bottom_font_size"],
                     layout["bottom_max_chars"],
                 )
+                bottom_alignment = 7 if layout["text_alignment"] == "left" else 5
+                bottom_x = layout["bottom_text_x"] if bottom_alignment == 7 else width // 2
                 bottom_tag_parts = [
-                    "\\an5",
-                    f"\\pos({width // 2},{layout['bottom_text_y']})",
+                    f"\\an{bottom_alignment}",
+                    f"\\pos({bottom_x},{layout['bottom_text_y']})",
                     "\\fad(0,100)",
                     f"\\fs{bottom_size}",
                 ]
@@ -1444,7 +1677,9 @@ def write_ass(
                     layout["bottom_font_size"],
                     layout["bottom_max_chars"],
                 )
-                bottom_tags = f"{{\\an5\\pos({width // 2},{layout['bottom_text_y']})\\fs{caption_size}}}"
+                bottom_alignment = 7 if layout["text_alignment"] == "left" else 5
+                bottom_x = layout["bottom_text_x"] if bottom_alignment == 7 else width // 2
+                bottom_tags = f"{{\\an{bottom_alignment}\\pos({bottom_x},{layout['bottom_text_y']})\\fs{caption_size}}}"
                 caption_rendered = ass_highlight_text(
                     caption_text,
                     bottom_highlights,
