@@ -462,6 +462,108 @@ def ass_escape(text: str) -> str:
     return text.replace("\\", r"\\").replace("{", r"\{").replace("}", r"\}").replace("\n", r"\N")
 
 
+def _balanced_layout_chunks(
+    text: str, max_chars: int, max_lines: int, protected_terms: list[str]
+) -> list[str] | None:
+    protected = sorted({term for term in protected_terms if term and term in text}, key=len, reverse=True)
+    tokens: list[str] = []
+    cursor = 0
+    counters = "个家人位名款套种项台年月日天次岁"
+    while cursor < len(text):
+        matched = next((term for term in protected if text.startswith(term, cursor)), None)
+        if matched:
+            tokens.append(matched)
+            cursor += len(matched)
+            continue
+        ascii_match = re.match(r"[+&./_-]?[A-Za-z0-9]+(?:[+&./_-][A-Za-z0-9]+)*", text[cursor:])
+        if ascii_match:
+            token = ascii_match.group(0)
+            cursor += len(token)
+            if cursor < len(text) and text[cursor] in counters:
+                token += text[cursor]
+                cursor += 1
+            tokens.append(token)
+            continue
+        char = text[cursor]
+        cursor += 1
+        if char.isspace():
+            previous_ascii = bool(tokens and tokens[-1][-1:].isascii() and tokens[-1][-1:].isalnum())
+            next_ascii = bool(cursor < len(text) and text[cursor].isascii() and text[cursor].isalnum())
+            if previous_ascii and next_ascii:
+                tokens.append(" ")
+            continue
+        tokens.append(char)
+    if not tokens:
+        return None
+
+    def token_width(value: str) -> float:
+        return sum(0.35 if char.isspace() else 0.62 if char.isascii() else 1.0 for char in value)
+
+    def boundary_penalty(left: str, right: str) -> float:
+        left_char, right_char = left[-1], right[0]
+        if right_char in "，。！？；：、,.!?;:)]}）】》」』+%％":
+            return 1000.0
+        if left_char in "([{（【《「『+" or (
+            left_char.isascii() and right_char.isascii()
+            and (left_char.isalnum() or left_char in "+_&./-")
+            and (right_char.isalnum() or right_char in "+_&./-")
+        ):
+            return 1000.0
+        if (
+            left_char in "0123456789一二三四五六七八九十几两" and right_char in counters
+        ) or left_char + right_char in {
+            "也能", "都能", "可以", "不会", "不能", "需要", "想要",
+            "已经", "正在", "还是", "就是", "如果", "所以", "但是",
+            "而且", "以及",
+        }:
+            return 1000.0
+        if left_char in "。！？!?；;":
+            return -20.0
+        if left_char in "，,：:":
+            return -3.0
+        return 0.0
+
+    target_lines = min(max_lines, max(1, math.ceil(len(text) / max_chars)))
+    total_width = sum(token_width(token) for token in tokens)
+    ideal = total_width / target_lines
+    line_limit = max(float(max_chars), max(map(token_width, tokens)), math.ceil(ideal) + 3)
+    prefix = [0.0]
+    for token in tokens:
+        prefix.append(prefix[-1] + token_width(token))
+    for _ in range(max(1, len(text))):
+        states: dict[tuple[int, int], tuple[float, list[int]]] = {(0, 0): (0.0, [])}
+        for line_index in range(target_lines):
+            for start in range(len(tokens)):
+                state = states.get((line_index, start))
+                if state is None:
+                    continue
+                remaining_lines = target_lines - line_index - 1
+                for end in range(start + 1, len(tokens) + 1):
+                    if len(tokens) - end < remaining_lines:
+                        break
+                    width = prefix[end] - prefix[start]
+                    if width > line_limit + 0.001:
+                        break
+                    penalty = boundary_penalty(tokens[end - 1], tokens[end]) if end < len(tokens) else 0.0
+                    if penalty >= 1000:
+                        continue
+                    score = state[0] + (width - ideal) ** 2 + penalty
+                    if line_index == target_lines - 1 and width < ideal * 0.58:
+                        score += (ideal - width) ** 2 * 4
+                    key = (line_index + 1, end)
+                    if key not in states or score < states[key][0]:
+                        states[key] = (score, state[1] + [end])
+        result = states.get((target_lines, len(tokens)))
+        if result:
+            chunks, start = [], 0
+            for end in result[1]:
+                chunks.append("".join(tokens[start:end]).strip())
+                start = end
+            return chunks
+        line_limit += 1
+    return None
+
+
 def wrap_layout_text(
     text: str,
     max_chars: int,
@@ -481,6 +583,9 @@ def wrap_layout_text(
         return "", 0
     effective_max = max(max_chars, math.ceil(len(compact) / max_lines))
     protected = sorted({term for term in protected_terms or [] if term and term in compact}, key=len, reverse=True)
+    balanced = _balanced_layout_chunks(compact, max_chars, max_lines, protected)
+    if balanced:
+        return "\n".join(balanced), max(map(len, balanced), default=0)
     if protected:
         tokens: list[str] = []
         cursor = 0
@@ -554,6 +659,84 @@ def wrap_highlighted_text(
     widest_token = max((len(value) for value, _, forced in tokens if not forced), default=0)
     width = max(max_chars, widest_token, math.ceil(visible_length / max_lines))
 
+    def display_width(value: str) -> float:
+        return sum(
+            0.35 if char.isspace() else 0.62 if char.isascii() else 1.0
+            for char in value
+        )
+
+    def break_penalty(left: str, right: str) -> float:
+        if not left or not right:
+            return 0.0
+        left_char, right_char = left[-1], right[0]
+        if right_char in "，。！？；：、,.!?;:)]}）】》」』+%％":
+            return 1000.0
+        if left_char in "([{（【《「『+" or (
+            left_char.isascii() and right_char.isascii()
+            and (left_char.isalnum() or left_char in "+_&./-")
+            and (right_char.isalnum() or right_char in "+_&./-")
+        ):
+            return 1000.0
+        if left_char.isdigit() and right_char in "个家人位名款套种项台年月日天次岁":
+            return 1000.0
+        if (
+            left_char in "一二三四五六七八九十几两" and right_char in "个家人位名款套种项台年月日天次岁"
+        ) or left_char + right_char in {
+            "也能", "都能", "可以", "不会", "不能", "需要", "想要",
+            "已经", "正在", "还是", "就是", "如果", "所以", "但是",
+            "而且", "以及",
+        }:
+            return 1000.0
+        if left_char in "。！？!?；;":
+            return -20.0
+        if left_char in "，,：:":
+            return -3.0
+        return 0.0
+
+    def balanced_pack(line_width: int) -> list[list[tuple[str, int | None, bool]]] | None:
+        if any(forced for _, _, forced in tokens):
+            return None
+        target_lines = min(max_lines, max(1, math.ceil(visible_length / max_chars)))
+        total_width = sum(display_width(value) for value, _, _ in tokens)
+        ideal = total_width / target_lines
+        prefix = [0.0]
+        for value, _, _ in tokens:
+            prefix.append(prefix[-1] + display_width(value))
+        states: dict[tuple[int, int], tuple[float, list[int]]] = {(0, 0): (0.0, [])}
+        for line_index in range(target_lines):
+            for start in range(len(tokens)):
+                state = states.get((line_index, start))
+                if state is None:
+                    continue
+                remaining_lines = target_lines - line_index - 1
+                for end in range(start + 1, len(tokens) + 1):
+                    if len(tokens) - end < remaining_lines:
+                        break
+                    current_width = prefix[end] - prefix[start]
+                    if current_width > line_width + 0.001:
+                        break
+                    if end < len(tokens):
+                        boundary = break_penalty(tokens[end - 1][0], tokens[end][0])
+                        if boundary >= 1000:
+                            continue
+                    else:
+                        boundary = 0.0
+                    score = state[0] + (current_width - ideal) ** 2 + boundary
+                    if line_index == target_lines - 1 and current_width < ideal * 0.58:
+                        score += (ideal - current_width) ** 2 * 4
+                    key = (line_index + 1, end)
+                    if key not in states or score < states[key][0]:
+                        states[key] = (score, state[1] + [end])
+        result = states.get((target_lines, len(tokens)))
+        if result is None:
+            return None
+        packed = []
+        start = 0
+        for end in result[1]:
+            packed.append(tokens[start:end])
+            start = end
+        return packed
+
     def pack(line_width: int) -> list[list[tuple[str, int | None, bool]]]:
         lines: list[list[tuple[str, int | None, bool]]] = [[]]
         line_length = 0
@@ -571,10 +754,10 @@ def wrap_highlighted_text(
             line_length += len(value)
         return [line for line in lines if line]
 
-    lines = pack(width)
+    lines = balanced_pack(width) or pack(width)
     while len(lines) > max_lines and width < max(1, visible_length):
         width += 1
-        lines = pack(width)
+        lines = balanced_pack(width) or pack(width)
     if len(lines) > max_lines:
         raise RuntimeError(f"layout text needs {len(lines)} lines but the template allows {max_lines}; shorten or split it")
 

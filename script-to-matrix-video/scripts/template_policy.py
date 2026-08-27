@@ -233,7 +233,7 @@ def fallback_emphasis(text: str, region: str) -> list[dict[str, Any]]:
 
     patterns = (
         (r"(?:19|20)\d{2}(?:[年/-]\d{1,2})?(?:[月/-]\d{1,2}日?)?", "number", 1),
-        (r"(?:[¥￥$])?\d+(?:[.,]\d+)*(?:%|元|万|亿|岁|天|小时|分钟|秒)?", "number", 1),
+        (r"(?:[¥￥$])?\d+(?:[.,]\d+)*(?:%|元|万|亿|岁|天|小时|分钟|秒|个|家|人|位|名|款|套|种|项|台|次)?", "number", 1),
         (r"[“\"「『][^”\"」』\n]{1,10}[”\"」』]", "conclusion", 2),
     )
     for pattern, role, priority in patterns:

@@ -261,6 +261,25 @@ def check_emphasis_protocol() -> None:
     wrapped_long, _ = renderer.wrap_layout_text(long_text, 5, 2)
     assert wrapped_long.replace("\n", "") == long_text
 
+    business_title = "想开店又怕养团队？1个人+AI员工也能运行一家门店"
+    business_highlights = fallback_emphasis(business_title, "top")
+    assert any(item["text"] == "1个" for item in business_highlights)
+    for item in business_highlights:
+        item["source_start"], item["source_end"] = item["start"], item["end"]
+    balanced, _, _ = renderer.wrap_highlighted_text(
+        business_title, 12, 3, business_highlights
+    )
+    assert balanced.splitlines() == [
+        "想开店又怕养团队？",
+        "1个人+AI员工",
+        "也能运行一家门店",
+    ]
+    plain_balanced, _ = renderer.wrap_layout_text(business_title, 13, 2)
+    assert plain_balanced.splitlines() == [
+        "想开店又怕养团队？",
+        "1个人+AI员工也能运行一家门店",
+    ]
+
     styled_project, _ = renderer.resolve_template(
         {"layout": {"template_id": "torn-magazine"}, "render": {"subtitle_font": "Noto Sans SC"}, **project}
     )
