@@ -7,8 +7,10 @@
     {&quot;id&quot;:&quot;top3&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题3&quot;,&quot;default&quot;:&quot;一群同频高能的优秀伙伴搞事业&quot;},
     {&quot;id&quot;:&quot;bottom1&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;底部副标题&quot;,&quot;default&quot;:&quot;社交破圈｜认知提升｜彼此赋能&quot;},
     {&quot;id&quot;:&quot;bottom2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;底部CTA&quot;,&quot;default&quot;:&quot;每周都有聚会\n感兴趣回复“666”&quot;},
+    {&quot;id&quot;:&quot;duration&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;任务随机时长&quot;,&quot;default&quot;:8,&quot;min&quot;:8,&quot;max&quot;:15,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;},
     {&quot;id&quot;:&quot;videoA&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材A&quot;,&quot;default&quot;:&quot;assets/library/default-a.mp4&quot;},
     {&quot;id&quot;:&quot;videoB&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材B&quot;,&quot;default&quot;:&quot;assets/library/default-b.mp4&quot;},
+    {&quot;id&quot;:&quot;videoC&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材C&quot;,&quot;default&quot;:&quot;assets/library/default-c.mp4&quot;},
     {&quot;id&quot;:&quot;bgm&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;背景音乐&quot;,&quot;default&quot;:&quot;assets/bgm/silence.m4a&quot;}
   ]">
   <head>
@@ -174,9 +176,10 @@
     </style>
   </head>
   <body>
-    <div data-hf-id="hf-f7ns" id="root" class="v01" data-composition-id="main" data-start="0" data-duration="8" data-width="1080" data-height="1920">
-      <video data-hf-id="hf-u6nw" id="videoA" class="clip media-video" data-start="0" data-duration="4" data-track-index="0" data-var-src="videoA" src="assets/library/default-a.mp4" muted playsinline></video>
-      <video data-hf-id="hf-z723" id="videoB" class="clip media-video" data-start="4" data-duration="4" data-track-index="0" data-var-src="videoB" src="assets/library/default-b.mp4" muted playsinline></video>
+    <div data-hf-id="hf-f7ns" id="root" class="v01" data-composition-id="main" data-start="0" data-width="1080" data-height="1920">
+      <video data-hf-id="hf-u6nw" id="videoA" class="clip media-video" data-start="0" data-duration="2.666667" data-track-index="0" data-var-src="videoA" src="assets/library/default-a.mp4" muted playsinline></video>
+      <video data-hf-id="hf-z723" id="videoB" class="clip media-video" data-start="2.666667" data-duration="2.666666" data-track-index="0" data-var-src="videoB" src="assets/library/default-b.mp4" muted playsinline></video>
+      <video data-hf-id="hf-q9pk" id="videoC" class="clip media-video" data-start="5.333333" data-duration="2.666667" data-track-index="0" data-var-src="videoC" src="assets/library/default-c.mp4" muted playsinline></video>
       <audio data-hf-id="hf-xex4" id="bgm" data-start="0" data-duration="8" data-track-index="10" data-volume="0.24" data-var-src="bgm" src="assets/bgm/silence.m4a"></audio>
 
       <section data-hf-id="hf-8op4" id="typography" class="clip text-layer" data-start="0" data-duration="8" data-track-index="2">
@@ -204,12 +207,33 @@
         document.getElementById("bottom2").textContent = vars.bottom2;
         document.getElementById("videoA").src = vars.videoA;
         document.getElementById("videoB").src = vars.videoB;
+        document.getElementById("videoC").src = vars.videoC || "assets/library/default-c.mp4";
         document.getElementById("bgm").src = vars.bgm;
       }
-      document.getElementById("root").className = vars.variant;
+      const duration = Math.max(8, Math.min(15, Math.round(Number(vars.duration) || 8)));
+      const segment = duration / 3;
+      const segmentStarts = [0, segment, segment * 2];
+      const segmentDurations = [segment, segment, duration - segment * 2];
+      const root = document.getElementById("root");
+      const typography = document.getElementById("typography");
+      const bgm = document.getElementById("bgm");
+      const videos = [
+        document.getElementById("videoA"),
+        document.getElementById("videoB"),
+        document.getElementById("videoC")
+      ];
+      root.className = vars.variant;
+      root.dataset.duration = String(duration);
+      typography.dataset.duration = String(duration);
+      bgm.dataset.duration = String(duration);
+      videos.forEach((video, index) => {
+        video.dataset.start = String(segmentStarts[index]);
+        video.dataset.duration = String(segmentDurations[index]);
+      });
       const tl = gsap.timeline({ paused: true });
-      tl.fromTo("#videoA", { scale: 1.015 }, { scale: 1.04, duration: 4, ease: "none" }, 0);
-      tl.fromTo("#videoB", { scale: 1.015 }, { scale: 1.04, duration: 4, ease: "none" }, 4);
+      videos.forEach((video, index) => {
+        tl.fromTo(video, { scale: 1.015 }, { scale: 1.04, duration: segmentDurations[index], ease: "none" }, segmentStarts[index]);
+      });
       window.__timelines["main"] = tl;
     </script>
   </body>

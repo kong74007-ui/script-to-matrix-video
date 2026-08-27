@@ -15,6 +15,7 @@ import tempfile
 SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 import render_video as renderer
+import render_reference_typography as reference_renderer
 import validate_template_batch as batch_validator
 from template_policy import emphasis_source_hash, fallback_emphasis, resolve_emphasis
 
@@ -67,17 +68,51 @@ def check_reference_typography_pack() -> None:
     templates = manifest.get("templates") or []
     ids = [item.get("id") for item in templates]
     variants = [item.get("variant") for item in templates]
-    assert manifest.get("version") == 1 and manifest.get("engine") == "hyperframes"
+    assert manifest.get("version") == 2 and manifest.get("engine") == "hyperframes"
     assert manifest.get("hyperframes_version") == "0.8.16"
+    assert manifest.get("duration_mode") == "random_integer_per_output"
+    assert manifest.get("duration_range_seconds") == [8, 15]
+    assert manifest.get("generated_fields") == ["duration"]
     assert len(templates) == 17 and len(ids) == len(set(ids))
     assert all(isinstance(value, str) and value.startswith("ref-") for value in ids)
     assert variants == [f"v{index:02d}" for index in range(1, 18)]
 
     index_html = (pack_root / "index.html").read_text(encoding="utf-8")
-    for variable in ("top1", "top2", "top3", "bottom1", "bottom2", "videoA", "videoB", "bgm"):
+    for variable in (
+        "top1",
+        "top2",
+        "top3",
+        "bottom1",
+        "bottom2",
+        "duration",
+        "videoA",
+        "videoB",
+        "videoC",
+        "bgm",
+    ):
         assert variable in index_html
+    assert "Math.random" not in index_html
+    assert "duration / 3" in index_html
+    root_tag = re.search(r'<div[^>]+id="root"[^>]*>', index_html)
+    assert root_tag and "data-duration" not in root_tag.group(0)
+    assert (pack_root / "assets" / "library" / "default-c.mp4").is_file()
     for variant in variants:
         assert f".{variant} " in index_html
+
+    sample_row = {
+        "name": "duration-contract",
+        "template_id": ids[0],
+        "top1": "标题",
+        "bottom2": "行动",
+        "videoA": "a.mp4",
+        "videoB": "b.mp4",
+        "videoC": "c.mp4",
+    }
+    durations = {
+        reference_renderer.random_duration(f"{seed:064x}", sample_row, seed)
+        for seed in range(64)
+    }
+    assert durations.issubset(set(range(8, 16))) and durations == set(range(8, 16))
 
     for item in templates:
         for field, suffix in (("example_mp4", ".mp4"), ("example_jpg", ".jpg")):

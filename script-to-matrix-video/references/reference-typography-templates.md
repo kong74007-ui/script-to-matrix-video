@@ -32,8 +32,10 @@
 - `template_id`：上表中的一个稳定 ID。
 - `top1`、`top2`、`top3`：顶部三层文字；至少填写一层。
 - `bottom1`、`bottom2`：底部两层文字；至少填写一层。
-- `videoA`、`videoB`：两个不同的、已批准的本地视频素材。禁止 AI 生成素材，也禁止用同一个素材重复填充。
+- `videoA`、`videoB`、`videoC`：三个不同的、已批准的本地视频素材。禁止 AI 生成素材、禁止图片替代，也禁止用同一个素材重复填充。
 - `bgm`：可选的已批准本地 BGM；省略时保留兼容音轨但静音。
+
+不要输入 `duration`。每条任务在准备阶段自动随机生成一个 8–15 秒的整数时长，并写入工作目录中的 `batch/prepared-rows.json`。同一工作目录的 dry-run 与正式渲染复用该次随机结果；新任务使用新的随机结果。
 
 示例：
 
@@ -50,6 +52,7 @@
       "bottom2": "想了解私信 OPC",
       "videoA": "D:/approved-media/store-01.mp4",
       "videoB": "D:/approved-media/ai-store-02.mp4",
+      "videoC": "D:/approved-media/customer-service-03.mp4",
       "bgm": "D:/approved-media/bgm/track-01.mp3"
     }
   ]
@@ -66,7 +69,7 @@ python scripts/render_reference_typography.py batch.json --quality high --worker
 
 批量任务默认串行启动每个成片、单条内部使用 4 个 worker，避免本机内存峰值。脚本会把模板复制到任务自己的工作目录，不会修改 Skill 内的模板源文件。
 
-这组版式固定为 1080×1920、30fps、8 秒。它适合短钩子和活动邀约；超过可读容量的文案必须先压缩或拆成多条，不要缩成难以阅读的小字。
+这组版式固定为 1080×1920、30fps，单条时长由脚本随机设为 8–15 秒整数。三个素材按实际总时长自动均分，文字从第一帧完整显示且不做渐入。它适合短钩子和活动邀约；超过可读容量的文案必须先压缩或拆成多条，不要缩成难以阅读的小字。
 
 ## 文件位置
 

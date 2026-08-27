@@ -2,16 +2,19 @@
 """Render the bundled 17-style reference typography pack with HyperFrames.
 
 This wrapper keeps user media outside the Skill directory. It copies the immutable
-template pack into a task-owned work directory, stages two distinct approved video
-assets per row, prepares the HyperFrames batch variables, and renders the MP4s.
+template pack into a task-owned work directory, stages three distinct approved video
+assets per row, assigns a reproducible random 8-15 second duration, prepares the
+HyperFrames batch variables, and renders the MP4s.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
+import secrets
 import shutil
 import subprocess
 import sys
@@ -29,6 +32,8 @@ FONT_FILES = (
     "ZCOOLXiaoWei-Regular.ttf",
 )
 NAME_RE = re.compile(r"[^0-9A-Za-z_-]+")
+DURATION_MIN_SECONDS = 8
+DURATION_MAX_SECONDS = 15
 
 
 class InputError(ValueError):
@@ -67,6 +72,34 @@ def stage_file(source: Path, directory: Path, stem: str) -> str:
     target = directory / f"{stem}{suffix}"
     shutil.copy2(source, target)
     return target.relative_to(directory.parents[1]).as_posix()
+
+
+def load_or_create_batch_seed(batch_dir: Path) -> str:
+    """Keep dry-run and render deterministic inside one task work directory."""
+
+    seed_path = batch_dir / "random-seed.json"
+    if seed_path.is_file():
+        payload = load_json(seed_path)
+        seed = payload.get("seed") if isinstance(payload, dict) else None
+        if isinstance(seed, str) and re.fullmatch(r"[0-9a-f]{64}", seed):
+            return seed
+        raise InputError(f"Invalid task duration seed: {seed_path}")
+
+    seed = secrets.token_hex(32)
+    seed_path.write_text(
+        json.dumps({"version": 1, "seed": seed}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return seed
+
+
+def random_duration(seed: str, row: dict[str, object], index: int) -> int:
+    """Return an integer in 8..15 without accepting a user duration override."""
+
+    canonical = json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(f"{seed}\n{index}\n{canonical}".encode("utf-8")).digest()
+    span = DURATION_MAX_SECONDS - DURATION_MIN_SECONDS + 1
+    return DURATION_MIN_SECONDS + int.from_bytes(digest[:8], "big") % span
 
 
 def validate_bgm_rotation(rows: list[dict[str, object]], base: Path) -> None:
@@ -182,6 +215,9 @@ def prepare(args: argparse.Namespace) -> tuple[Path, Path, list[dict[str, object
 
     input_dir = workdir / "assets" / "input"
     input_dir.mkdir(parents=True, exist_ok=True)
+    batch_dir = workdir / "batch"
+    batch_dir.mkdir(parents=True, exist_ok=True)
+    batch_seed = load_or_create_batch_seed(batch_dir)
     silence = "assets/bgm/silence.m4a"
     prepared: list[dict[str, object]] = []
     used_names: set[str] = set()
@@ -200,11 +236,16 @@ def prepare(args: argparse.Namespace) -> tuple[Path, Path, list[dict[str, object
         bottom_values = [str(row.get(key, "")).strip() for key in ("bottom1", "bottom2")]
         if not any(top_values) or not any(bottom_values):
             raise InputError(f"row {index} requires at least one top and one bottom text layer")
+        if "duration" in row:
+            raise InputError(
+                f"row {index} must not set duration; reference templates randomize 8-15 seconds automatically"
+            )
 
         video_a = resolve_input(row.get("videoA"), batch_path.parent, f"row {index} videoA")
         video_b = resolve_input(row.get("videoB"), batch_path.parent, f"row {index} videoB")
-        if video_a == video_b:
-            raise InputError(f"row {index} must use two distinct video assets")
+        video_c = resolve_input(row.get("videoC"), batch_path.parent, f"row {index} videoC")
+        if len({video_a, video_b, video_c}) != 3:
+            raise InputError(f"row {index} must use three distinct video assets")
 
         bgm_value = row.get("bgm")
         if bgm_value in (None, ""):
@@ -222,14 +263,14 @@ def prepare(args: argparse.Namespace) -> tuple[Path, Path, list[dict[str, object
                 "top3": top_values[2],
                 "bottom1": bottom_values[0],
                 "bottom2": bottom_values[1],
+                "duration": random_duration(batch_seed, row, index),
                 "videoA": stage_file(video_a, input_dir, f"{index:02d}-a"),
                 "videoB": stage_file(video_b, input_dir, f"{index:02d}-b"),
+                "videoC": stage_file(video_c, input_dir, f"{index:02d}-c"),
                 "bgm": bgm,
             }
         )
 
-    batch_dir = workdir / "batch"
-    batch_dir.mkdir(parents=True, exist_ok=True)
     prepared_path = batch_dir / "prepared-rows.json"
     prepared_path.write_text(
         json.dumps({"rows": prepared}, ensure_ascii=False, indent=2) + "\n",
@@ -245,6 +286,8 @@ def render(args: argparse.Namespace) -> int:
         "engine": "hyperframes",
         "template_pack": "reference-typography-17",
         "jobs": len(rows),
+        "duration_mode": "random-integer-8-15-seconds",
+        "durations_seconds": [row["duration"] for row in rows],
         "workdir": str(workdir),
         "output_dir": str(output_dir),
         "prepared_batch": str(workdir / "batch" / "prepared-rows.json"),
