@@ -1285,7 +1285,7 @@ def resolve_layout(
     accent_color = str(raw.get("accent_color", "#FFD400" if native_bold else "#D97745"))
     secondary_accent_color = str(raw.get("secondary_accent_color", "#FF453A"))
     text_alignment = str(raw.get("text_alignment", "center")).strip().lower()
-    if text_alignment not in {"center", "left"}:
+    if text_alignment not in {"center", "left", "right"}:
         warnings.append(f"unsupported text_alignment {text_alignment!r}; used 'center'")
         text_alignment = "center"
     top_text_layout = str(raw.get("top_text_layout", "block")).strip().lower()
@@ -1475,8 +1475,8 @@ def write_ass(
                 layout["top_font_size"],
                 layout["top_max_chars"],
             )
-            cover_alignment = 7 if layout["text_alignment"] == "left" else 5
-            cover_x = layout["top_text_x"] if cover_alignment == 7 else width // 2
+            cover_alignment = {"left": 7, "center": 5, "right": 9}[layout["text_alignment"]]
+            cover_x = width // 2 if cover_alignment == 5 else layout["top_text_x"]
             cover_tag_parts = [f"\\an{cover_alignment}", f"\\pos({cover_x},{layout['top_text_y']})", f"\\fs{cover_size}"]
             if layout["text_pop_in"]:
                 cover_tag_parts.extend(["\\fscx94", "\\fscy94", "\\t(0,220,\\fscx100\\fscy100)"])
@@ -1542,8 +1542,8 @@ def write_ass(
                             layout["top_font_size"],
                             layout["top_max_chars"],
                         )
-                        top_alignment = 7 if layout["text_alignment"] == "left" else 5
-                        top_x = layout["top_text_x"] if top_alignment == 7 else width // 2
+                        top_alignment = {"left": 7, "center": 5, "right": 9}[layout["text_alignment"]]
+                        top_x = width // 2 if top_alignment == 5 else layout["top_text_x"]
                         top_tag_parts = [
                             f"\\an{top_alignment}",
                             f"\\pos({top_x},{layout['top_text_y']})",
@@ -1617,8 +1617,8 @@ def write_ass(
                     layout["bottom_font_size"],
                     layout["bottom_max_chars"],
                 )
-                bottom_alignment = 7 if layout["text_alignment"] == "left" else 5
-                bottom_x = layout["bottom_text_x"] if bottom_alignment == 7 else width // 2
+                bottom_alignment = {"left": 7, "center": 5, "right": 9}[layout["text_alignment"]]
+                bottom_x = width // 2 if bottom_alignment == 5 else layout["bottom_text_x"]
                 bottom_tag_parts = [
                     f"\\an{bottom_alignment}",
                     f"\\pos({bottom_x},{layout['bottom_text_y']})",
@@ -1677,8 +1677,8 @@ def write_ass(
                     layout["bottom_font_size"],
                     layout["bottom_max_chars"],
                 )
-                bottom_alignment = 7 if layout["text_alignment"] == "left" else 5
-                bottom_x = layout["bottom_text_x"] if bottom_alignment == 7 else width // 2
+                bottom_alignment = {"left": 7, "center": 5, "right": 9}[layout["text_alignment"]]
+                bottom_x = width // 2 if bottom_alignment == 5 else layout["bottom_text_x"]
                 bottom_tags = f"{{\\an{bottom_alignment}\\pos({bottom_x},{layout['bottom_text_y']})\\fs{caption_size}}}"
                 caption_rendered = ass_highlight_text(
                     caption_text,

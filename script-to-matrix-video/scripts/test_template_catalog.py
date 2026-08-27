@@ -33,7 +33,16 @@ def check_real_catalog() -> None:
     ids = [item.get("id") for item in catalog.get("templates", []) if isinstance(item, dict)]
     profiles = catalog.get("emphasis_profiles") or {}
     assert catalog.get("version") == 1
-    assert ids == ["black-left-bold", "white-center-bold", "white-handwritten", "black-playful"]
+    assert ids == [
+        "black-left-bold",
+        "white-center-bold",
+        "white-handwritten",
+        "black-playful",
+        "white-left-editorial",
+        "black-right-modern",
+        "white-left-playful",
+        "black-center-editorial",
+    ]
     assert len(ids) == len(set(ids))
     assert set(profiles) == set(ids)
     for template_id in ids:
@@ -217,6 +226,24 @@ def check_layout_and_ass() -> None:
         assert "美妆只有15%。选赛道这件事，数据不会骗人。" in native_plain
         assert "\\an7\\pos(76,1730)" in native_ass and "评论区扣勾兑" in native_ass
         assert "\\fscx94" not in native_ass and "\\fscx96" not in native_ass
+
+        right_project, _ = renderer.resolve_template(
+            {"layout": {"template_id": "black-right-modern"}, "render": {"subtitle_font": "Noto Sans SC"}}
+        )
+        right_layout = renderer.resolve_layout(right_project, 1080, 1920, [])
+        assert right_layout and right_layout["text_alignment"] == "right"
+        right_ass_path = temp / "right.ass"
+        renderer.write_ass(
+            right_project,
+            right_ass_path,
+            1080,
+            1920,
+            [{"scene": {"top_text": "右对齐标题", "bottom_text": "右对齐行动"}, "start": 0.0, "duration": 8.0}],
+            right_layout,
+        )
+        right_ass = right_ass_path.read_text(encoding="utf-8-sig")
+        assert "\\an9\\pos(1004,80)" in right_ass
+        assert "\\an9\\pos(1004,1730)" in right_ass
 
 
 def check_emphasis_protocol() -> None:

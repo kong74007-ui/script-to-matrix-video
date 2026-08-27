@@ -2,7 +2,7 @@
 
 Read this reference when the user asks to choose, compare, or batch-rotate text-media-text styles.
 
-The machine-readable source of truth is assets/templates/catalog.json. The Skill contains exactly four templates. Select one with:
+The machine-readable source of truth is assets/templates/catalog.json. The Skill contains exactly eight templates. Select one with:
 
     {"layout": {"template_id": "black-left-bold"}}
 
@@ -16,6 +16,10 @@ The renderer resolves the selected template first and then applies explicit proj
 | 2 | white-center-bold | 白底居中粗体 | 知识点、方案说明、商业观点 |
 | 4 | white-handwritten | 白底加粗手写体 | 个人表达、经历分享、轻商业 |
 | 5 | black-playful | 黑底趣味体 | 社交传播、活动招募、轻松口吻 |
+| 6 | white-left-editorial | 白底左排编辑体 | 观点、行业判断、品牌叙事 |
+| 7 | black-right-modern | 黑底右排现代体 | 反常识钩子、结论先行、商业口播 |
+| 8 | white-left-playful | 白底左排趣味体 | 社交话题、轻知识、活动招募 |
+| 9 | black-center-editorial | 黑底居中编辑体 | 品牌观点、趋势洞察、高级感表达 |
 
 No other bundled template_id is supported. Do not invent, alias, or silently fall back from a removed template.
 

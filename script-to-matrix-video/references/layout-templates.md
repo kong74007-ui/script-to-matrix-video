@@ -8,7 +8,7 @@ Use template 1 unless the user chooses another:
 
     {"layout": {"template_id": "black-left-bold"}}
 
-The four valid IDs are listed in [style-templates.md](style-templates.md). The catalog owns typography, background, top position, media rectangle, CTA position, and semantic-emphasis styling. Prefer a template_id over duplicating the full layout object.
+The eight valid IDs are listed in [style-templates.md](style-templates.md). The catalog owns typography, background, top position, media rectangle, CTA position, and semantic-emphasis styling. Prefer a template_id over duplicating the full layout object.
 
 ## Structural contract
 
@@ -29,7 +29,7 @@ Shared defaults:
 - media_border_width: 0, divider_height: 0, and empty surface_boxes;
 - text_pop_in: false.
 
-Do not add a yellow divider, background blur, decorative card, kicker, progress bar, player chrome, or fade-in unless the user explicitly asks to leave the four-template system.
+Do not add a yellow divider, background blur, decorative card, kicker, progress bar, player chrome, or fade-in unless the user explicitly asks to leave the eight-template system.
 
 ## Copy fitting
 
@@ -38,6 +38,7 @@ Do not add a yellow divider, background blur, decorative card, kicker, progress 
 - Keep the CTA to one line when possible.
 - If copy does not fit at the template's minimum font size, shorten or split it instead of clipping or shrinking it into unreadable type.
 - Render title and CTA at full opacity from the first frame.
+- Preserve the selected left, center, or right alignment; do not silently center a right-aligned template.
 
 ## Media
 
@@ -45,4 +46,4 @@ Use at least two distinct assets for an 8–10 second output and include approve
 
 ## Project-level overrides
 
-Explicit overrides are allowed for copy-specific fitting, but they must preserve the selected template's recognizable layout. Safe overrides include font size within readable bounds, line limits, material crop, and top/bottom text positions. Do not turn an override into an undeclared fifth template.
+Explicit overrides are allowed for copy-specific fitting, but they must preserve the selected template's recognizable layout. Safe overrides include font size within readable bounds, line limits, material crop, and top/bottom text positions. Do not turn an override into an undeclared ninth template.
