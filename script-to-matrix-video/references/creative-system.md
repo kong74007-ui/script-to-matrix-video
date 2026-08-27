@@ -74,7 +74,7 @@ Use motion as emphasis. Do not randomize every scene independently. Alternate on
 - Keep the lower platform-control zone and upper account-header zone clear.
 - The cover title should be one claim or question, usually 8–16 Chinese characters, supported by the copy.
 
-For `text-media-text` with the `native-bold` variant, rewrite the displayed title as an intentional 2–4-line hierarchy without changing its factual meaning. Use explicit newlines to separate context, comparison, and conclusion. Highlight only the decisive numbers, contrast term, or CTA keyword; do not color every noun. The generated image remains text-free and should be composed for a near-full-width central crop.
+For `text-media-text`, rewrite the displayed title as an intentional 2–3-line hierarchy without changing its factual meaning. Use explicit newlines to separate context, comparison, and conclusion. Highlight only the decisive numbers, contrast term, or CTA keyword; do not color every noun. Client or approved-library media should survive the near-full-width central crop; Function 2 must not generate replacement media.
 
 ## CTA constraints
 

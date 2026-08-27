@@ -15,9 +15,10 @@ import render_video as renderer
 
 
 CASES = (
-    ("yellow-blue-pop", "不是所有字都该一样大", "先让观众看到重点", "一样大", "看到重点"),
-    ("torn-magazine", "信息越多，越要有主次", "三秒留下一个记忆点", "有主次", "记忆点"),
-    ("chinese-title", "表达有轻重，内容才有气韵", "把结论留在第一眼", "有轻重", "第一眼"),
+    ("black-left-bold", "想开店又怕养团队", "私信OPC了解模式", "怕养团队", "OPC"),
+    ("white-center-bold", "一人加AI也能开店", "私信OPC了解模式", "AI", "OPC"),
+    ("white-handwritten", "表达有轻重内容才清楚", "把结论留在第一眼", "有轻重", "第一眼"),
+    ("black-playful", "轻松表达也要有重点", "评论区留下关键词", "有重点", "关键词"),
 )
 
 
@@ -50,9 +51,9 @@ def span(text: str, term: str, role: str) -> dict[str, object]:
 
 
 def render_profile_stills(output: Path, ffmpeg: str, source: Path) -> tuple[list[str], Path]:
-    """Exercise every catalog profile through ASS/libass without rendering 13 full MP4s."""
+    """Exercise every catalog profile through ASS/libass without rendering four full MP4s."""
 
-    top, bottom = "13套模板都有重点", "大字高亮 一眼看懂"
+    top, bottom = "四套模板都有重点", "大字高亮 一眼看懂"
     catalog = json.loads(renderer.TEMPLATE_CATALOG_PATH.read_text(encoding="utf-8"))
     template_ids = [str(item["id"]) for item in catalog["templates"]]
     still_root = output / "profile-stills"

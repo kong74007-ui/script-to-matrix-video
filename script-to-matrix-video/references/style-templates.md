@@ -1,58 +1,43 @@
 # Style template catalog
 
-Read this reference when the user asks to choose, compare, or batch-rotate visual styles for `text-media-text` output.
+Read this reference when the user asks to choose, compare, or batch-rotate text-media-text styles.
 
-The catalog is `assets/templates/catalog.json`. It is the machine-readable source of truth for names, tags, bundled font roles, layout defaults, labels, and surface decoration. A project selects one style with only:
+The machine-readable source of truth is assets/templates/catalog.json. The Skill contains exactly four templates. Select one with:
 
-```json
-{
-  "layout": {"template_id": "business-black"}
-}
-```
+    {"layout": {"template_id": "black-left-bold"}}
 
-The renderer merges the selected template first, then applies explicit project `layout` and `render` fields. This keeps one stable `template_id` for a future product UI while still allowing a project-specific color, media region, type size, or font override.
+The renderer resolves the selected template first and then applies explicit project-level layout and render overrides.
 
-## Bundled templates
+## Available templates
 
-| `template_id` | Name | Best for |
-| --- | --- | --- |
-| `native-bold` | 默认原生大字 | 左对齐数据钩子、矩阵引流、知识口播、门店招商 |
-| `video-diary` | 视频日记 | 日常记录、探店、过程复盘 |
-| `minimal-headline` | 极简大标题 | 观点、清单、短结论 |
-| `airy-blush` | 轻透雅粉 | 美学、情绪、服务介绍 |
-| `yellow-blue-pop` | 鲜黄亮蓝 | 活动提醒、知识点、年轻化清单 |
-| `business-black` | 商务深黑 | 方案、复盘、专业服务 |
-| `black-gold-premium` | 黑金高级 | 高客单服务、品牌、人物介绍 |
-| `data-compare` | 数据对比 | 前后对照、选择题、案例结果 |
-| `chinese-title` | 国风标题 | 文化、器物、节气内容 |
-| `torn-magazine` | 撕边杂志 | 趋势、穿搭、专题选题 |
-| `vlog-journal` | Vlog 手账 | 旅行、打卡、过程分享 |
-| `bilingual-split` | 中英双语 | 品牌表达、术语解释、国际化内容 |
-| `portrait-quote` | 人物金句 | 访谈、观点摘录、人物故事 |
+| Number | template_id | Name | Best for |
+| --- | --- | --- | --- |
+| 1 | black-left-bold | 黑底左排粗体 | 招商、门店、观点、矩阵引流；default |
+| 2 | white-center-bold | 白底居中粗体 | 知识点、方案说明、商业观点 |
+| 4 | white-handwritten | 白底加粗手写体 | 个人表达、经历分享、轻商业 |
+| 5 | black-playful | 黑底趣味体 | 社交传播、活动招募、轻松口吻 |
 
-These are original template definitions. Reference products may inform category names and information hierarchy, but do not copy their assets, icons, player chrome, CSS, or exact compositions.
+No other bundled template_id is supported. Do not invent, alias, or silently fall back from a removed template.
 
-## Semantic emphasis profiles
+## Shared structure
 
-The catalog's `emphasis_profiles` map gives every `template_id` its own scale, color, outline/marker, underline, angle, and optional role colors. Providers emit only the neutral [`emphasis.v1` spans](semantic-emphasis.md); never copy visual settings into an Agent prompt or project semantic result. This lets Codex and a future Huangque Agent produce interchangeable decisions while the template remains responsible for appearance.
+- 1080×1920 vertical canvas.
+- Visible top margin is about 5% (96–100px).
+- Persistent top copy, central approved material, fixed bottom CTA.
+- Background is pure black or pure white.
+- No template decorations, surface boxes, separators, media borders, blur, or text fade-in.
+- Function 2 still requires multiple approved library/client assets and may not generate AI media.
 
-Use the profile as a restrained hierarchy, not decoration on every word. The renderer keeps at most three non-overlapping spans per region and reduces emphasis scale before base type when space is tight.
+## Semantic emphasis
+
+Each template owns its colors and scale through the catalog's emphasis_profiles. Providers emit only neutral [emphasis.v1](semantic-emphasis.md) spans. Use emphasis sparingly: one or two decisive phrases in the title and the CTA keyword.
 
 ## Fonts
 
-The Skill bundles four SIL Open Font License families and passes `assets/fonts` to FFmpeg/libass automatically:
+The Skill bundles and validates the font files it uses:
 
-- `Noto Sans SC`: functional body and business display;
-- `ZCOOL XiaoWei`: editorial and refined titles;
-- `Ma Shan Zheng`: Chinese-style title cards;
-- `ZCOOL KuaiLe`: playful Vlog and journal emphasis.
+- Noto Sans SC (also resolves the Microsoft YaHei compatibility alias);
+- Ma Shan Zheng;
+- ZCOOL KuaiLe.
 
-Use `layout.top_font` and `layout.bottom_font` only when a project must override the selected template. A custom `render.fonts_dir` must point to a directory inside that project so the project remains self-contained.
-
-With the bundled font directory, every requested family must appear in `assets/fonts/sources.json`, its file must exist, and its SHA-256 must match before dry-run, batch validation, or rendering can pass. Use a project-local custom `fonts_dir` for any other family.
-
-## Batch rules
-
-- Template rotation is a style change, not an A/B media substitution. Continue enforcing approved-media counts, video-first selection, duration, and BGM rules independently.
-- Use the same copy and media only for a deliberate style comparison. For ordinary production variants, vary the media set as required by [template-batch.md](template-batch.md).
-- Render one pilot before a large batch when a new font, unusually long bilingual copy, or project-level layout override is involved.
+Do not depend on an unbundled machine-specific font.

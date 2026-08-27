@@ -1,201 +1,48 @@
 # Layout templates
 
-Read this reference when a video should use a structured page layout instead of full-frame media.
+Read this reference when creating or editing a text-media-text project.
 
-## Bundled style catalog
+## Default
 
-For an authored visual style, select one entry from [style-templates.md](style-templates.md) with a stable `template_id`:
+Use template 1 unless the user chooses another:
 
-```json
-{"layout": {"template_id": "business-black"}}
-```
+    {"layout": {"template_id": "black-left-bold"}}
 
-The renderer reads `assets/templates/catalog.json`, applies that template's `layout` and `render` defaults, then applies explicit project fields. This means a project can select one template and override only the one value it needs. The batch validator resolves the same catalog before enforcing duration, media, A/B, and BGM rules.
+The four valid IDs are listed in [style-templates.md](style-templates.md). The catalog owns typography, background, top position, media rectangle, CTA position, and semantic-emphasis styling. Prefer a template_id over duplicating the full layout object.
 
-The bundled templates may use `top_font`, `bottom_font`, a persistent `kicker`, and up to 24 validated `surface_boxes`. These are styling primitives only; they do not change copy, retrieve media, or bypass provenance rules. Bundled fonts load from `assets/fonts` automatically.
+## Structural contract
 
-## `text-media-text`
+Every bundled template follows the same three-region structure:
 
-Use for knowledge explainers, local-business invitations, case studies, data comparisons, tutorials, and list-style videos where the title and CTA must stay visible around the media.
+1. Top: persistent title block.
+2. Middle: supplied or approved-library image/video material.
+3. Bottom: persistent subtitle or CTA.
 
-This template is an independent production function, not merely a styling option inside full script-to-video. It accepts a top title plus bottom subtitle/CTA as its minimum input, works without narration by default, and supports both one-off and batch generation. Use only client-supplied media or library records whose `状态` is `可使用`; AI image and video generation are forbidden. If no suitable material exists, report `material_missing` instead of generating or using unrelated filler. For batch work, create independent output variants, preserve the meaning of each copy item, vary meaningful visual choices, and emit a timing/status report together with the MP4s.
+Shared defaults:
 
-The template has two variants:
+- preset: text-media-text;
+- variant: native-bold;
+- background_mode: solid;
+- visible top margin around 96px (5%);
+- media rectangle x=24, y=620, width=1032, height=930;
+- fixed CTA near y=1730;
+- media_border_width: 0, divider_height: 0, and empty surface_boxes;
+- text_pop_in: false.
 
-- `native-bold`: the default for new projects. It uses a left-aligned data hierarchy, an oversized yellow primary statistic, red comparison numbers, white supporting copy, a blurred continuation of the current image behind the text bands, and near-full-width central media. Text is fully opaque from its first frame and does not scale in.
-- `classic`: the original warm solid-background editorial card. Use only when the user asks for a calm, minimal, or premium information-card treatment.
+Do not add a yellow divider, background blur, decorative card, kicker, progress bar, player chrome, or fade-in unless the user explicitly asks to leave the four-template system.
 
-The default `native-bold` configuration is also registered in the style catalog as `template_id: native-bold`. Prefer `{"layout":{"template_id":"native-bold"}}` for new default projects; use explicit layout fields only when the project needs a deliberate override.
+## Copy fitting
 
-Do not reproduce player chrome from visual references. Play buttons, progress bars, account labels, and platform UI are not part of the rendered template.
+- Preserve the user's wording and explicit line breaks when they fit.
+- Keep top copy to at most three lines.
+- Keep the CTA to one line when possible.
+- If copy does not fit at the template's minimum font size, shorten or split it instead of clipping or shrinking it into unreadable type.
+- Render title and CTA at full opacity from the first frame.
 
-### Duration policy
+## Media
 
-- Hard minimum total duration: 8 seconds.
-- Normal target range: 8–15 seconds.
-- Without narration, calculate `target duration = max(8 seconds, reading time + 1.5 seconds)`.
-- Estimate reading time at about five visible Chinese characters, letters, or digits per second. Ignore whitespace and punctuation when counting.
-- Round up to a valid video frame. The renderer performs the same calculation and extends a short manifest to the full copy-based target, not merely to 8 seconds.
-- When the computed reading time pushes the result beyond 15 seconds, shorten the displayed copy or split it into multiple template scenes. Do not cut required wording or force unreadable speed merely to stay within 15 seconds.
+Use at least two distinct assets for an 8–10 second output and include approved video by default. Template mode must use client files or library records marked 可使用; AI media generation is forbidden.
 
-### Media pacing policy
+## Project-level overrides
 
-- Search approved `视频` records first, then approved `图片` records. Do not satisfy a whole template with one still image.
-- Use at least two distinct assets for 8–10 seconds, at least three above 10 through 15 seconds, and at least four above 15 seconds. Repeating the same file or changing only its crop does not count as a distinct asset.
-- Include at least one contextually suitable video by default. Use an image-only output only after two distinct video searches fail; record `material_policy.allow_image_only=true` and a specific `image_only_reason`.
-- For A/B variants, change the media set itself. A different filename, crop, or color treatment applied to the same complete media set is not enough.
-
-### Recommended `native-bold` configuration
-
-Default 1080×1920 structure:
-
-- Left safe edge: `x=90`; all persistent copy uses the same visual axis.
-- Top title near `y=176`; primary number near `y=278`; short red accent bar at `y=540`; supporting comparison copy near `y=590`.
-- Media region: `x=20`, `y=720`, `width=1040`, `height=860`.
-- Bottom CTA starts near `x=90`, `y=1740`.
-- Keep essential text away from the first 80 px and below `y=1840`.
-- The renderer chooses the first semantic `number` span, or the first deterministic numeric expression, as the hero. It never invents a value. With no number, it renders the complete title as a left-aligned block.
-
-```json
-{
-  "layout": {
-    "preset": "text-media-text",
-    "variant": "native-bold",
-    "background_mode": "blurred-media",
-    "background_color": "#11151C",
-    "background_blur": 28,
-    "background_brightness": -0.22,
-    "background_saturation": 0.78,
-    "band_color": "#101318",
-    "top_band_opacity": 0.52,
-    "bottom_band_opacity": 0.62,
-    "top_text_color": "#FFFFFF",
-    "bottom_text_color": "#FFFFFF",
-    "text_outline_color": "#111111",
-    "top_text_outline": 8,
-    "bottom_text_outline": 7,
-    "text_shadow": 2,
-    "accent_color": "#FFD400",
-    "secondary_accent_color": "#FF453A",
-    "auto_highlight": true,
-    "text_pop_in": false,
-    "text_alignment": "left",
-    "top_text_layout": "hero-number",
-    "top_text_x": 90,
-    "bottom_text_x": 90,
-    "right_safe_margin": 72,
-    "top_font_size": 80,
-    "bottom_font_size": 64,
-    "top_min_font_size": 52,
-    "bottom_min_font_size": 46,
-    "top_max_chars": 12,
-    "top_max_lines": 4,
-    "bottom_max_chars": 15,
-    "bottom_max_lines": 3,
-    "top_text_y": 176,
-    "hero_text_y": 278,
-    "hero_font_size": 300,
-    "hero_min_font_size": 112,
-    "hero_color": "#FFD400",
-    "hero_outline": 8,
-    "hero_title_font_size": 68,
-    "hero_title_min_font_size": 48,
-    "hero_title_outline": 2,
-    "hero_title_max_chars": 18,
-    "hero_title_max_lines": 2,
-    "hero_support_text_y": 590,
-    "hero_support_font_size": 58,
-    "hero_support_min_font_size": 44,
-    "hero_support_max_chars": 17,
-    "hero_support_max_lines": 3,
-    "bottom_text_y": 1740,
-    "bottom_text_mode": "fixed",
-    "media_border_width": 0,
-    "divider_height": 0,
-    "media": {
-      "x": 20,
-      "y": 720,
-      "width": 1040,
-      "height": 860
-    },
-    "surface_boxes": [
-      {"x": 90, "y": 540, "width": 190, "height": 14, "color": "#FF453A", "opacity": 1}
-    ]
-  }
-}
-```
-
-Write each scene's display copy with intentional line breaks and a small number of highlights:
-
-```json
-{
-  "top_text": "大健康行业私域复购率是40%，美妆只有15%。选赛道这件事，数据不会骗人。",
-  "bottom_text": "现在还想进军这个赛道？\n评论区回复：关键词",
-  "top_highlights": [
-    {"text": "40%", "color": "#FFD400"},
-    {"text": "15%", "color": "#FF453A"}
-  ],
-  "bottom_highlights": [
-    {"text": "关键词", "color": "#FFD400"}
-  ]
-}
-```
-
-When highlight arrays are absent and `auto_highlight` is true, the renderer emphasizes numbers, percentages, quoted phrases, and the short term after the final Chinese colon in fixed bottom CTA text. Explicit arrays take precedence. Keep one primary accent and one comparison accent; highlighting every phrase destroys hierarchy.
-
-The renderer respects explicit newlines when they fit. Otherwise it wraps the complete text and reduces type size down to the configured minimum instead of silently discarding the final clause.
-
-For AI-selected large type, use the top-level [`emphasis.v1` contract](semantic-emphasis.md) instead of putting colors or scale values into the Agent result. Every bundled `template_id` owns an `emphasis_profile`; the same semantic spans therefore render differently across the 13 styles. The renderer protects emphasized phrases from line breaks and fits them in two passes: reduce emphasis scale first, then reduce the base font size. Source text is never truncated.
-
-Use `background_mode: "solid"` when the image colors make the blurred background distracting. `blurred-media` darkens and blurs the current image behind the top and bottom bands; it does not create additional content.
-
-### `classic` configuration
-
-```json
-{
-  "layout": {
-    "preset": "text-media-text",
-    "variant": "classic",
-    "background_mode": "solid",
-    "background_color": "#F5F1E8",
-    "top_text_color": "#1F2430",
-    "bottom_text_color": "#1F2430",
-    "accent_color": "#D97745",
-    "auto_highlight": false,
-    "text_pop_in": false,
-    "top_font_size": 76,
-    "bottom_font_size": 62,
-    "top_max_chars": 12,
-    "top_max_lines": 2,
-    "bottom_max_chars": 14,
-    "bottom_max_lines": 2,
-    "top_text_y": 221,
-    "bottom_text_y": 1642,
-    "bottom_text_mode": "captions",
-    "media_border_width": 4,
-    "media_border_color": "#D8D2C8",
-    "media": {
-      "x": 60,
-      "y": 420,
-      "width": 960,
-      "height": 1040
-    }
-  }
-}
-```
-
-### Shared behavior
-
-`top_text` is displayed for the scene. When absent, the renderer derives a short fallback from the first caption chunk.
-
-With `bottom_text_mode: "captions"`, the bottom region shows timed `caption_chunks`. If a scene provides `bottom_text`, that fixed text replaces timed captions for the scene. With `bottom_text_mode: "fixed"`, every scene uses `bottom_text`, falling back to its narration text.
-
-For a pure graphic template without narration, set `voice.enabled` to `false`, use `bottom_text_mode: "fixed"`, provide concise `bottom_text`, and set explicit scene durations using the duration policy above. The MP4 keeps a silent AAC track for publishing compatibility.
-
-Top titles, fixed bottom copy, and overlays appear at full opacity on their first displayed frame. The renderer does not use text fade-in. A short fade-out and a template's optional `text_pop_in` scale motion may remain; this does not change media transitions.
-
-Supplied and library images should not contain conflicting top or bottom wording. Compose readable Chinese in the renderer. For `native-bold`, choose assets that survive a wide, near-full-width central crop. For `classic`, choose assets with more internal negative space around the subject. Never generate replacement media for this template.
-
-## `full-frame`
-
-This remains the default for ordinary videos. Omit `layout` or set `"preset": "full-frame"`.
+Explicit overrides are allowed for copy-specific fitting, but they must preserve the selected template's recognizable layout. Safe overrides include font size within readable bounds, line limits, material crop, and top/bottom text positions. Do not turn an override into an undeclared fifth template.

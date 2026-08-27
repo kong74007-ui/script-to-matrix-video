@@ -33,7 +33,8 @@ def check_real_catalog() -> None:
     ids = [item.get("id") for item in catalog.get("templates", []) if isinstance(item, dict)]
     profiles = catalog.get("emphasis_profiles") or {}
     assert catalog.get("version") == 1
-    assert len(ids) == 13 and len(ids) == len(set(ids)) and all(ids)
+    assert ids == ["black-left-bold", "white-center-bold", "white-handwritten", "black-playful"]
+    assert len(ids) == len(set(ids))
     assert set(profiles) == set(ids)
     for template_id in ids:
         project, resolved_id = renderer.resolve_template({"layout": {"template_id": template_id}})
@@ -56,7 +57,7 @@ def check_template_resolution() -> None:
     warnings: list[str] = []
     assert renderer.resolve_layout({"layout": "invalid"}, 1080, 1920, warnings) is None
     assert warnings
-    bilingual, _ = renderer.wrap_layout_text("ONE STORY\n13种风格\n不只是换颜色", 13, 2)
+    bilingual, _ = renderer.wrap_layout_text("ONE STORY\n4种风格\n不只是换颜色", 13, 2)
     assert "ONE STORY" in bilingual
     with tempfile.TemporaryDirectory() as temp_value:
         temp = Path(temp_value)
@@ -193,13 +194,13 @@ def check_layout_and_ass() -> None:
         bottom = "评论区扣勾兑"
         native_project, _ = renderer.resolve_template(
             {
-                "layout": {"template_id": "native-bold"},
+                "layout": {"template_id": "black-left-bold"},
                 "cover": {"title": top},
                 "render": {"subtitle_font": "Noto Sans SC"},
             }
         )
         native_layout = renderer.resolve_layout(native_project, 1080, 1920, [])
-        assert native_layout and native_layout["top_text_layout"] == "hero-number"
+        assert native_layout and native_layout["top_text_layout"] == "block"
         native_ass_path = temp / "native.ass"
         renderer.write_ass(
             native_project,
@@ -210,14 +211,11 @@ def check_layout_and_ass() -> None:
             native_layout,
         )
         native_ass = native_ass_path.read_text(encoding="utf-8-sig")
-        assert "\\an7\\pos(90,176)" in native_ass
-        assert "\\an7\\pos(90,278)" in native_ass and "\\fs300" in native_ass
-        assert "\\1c&H0000D4FF&}40%" in native_ass
-        assert "\\1c&H003A45FF&" in native_ass and "15%" in native_ass
-        assert "数据不会骗人" in native_ass
+        assert "\\an7\\pos(76,80)" in native_ass
         native_plain = re.sub(r"\{[^}]*\}", "", native_ass).replace(r"\N", "")
+        assert "40%" in native_plain and "15%" in native_plain and "数据不会骗人" in native_plain
         assert "美妆只有15%。选赛道这件事，数据不会骗人。" in native_plain
-        assert "\\an7\\pos(90,1740)" in native_ass and "评论区扣勾兑" in native_ass
+        assert "\\an7\\pos(76,1730)" in native_ass and "评论区扣勾兑" in native_ass
         assert "\\fscx94" not in native_ass and "\\fscx96" not in native_ass
 
 
@@ -262,7 +260,7 @@ def check_emphasis_protocol() -> None:
     assert wrapped_long.replace("\n", "") == long_text
 
     styled_project, _ = renderer.resolve_template(
-        {"layout": {"template_id": "torn-magazine"}, "render": {"subtitle_font": "Noto Sans SC"}, **project}
+        {"layout": {"template_id": "black-playful"}, "render": {"subtitle_font": "Noto Sans SC"}, **project}
     )
     layout = renderer.resolve_layout(styled_project, 1080, 1920, [])
     assert layout
@@ -279,7 +277,7 @@ def check_emphasis_protocol() -> None:
             resolved,
         )
         ass = ass_path.read_text(encoding="utf-8-sig")
-        assert "\\fscx" in ass and "\\u1" in ass and "\\frz-1.50" in ass
+        assert "\\fscx" in ass and "\\u1" not in ass
         assert "一样大" in ass and "看到重点" in ass
 
     assert_raises_runtime(
@@ -288,7 +286,7 @@ def check_emphasis_protocol() -> None:
         )
     )
 
-    legacy_project, _ = renderer.resolve_template({"layout": {"template_id": "video-diary"}})
+    legacy_project, _ = renderer.resolve_template({"layout": {"template_id": "white-handwritten"}})
     legacy_layout = renderer.resolve_layout(legacy_project, 1080, 1920, [])
     assert legacy_layout and not legacy_layout["auto_highlight"]
     legacy = renderer.normalize_highlights(
@@ -298,13 +296,13 @@ def check_emphasis_protocol() -> None:
         legacy_layout,
     )
     assert legacy[0]["scale"] == 1 and not legacy[0]["underline"] and legacy[0]["color"] == "#FF0000"
-    old_auto_project, _ = renderer.resolve_template({"layout": {"template_id": "yellow-blue-pop"}})
+    old_auto_project, _ = renderer.resolve_template({"layout": {"template_id": "black-left-bold"}})
     old_auto_layout = renderer.resolve_layout(old_auto_project, 1080, 1920, [])
     assert old_auto_layout
     old_auto = renderer.normalize_highlights(
         {}, "top_highlights", "增长40%", old_auto_layout, resolve_emphasis({}, [{"top_text": "增长40%"}])[0]
     )
-    assert old_auto and old_auto[0]["scale"] == 1 and old_auto[0]["text"] == "40%"
+    assert old_auto == []
 
     repeated_top, repeated_bottom = "哈哈哈", "立即保存"
     repeated_project = {
@@ -487,14 +485,14 @@ def check_cli_dry_run_and_batch() -> None:
         project = {
             "version": 1,
             "canvas": {"width": 1080, "height": 1920, "fps": 30},
-            "layout": {"template_id": "business-black"},
+            "layout": {"template_id": "white-center-bold"},
             "voice": {"enabled": False},
             "bgm": False,
             "material_policy": {"allow_image_only": False, "image_only_reason": ""},
             "scenes": [
                 {
                     "id": "s01",
-                    "top_text": "同一套素材 13种风格",
+                    "top_text": "同一套素材 4种风格",
                     "bottom_text": "选择模板",
                     "duration": 8.0,
                     "media": [
@@ -513,7 +511,7 @@ def check_cli_dry_run_and_batch() -> None:
             text=True,
         )
         dry = json.loads(dry_run.stdout)
-        assert dry["template_id"] == "business-black" and dry["layout"] == "text-media-text"
+        assert dry["template_id"] == "white-center-bold" and dry["layout"] == "text-media-text"
         assert dry["scenes"][0]["video_assets"] == 2
 
         for field, value, expected_error in (
@@ -551,7 +549,7 @@ def check_cli_dry_run_and_batch() -> None:
             text=True,
         )
         validated = json.loads(valid.stdout)
-        assert validated["ok"] and validated["jobs"][0]["template_id"] == "business-black"
+        assert validated["ok"] and validated["jobs"][0]["template_id"] == "white-center-bold"
         assert validated["jobs"][0]["video_media"] == 2
 
         duplicate_batch = {
@@ -634,7 +632,7 @@ def check_cli_dry_run_and_batch() -> None:
         assert "require at least 3 distinct BGM tracks" in repeated_bgm.stdout
         assert "reuse the same BGM" in repeated_bgm.stdout
 
-        project["scenes"][0]["top_text"] = "ONE STORY 13种风格 不只是换颜色"
+        project["scenes"][0]["top_text"] = "ONE STORY 4种风格 不只是换颜色"
         project["scenes"][0]["bottom_text"] = "PICK A STYLE 再批量生成"
         project_path.write_text(json.dumps(project, ensure_ascii=False), encoding="utf-8")
         batch_path.write_text(json.dumps({"jobs": [{"project": "project.json"}]}), encoding="utf-8")
@@ -741,7 +739,7 @@ def check_concurrency_and_boundaries() -> None:
         )
 
         invalid_project = {
-            "layout": {"template_id": "business-black"},
+            "layout": {"template_id": "white-center-bold"},
             "render": {"output": "output/final.mp4"},
             "scenes": ["not-an-object"],
         }
@@ -810,7 +808,7 @@ def check_real_render() -> None:
                 {
                     "version": 1,
                     "canvas": {"width": 1080, "height": 1920, "fps": 30},
-                    "layout": {"template_id": "video-diary"},
+                    "layout": {"template_id": "white-handwritten"},
                     "voice": {"enabled": False},
                     "bgm": False,
                     "material_policy": {"allow_image_only": False, "image_only_reason": ""},
@@ -840,10 +838,10 @@ def check_real_render() -> None:
         )
         report = json.loads(result.stdout)
         assert report["video_codec"] == "h264" and report["audio_codec"] == "aac"
-        assert (report["width"], report["height"], report["template_id"]) == (1080, 1920, "video-diary")
+        assert (report["width"], report["height"], report["template_id"]) == (1080, 1920, "white-handwritten")
         assert report["duration"] >= 8.0 and (temp / "output/final.mp4").is_file()
         saved = json.loads(project_path.read_text(encoding="utf-8"))
-        assert saved["render_report"]["template_id"] == "video-diary"
+        assert saved["render_report"]["template_id"] == "white-handwritten"
 
 
 if __name__ == "__main__":
