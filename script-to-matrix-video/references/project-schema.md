@@ -150,13 +150,15 @@ Unknown values must fall back to `static` or `cut` and be recorded in the render
 
 For Agent-selected emphasis, use the top-level `emphasis.v1` object described in [semantic-emphasis.md](semantic-emphasis.md). Its `top` and `bottom` offsets must match the exact persistent scene copy. Scene-level highlight arrays remain backward compatible and take precedence. The renderer drops stale or invalid spans, falls back to conservative deterministic rules when appropriate, and records the resolved provider and span counts in `render_report.emphasis`.
 
-For one of the 13 bundled authored styles, set only a stable template identifier:
+For one of the eight bundled standard styles, set only a stable template identifier:
 
 ```json
 {"layout": {"template_id": "white-handwritten"}}
 ```
 
 The renderer loads its defaults from `assets/templates/catalog.json`. Explicit project `layout` and `render` fields override template defaults. Read [style-templates.md](style-templates.md) for the complete catalog. Bundled templates can set independent `top_font` and `bottom_font`, one persistent `kicker`, validated `surface_boxes` decoration, and one catalog-owned semantic `emphasis_profile`. The Skill automatically supplies `assets/fonts` to FFmpeg/libass; set `render.fonts_dir` only for a custom font directory contained inside the current project.
+
+The 17 IDs beginning with `ref-` use a separate five-layer HyperFrames batch schema rather than this `project.json` schema. Read [reference-typography-templates.md](reference-typography-templates.md) and render them with `scripts/render_reference_typography.py`; do not pass a `ref-` ID to `render_video.py`.
 
 An unsupported layout falls back to `full-frame` and is recorded in `render_report.warnings`.
 

@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "pack_id": "reference-typography-17",
+  "engine": "hyperframes",
+  "hyperframes_version": "0.8.16",
+  "duration_seconds": 8,
+  "resolution": "1080x1920",
+  "fps": 30,
+  "input_fields": [
+    "name",
+    "template_id",
+    "top1",
+    "top2",
+    "top3",
+    "bottom1",
+    "bottom2",
+    "videoA",
+    "videoB",
+    "bgm"
+  ],
+  "templates": [
+    {
+      "id": "ref-01-chengdu-green-brush",
+      "variant": "v01",
+      "name": "成都绿描边手写",
+      "description": "绿色粗描边手写标题，白色黑描边副标题，适合圈层、社群与女性成长内容。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/01-chengdu-green-brush.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/01-chengdu-green-brush.jpg"
+    },
+    {
+      "id": "ref-02-shenzhen-ai-orange",
+      "variant": "v02",
+      "name": "深圳 AI 橙色主标题",
+      "description": "橙色白描边主标题与黑白副标题，适合 AI 沙龙、获客与科技创业内容。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/02-shenzhen-ai-orange.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/02-shenzhen-ai-orange.jpg"
+    },
+    {
+      "id": "ref-03-zhengzhou-blue-banner",
+      "variant": "v03",
+      "name": "郑州蓝色标题红横条",
+      "description": "浅蓝粗黑描边标题与红色信息横条，适合城市活动、沙龙报名和资源链接。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/03-zhengzhou-blue-banner.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/03-zhengzhou-blue-banner.jpg"
+    },
+    {
+      "id": "ref-04-foshan-yellow-strip",
+      "variant": "v04",
+      "name": "佛山黄色信息条",
+      "description": "黄黑高对比标题、黄色横条 CTA，适合老板茶话会、同城活动和实体圈层。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/04-foshan-yellow-strip.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/04-foshan-yellow-strip.jpg"
+    },
+    {
+      "id": "ref-05-changsha-white-red",
+      "variant": "v05",
+      "name": "长沙白字红强调",
+      "description": "白色手写标题搭配红色强调与黄色地点信息，适合聚会、破圈和邀约。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/05-changsha-white-red.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/05-changsha-white-red.jpg"
+    },
+    {
+      "id": "ref-06-guangzhou-yellow-button",
+      "variant": "v06",
+      "name": "广州黄色按钮 CTA",
+      "description": "超粗白色标题与黄色按钮式 CTA，适合读书会、女性组织和直接转化。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/06-guangzhou-yellow-button.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/06-guangzhou-yellow-button.jpg"
+    },
+    {
+      "id": "ref-07-shenzhen-red-growth",
+      "variant": "v07",
+      "name": "深圳红色成长强调",
+      "description": "黄色城市钩子、白色主体和红色增长结论，适合高净值圈层与成长话题。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/07-shenzhen-red-growth.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/07-shenzhen-red-growth.jpg"
+    },
+    {
+      "id": "ref-08-puyang-yellow-white",
+      "variant": "v08",
+      "name": "濮阳黄白层级",
+      "description": "黄白粗体多层标题与手写底部邀约，适合中年女性圈层、聚会和报名。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/08-puyang-yellow-white.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/08-puyang-yellow-white.jpg"
+    },
+    {
+      "id": "ref-09-urumqi-soft-brush",
+      "variant": "v09",
+      "name": "乌鲁木齐柔和手写",
+      "description": "暖黄手写标题、浅绿信息层级，适合女性社群、温暖圈层和成长内容。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/09-urumqi-soft-brush.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/09-urumqi-soft-brush.jpg"
+    },
+    {
+      "id": "ref-10-shenzhen-sisters",
+      "variant": "v10",
+      "name": "深圳姐妹自我提升",
+      "description": "白黄手写层级与大字 CTA，适合姐妹圈、女性成长与自我提升。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/10-shenzhen-sisters.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/10-shenzhen-sisters.jpg"
+    },
+    {
+      "id": "ref-11-nansha-clean",
+      "variant": "v11",
+      "name": "南沙清爽三层标题",
+      "description": "黄黑主标题、黑色副标题和细黄信息层，适合创业沙龙与资源互换。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/11-nansha-clean.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/11-nansha-clean.jpg"
+    },
+    {
+      "id": "ref-12-guangzhou-brush",
+      "variant": "v12",
+      "name": "广州手写聚会",
+      "description": "白色黑描边手写标题与黄色聚会信息，适合中年女性、资源链接和周活动。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/12-guangzhou-brush.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/12-guangzhou-brush.jpg"
+    },
+    {
+      "id": "ref-13-shenzhen-green-location",
+      "variant": "v13",
+      "name": "深圳绿色坐标 CTA",
+      "description": "黄色顶部钩子与荧光绿地点、口令，适合本地活动、饭局和线下邀约。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/13-shenzhen-green-location.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/13-shenzhen-green-location.jpg"
+    },
+    {
+      "id": "ref-14-karamay-green",
+      "variant": "v14",
+      "name": "克拉玛依绿系手写",
+      "description": "暖黄手写标题与绿色信息层，适合异地女性圈、长期成长和资源共享。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/14-karamay-green.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/14-karamay-green.jpg"
+    },
+    {
+      "id": "ref-15-tianjin-monochrome",
+      "variant": "v15",
+      "name": "天津黑白极简",
+      "description": "纯黑背景、超粗白字和居中素材，适合稳重圈层、退休生活与知识型活动。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/15-tianjin-monochrome.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/15-tianjin-monochrome.jpg"
+    },
+    {
+      "id": "ref-16-shenzhen-opc",
+      "variant": "v16",
+      "name": "深圳 OPC 多层信息",
+      "description": "小号暖黄引题、白色核心卖点和大号底部邀约，适合 OPC、共享创业与项目招募。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/16-shenzhen-opc.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/16-shenzhen-opc.jpg"
+    },
+    {
+      "id": "ref-17-shenzhen-yellow-red",
+      "variant": "v17",
+      "name": "深圳黄红爆款层级",
+      "description": "黄色超粗标题、红白冲突强调和大号底部 CTA，适合高吸引力引流与强报名口令。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/17-shenzhen-yellow-red.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/17-shenzhen-yellow-red.jpg"
+    }
+  ]
+}

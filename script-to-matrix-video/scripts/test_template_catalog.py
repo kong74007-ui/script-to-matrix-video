@@ -56,6 +56,36 @@ def check_real_catalog() -> None:
         )
 
 
+def check_reference_typography_pack() -> None:
+    skill_root = SCRIPTS.parent
+    pack_root = skill_root / "assets" / "templates" / "reference-typography-17"
+    manifest_path = pack_root / "manifest.json"
+    wrapper_path = SCRIPTS / "render_reference_typography.py"
+    assert manifest_path.is_file(), "reference typography manifest is missing"
+    assert wrapper_path.is_file(), "reference typography renderer is missing"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    templates = manifest.get("templates") or []
+    ids = [item.get("id") for item in templates]
+    variants = [item.get("variant") for item in templates]
+    assert manifest.get("version") == 1 and manifest.get("engine") == "hyperframes"
+    assert manifest.get("hyperframes_version") == "0.8.16"
+    assert len(templates) == 17 and len(ids) == len(set(ids))
+    assert all(isinstance(value, str) and value.startswith("ref-") for value in ids)
+    assert variants == [f"v{index:02d}" for index in range(1, 18)]
+
+    index_html = (pack_root / "index.html").read_text(encoding="utf-8")
+    for variable in ("top1", "top2", "top3", "bottom1", "bottom2", "videoA", "videoB", "bgm"):
+        assert variable in index_html
+    for variant in variants:
+        assert f".{variant} " in index_html
+
+    for item in templates:
+        for field, suffix in (("example_mp4", ".mp4"), ("example_jpg", ".jpg")):
+            example = (pack_root / item[field]).resolve()
+            assert example.suffix.lower() == suffix and example.is_file()
+            assert example.stat().st_size > 10_000
+
+
 def check_template_resolution() -> None:
     assert batch_validator.resolve_template is renderer.resolve_template
     assert renderer.manifest_path(r"assets\clip.mp4", "test") == Path("assets") / "clip.mp4"
@@ -873,6 +903,7 @@ def check_real_render() -> None:
 
 if __name__ == "__main__":
     check_real_catalog()
+    check_reference_typography_pack()
     check_template_resolution()
     check_invalid_catalogs()
     check_layout_and_ass()

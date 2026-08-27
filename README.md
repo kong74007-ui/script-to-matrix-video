@@ -2,7 +2,7 @@
 
 一个面向中文矩阵引流内容的 Codex Skill，输出可直接发布的 9:16 MP4。
 
-当前版本：`v1.7.5`
+当前版本：`v1.8.0`
 
 ## 两个独立功能
 
@@ -26,21 +26,23 @@
 
 阅读速度按每秒约 5 个可见中文字符、字母或数字估算。渲染器会再次计算并把过短清单延长到完整的文案阅读时长，不会把所有视频都固定成 8 秒。
 
+例外：17 套 `ref-` 参考排版是用户确认过的固定 8 秒视觉模板。选择它们时必须先把长文案压缩或拆条，不能为了塞字而破坏已确认的字号和层级。
+
 模板素材采用视频优先策略：8–10 秒至少使用 2 个不同素材，10–15 秒至少 3 个，默认至少包含 1 个素材库视频。只有两次视频检索均无合适结果并写明原因时，才允许纯图片成片。批量开启 BGM 时会轮换曲库：2–3 条成片至少 2 首，4 条及以上至少 3 首，相邻成片不得使用同一首。
 
 批量渲染前必须运行 `scripts/validate_template_batch.py`，它会阻止单素材、无理由纯图片、A/B 素材重复、BGM 未轮换以及时长不足的任务进入渲染。
 
-## 13 套原创视觉模板
+## 25 套可复用视觉模板
 
-`text-media-text` 现在可直接用稳定的 `template_id` 选择：默认原生大字、视频日记、极简大标题、轻透雅粉、鲜黄亮蓝、商务深黑、黑金高级、数据对比、国风标题、撕边杂志、Vlog 手账、中英双语、人物金句。
+`text-media-text` 现在包含两组稳定模板：8 套黑白字体排版标准模板，以及 17 套根据已确认案例保留下来的 HyperFrames 参考排版模板。默认仍是黑底左排粗体 `black-left-bold`；参考模板 ID 使用 `ref-01-...` 到 `ref-17-...`，覆盖 AI 沙龙、城市圈层、女性成长、同城活动、OPC 招募和强 CTA 等排版。
 
 ```json
-{"layout": {"template_id": "native-bold"}}
+{"layout": {"template_id": "black-left-bold"}}
 ```
 
-模板目录位于 `script-to-matrix-video/assets/templates/catalog.json`。渲染器先应用模板默认值，再应用项目显式覆盖；批量校验器使用同一份目录，因此网站或其他调用方以后只需要保存 `template_id`，不必复制整套版式参数。
+8 套标准模板位于 `script-to-matrix-video/assets/templates/catalog.json`，使用 FFmpeg 渲染；17 套参考排版位于 `script-to-matrix-video/assets/templates/reference-typography-17/`，使用固定版本 HyperFrames 渲染，并由 `scripts/render_reference_typography.py` 统一准备素材与批量输出。完整 ID、输入字段和适用场景见 [参考排版模板目录](script-to-matrix-video/references/reference-typography-templates.md)。
 
-13 套模板现在都支持 `emphasis.v1` 语义重点：Codex 只输出原文中的重点区间和 `number / contrast / pain / benefit / conclusion / cta` 角色，模板目录决定放大、颜色、描边、荧光笔或下划线效果。未来黄雀 Agent 只需输出同一协议，无需修改渲染器。无效区间会被丢弃并回退到数字、日期、引号、转折和 CTA 的确定性规则；排版会先降低重点倍率、再降低基础字号，不截断文案。协议见 [semantic-emphasis.md](script-to-matrix-video/references/semantic-emphasis.md)。
+8 套标准模板支持 `emphasis.v1` 语义重点；17 套参考模板直接固定五层文字的字号、颜色、描边和层级，输入 `top1`/`top2`/`top3` 与 `bottom1`/`bottom2` 即可复用，不在渲染期间调用模型。
 
 Skill 自带 `Noto Sans SC`、`ZCOOL XiaoWei`、`Ma Shan Zheng`、`ZCOOL KuaiLe` 四个 OFL 中文字体家族，并自动交给 FFmpeg 加载，不依赖运行电脑碰巧安装了什么字体。详细选择建议见 [视觉模板目录](script-to-matrix-video/references/style-templates.md)。
 
@@ -54,15 +56,15 @@ v1.7.3 将个人素材库连接设为首次安装硬门槛。新电脑必须先�
 
 v1.7.4 取消所有标题、固定 CTA 和浮层文字的透明度渐入。文字从出现的第一帧即为完全不透明；短暂渐出、可选缩放弹入和素材转场保持不变。
 
-v1.7.5 重做默认 `native-bold` 排版：标题、主数据、对比结论和 CTA 统一左对齐；自动把第一个关键数字提为黄色超大主视觉，后续对比数字使用红色，并加入短红色强调条。没有数字的文案会安全回退为左对齐标题，不复制播放器进度线或参考图中的预览信息。
+v1.7.5 重做了当时的 `native-bold` 数据版式。后续模板精简将默认恢复为 `black-left-bold`，避免旧模板被静默恢复。
 
-PR 会运行零付费模板回归：校验协议和 13 套重点档案，为全部 13 套模板生成真实 libass 首帧矩阵，再用 30/60fps 合成素材渲染鲜黄亮蓝、撕边杂志、国风标题三条 MP4 供审查。
+v1.8.0 新增 17 套经过成片验证的 HyperFrames 参考排版模板，保存完整模板源文件、稳定 ID、批量渲染脚本、17 条 MP4 案例和 17 张首帧预览；原有 8 套标准模板继续保留。
+
+PR 会运行零付费模板回归，校验标准模板目录、参考模板清单、字体、示例文件和批量输入规则。
 
 ## 模板案例视频
 
-仓库内置 6 组文案、每组 A/B 两个版本，共 12 条已经生成的 `text-media-text` 模板案例视频。全部为 1080×1920 H.264 MP4，单条约 10.5–12 秒。
-
-![12条模板案例首帧预览](script-to-matrix-video/assets/examples/text-media-text/preview-opening.jpg)
+仓库现在为全部 25 套模板保存了可直接查看的 MP4 和第一帧 JPG：8 套标准模板案例，以及 17 套参考排版案例。参考排版案例为 1080×1920、8 秒、H.264/AAC。
 
 - [查看案例文案与 A/B 视频索引](script-to-matrix-video/references/template-examples.md)
 - [打开案例视频目录](script-to-matrix-video/assets/examples/text-media-text/)
@@ -145,8 +147,8 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 ```text
 script-to-matrix-video/   Skill 本体
   assets/fonts/           4 个开源中文字体家族及许可证
-  assets/templates/       13 套原创模板目录
-  assets/examples/        12条模板案例视频与预览图
+  assets/templates/       8 套标准模板与 17 套 HyperFrames 参考排版模板
+  assets/examples/        25 套模板案例视频与首帧预览图
 install.ps1               Windows 安装器
 INSTALL.md                完整安装与连接配置
 功能介绍.md               两个独立功能的说明

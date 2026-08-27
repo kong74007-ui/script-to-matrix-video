@@ -10,4 +10,6 @@ id_ed25519.pub
 outputs/
 *.mp4
 !script-to-matrix-video/assets/examples/text-media-text/*.mp4
+!script-to-matrix-video/assets/examples/text-media-text/reference-typography-17/*.mp4
+!script-to-matrix-video/assets/templates/reference-typography-17/assets/library/*.mp4
 *.wav

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-resolution="portrait" data-preview-row="0" data-composition-variables="[
+    {&quot;id&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;输出名称&quot;,&quot;default&quot;:&quot;01-chengdu-green-brush&quot;},
+    {&quot;id&quot;:&quot;variant&quot;,&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;版式&quot;,&quot;default&quot;:&quot;v01&quot;,&quot;options&quot;:[{&quot;value&quot;:&quot;v01&quot;,&quot;label&quot;:&quot;01&quot;},{&quot;value&quot;:&quot;v02&quot;,&quot;label&quot;:&quot;02&quot;},{&quot;value&quot;:&quot;v03&quot;,&quot;label&quot;:&quot;03&quot;},{&quot;value&quot;:&quot;v04&quot;,&quot;label&quot;:&quot;04&quot;},{&quot;value&quot;:&quot;v05&quot;,&quot;label&quot;:&quot;05&quot;},{&quot;value&quot;:&quot;v06&quot;,&quot;label&quot;:&quot;06&quot;},{&quot;value&quot;:&quot;v07&quot;,&quot;label&quot;:&quot;07&quot;},{&quot;value&quot;:&quot;v08&quot;,&quot;label&quot;:&quot;08&quot;},{&quot;value&quot;:&quot;v09&quot;,&quot;label&quot;:&quot;09&quot;},{&quot;value&quot;:&quot;v10&quot;,&quot;label&quot;:&quot;10&quot;},{&quot;value&quot;:&quot;v11&quot;,&quot;label&quot;:&quot;11&quot;},{&quot;value&quot;:&quot;v12&quot;,&quot;label&quot;:&quot;12&quot;},{&quot;value&quot;:&quot;v13&quot;,&quot;label&quot;:&quot;13&quot;},{&quot;value&quot;:&quot;v14&quot;,&quot;label&quot;:&quot;14&quot;},{&quot;value&quot;:&quot;v15&quot;,&quot;label&quot;:&quot;15&quot;},{&quot;value&quot;:&quot;v16&quot;,&quot;label&quot;:&quot;16&quot;},{&quot;value&quot;:&quot;v17&quot;,&quot;label&quot;:&quot;17&quot;}]},
+    {&quot;id&quot;:&quot;top1&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题1&quot;,&quot;default&quot;:&quot;在成都高新区&quot;},
+    {&quot;id&quot;:&quot;top2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题2&quot;,&quot;default&quot;:&quot;有一群不打麻将 不逛街\n70 80 90 后\n相互成长 资源共享&quot;},
+    {&quot;id&quot;:&quot;top3&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题3&quot;,&quot;default&quot;:&quot;一群同频高能的优秀伙伴搞事业&quot;},
+    {&quot;id&quot;:&quot;bottom1&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;底部副标题&quot;,&quot;default&quot;:&quot;社交破圈｜认知提升｜彼此赋能&quot;},
+    {&quot;id&quot;:&quot;bottom2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;底部CTA&quot;,&quot;default&quot;:&quot;每周都有聚会\n感兴趣回复“666”&quot;},
+    {&quot;id&quot;:&quot;videoA&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材A&quot;,&quot;default&quot;:&quot;assets/library/default-a.mp4&quot;},
+    {&quot;id&quot;:&quot;videoB&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材B&quot;,&quot;default&quot;:&quot;assets/library/default-b.mp4&quot;},
+    {&quot;id&quot;:&quot;bgm&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;背景音乐&quot;,&quot;default&quot;:&quot;assets/bgm/silence.m4a&quot;}
+  ]">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <title>17套参考文字排版</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="preview-data.js"></script>
+    <style>
+      @font-face { font-family: "NotoSC"; src: url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype"); font-weight: 100 900; }
+      @font-face { font-family: "MaShan"; src: url("assets/fonts/MaShanZheng-Regular.ttf") format("truetype"); }
+      @font-face { font-family: "KuaiLe"; src: url("assets/fonts/ZCOOLKuaiLe-Regular.ttf") format("truetype"); }
+      @font-face { font-family: "XiaoWei"; src: url("assets/fonts/ZCOOLXiaoWei-Regular.ttf") format("truetype"); }
+
+      * { box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; margin: 0; overflow: hidden; background: #000; }
+      body { font-family: "NotoSC", sans-serif; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      .clip { position: absolute; }
+      .media-video {
+        left: 0; width: 1080px; height: 1920px; object-fit: cover; object-position: center;
+        transform-origin: center center; background: #000;
+      }
+      .text-layer {
+        inset: 0; width: 1080px; height: 1920px; z-index: 3; color: #fff;
+        pointer-events: none; overflow: hidden;
+      }
+      .text-layer::before {
+        content: ""; position: absolute; inset: 0; z-index: -1;
+        background: linear-gradient(to bottom, rgba(0,0,0,.58) 0%, rgba(0,0,0,0) 38%, rgba(0,0,0,0) 62%, rgba(0,0,0,.58) 100%);
+      }
+      .top, .bottom { position: absolute; left: 0; width: 100%; padding-left: 42px; padding-right: 42px; }
+      .top { top: 96px; text-align: center; }
+      .bottom { bottom: 116px; text-align: center; }
+      .top1, .top2, .top3, .bottom1, .bottom2 {
+        margin: 0 auto; max-width: 996px; white-space: pre-line; overflow-wrap: anywhere;
+        letter-spacing: .01em; line-height: 1.13;
+      }
+      .top2, .top3, .bottom1, .bottom2 { margin-top: 16px; }
+
+      .v01 .media-video, .v03 .media-video, .v14 .media-video, .v15 .media-video { top: 590px; height: 740px; }
+      .v01 .text-layer::before, .v03 .text-layer::before, .v14 .text-layer::before, .v15 .text-layer::before {
+        background: linear-gradient(to bottom, #070707 0 590px, rgba(0,0,0,.18) 590px 1330px, #070707 1330px 1920px);
+      }
+
+      /* 01：黑底三段式，绿色手写描边 */
+      .v01 .top1 { font: 400 68px/1.08 "MaShan"; color: #f7f5ec; -webkit-text-stroke: 11px #789822; paint-order: stroke fill; }
+      .v01 .top2 { font: 400 62px/1.15 "MaShan"; color: #f8f7ef; -webkit-text-stroke: 9px #789822; paint-order: stroke fill; }
+      .v01 .top3 { font-size: 50px; font-weight: 900; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v01 .bottom { bottom: 132px; }
+      .v01 .bottom1 { font: 400 54px/1.05 "MaShan"; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v01 .bottom2 { width: max-content; max-width: 900px; padding: 14px 26px; border-radius: 22px; background: #f5f4ee; color: #426d24; font: 400 72px/1.15 "MaShan"; box-shadow: 0 9px 0 rgba(0,0,0,.45); }
+
+      /* 02：橙白书法标题，三行CTA */
+      .v02 .top { top: 126px; }
+      .v02 .top1 { font: 400 86px/1.05 "MaShan"; color: #f56a00; -webkit-text-stroke: 13px #fff; paint-order: stroke fill; }
+      .v02 .top2 { font: 400 72px/1.16 "XiaoWei"; color: #fff; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v02 .bottom1 { font: 400 62px/1.1 "XiaoWei"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v02 .bottom2 { font: 400 78px/1.05 "MaShan"; color: #f56a00; -webkit-text-stroke: 10px #fff; paint-order: stroke fill; }
+
+      /* 03：黑底分区，蓝白标题，红色横条 */
+      .v03 .top1 { font-size: 86px; font-weight: 900; color: #bde8ff; -webkit-text-stroke: 10px #0b0b0b; paint-order: stroke fill; }
+      .v03 .top2 { font: 400 54px/1.18 "XiaoWei"; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v03 .bottom { bottom: 148px; }
+      .v03 .bottom1 { margin-left: -42px; margin-right: -42px; max-width: none; padding: 22px; background: #9f2637; font: 400 58px/1.1 "XiaoWei"; color: #fff; }
+      .v03 .bottom2 { font-size: 78px; font-weight: 900; color: #ffd51e; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+
+      /* 04：黄白重黑体，黄色提示条 */
+      .v04 .top { top: 116px; }
+      .v04 .top1 { font-size: 88px; font-weight: 900; color: #ffd923; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
+      .v04 .top2 { font-size: 72px; font-weight: 900; color: #fff; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v04 .top3 { display: inline-block; margin-top: 22px; padding: 14px 24px; border-radius: 12px; background: #ffd916; color: #111; font-size: 48px; font-weight: 900; }
+      .v04 .bottom1 { font-size: 58px; font-weight: 900; color: #ffd923; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v04 .bottom2 { font-size: 52px; font-weight: 900; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+
+      /* 05：超粗白主标题，红色说明 */
+      .v05 .top1 { font: 400 70px/1.06 "MaShan"; color: #fff; -webkit-text-stroke: 11px #111; paint-order: stroke fill; }
+      .v05 .top2 { font: 400 98px/1.02 "MaShan"; color: #fff; -webkit-text-stroke: 13px #111; paint-order: stroke fill; }
+      .v05 .top3 { font: 400 62px/1.05 "MaShan"; color: #d51f2c; -webkit-text-stroke: 7px #fff; paint-order: stroke fill; }
+      .v05 .bottom1 { font-size: 64px; font-weight: 900; color: #ffd825; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v05 .bottom2 { font: 400 82px/1.05 "MaShan"; color: #fff; -webkit-text-stroke: 11px #111; paint-order: stroke fill; }
+
+      /* 06：白色超大标题，黄色按钮 */
+      .v06 .top1 { font-size: 104px; font-weight: 900; color: #fff; -webkit-text-stroke: 13px #111; paint-order: stroke fill; }
+      .v06 .top2 { font-size: 76px; font-weight: 900; color: #fff; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
+      .v06 .top3 { font-size: 60px; font-weight: 900; color: #fffbdc; -webkit-text-stroke: 8px #333; paint-order: stroke fill; }
+      .v06 .bottom1 { font-size: 68px; font-weight: 900; color: #ffe326; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v06 .bottom2 { display: inline-block; margin-top: 28px; padding: 20px 36px; border-radius: 28px; background: #ffd51a; color: #090909; font-size: 76px; font-weight: 900; }
+
+      /* 07：黄白红三层标题 */
+      .v07 .top1 { font-size: 104px; font-weight: 900; color: #ffd719; -webkit-text-stroke: 12px #111; paint-order: stroke fill; }
+      .v07 .top2 { font-size: 68px; font-weight: 900; color: #fff; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v07 .top3 { font-size: 62px; font-weight: 900; color: #ff244a; -webkit-text-stroke: 7px #fff; paint-order: stroke fill; }
+      .v07 .bottom2 { font-size: 84px; font-weight: 900; color: #ffd719; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
+
+      /* 08：黄色地名，白黄说明 */
+      .v08 .top1 { font-size: 92px; font-weight: 900; color: #ffd719; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
+      .v08 .top2 { font-size: 62px; font-weight: 900; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v08 .top3 { font-size: 54px; font-weight: 900; color: #ffd719; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v08 .bottom1 { font: 400 72px/1.05 "MaShan"; color: #fff; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
+      .v08 .bottom2 { display: inline-block; padding: 10px 24px; background: #ffd719; color: #fff; font: 400 64px/1.1 "MaShan"; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+
+      /* 09：米黄手写标题，薄荷绿说明 */
+      .v09 .top1 { font: 400 78px/1.08 "MaShan"; color: #fff0a8; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v09 .top2 { font-size: 50px; font-weight: 700; color: #baf0bd; -webkit-text-stroke: 5px #234629; paint-order: stroke fill; }
+      .v09 .bottom1 { font: 400 60px/1.05 "MaShan"; color: #a5ed7a; -webkit-text-stroke: 7px #234629; paint-order: stroke fill; }
+      .v09 .bottom2 { font: 400 66px/1.05 "MaShan"; color: #fff0a8; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+
+      /* 10：黄白层级，左对齐意向词 */
+      .v10 .top { top: 92px; }
+      .v10 .top1 { font: 400 70px/1.02 "XiaoWei"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v10 .top2 { font: 400 78px/1.03 "XiaoWei"; color: #ffd819; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v10 .top3 { font-size: 54px; font-weight: 800; color: #fff; -webkit-text-stroke: 6px #111; paint-order: stroke fill; }
+      .v10 .bottom { text-align: left; padding-left: 68px; bottom: 118px; }
+      .v10 .bottom1 { margin-left: 0; font: 400 68px/1.04 "XiaoWei"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v10 .bottom2 { margin-left: 0; font: 400 80px/1.03 "XiaoWei"; color: #fff; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+
+      /* 11：清洁分区、黄白标题、红色CTA */
+      .v11 .text-layer::before { background: linear-gradient(to bottom, rgba(255,255,255,.8) 0 520px, rgba(0,0,0,0) 520px 1390px, rgba(255,255,255,.82) 1390px 1920px); }
+      .v11 .top1 { font-size: 86px; font-weight: 900; color: #f0dc44; -webkit-text-stroke: 8px #222; paint-order: stroke fill; }
+      .v11 .top2 { font-size: 80px; font-weight: 800; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v11 .top3 { font-size: 54px; font-weight: 800; color: #f0dc44; -webkit-text-stroke: 6px #222; paint-order: stroke fill; }
+      .v11 .bottom1 { font-size: 68px; font-weight: 900; color: #111; -webkit-text-stroke: 8px #fff; paint-order: stroke fill; }
+      .v11 .bottom2 { font: 400 76px/1.08 "MaShan"; color: #d82424; -webkit-text-stroke: 7px #fff; paint-order: stroke fill; }
+
+      /* 12：黑白手写标题，黄色信息行 */
+      .v12 .top1 { font: 400 72px/1.08 "MaShan"; color: #fff; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
+      .v12 .top2 { font: 400 62px/1.05 "MaShan"; color: #fff; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v12 .top3 { font: 400 50px/1.12 "MaShan"; color: #ffe036; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v12 .bottom1 { font: 400 58px/1.08 "MaShan"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v12 .bottom2 { font: 400 62px/1.08 "MaShan"; color: #ffe036; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+
+      /* 13：黄色两行标题、绿色定位CTA */
+      .v13 .top1 { font-size: 76px; font-weight: 900; color: #ffe122; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v13 .top2 { font-size: 68px; font-weight: 900; color: #ffe122; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v13 .bottom1, .v13 .bottom2 { font-size: 80px; font-weight: 900; color: #18f14c; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+
+      /* 14：上黑中素材下黑、米黄与绿色 */
+      .v14 .top1 { font: 400 72px/1.08 "MaShan"; color: #fff0b0; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v14 .top2 { font-size: 50px; font-weight: 800; color: #a8e4a2; -webkit-text-stroke: 5px #315a31; paint-order: stroke fill; }
+      .v14 .bottom1 { font: 400 60px/1.05 "MaShan"; color: #a5e993; -webkit-text-stroke: 7px #315a31; paint-order: stroke fill; }
+      .v14 .bottom2 { font: 400 64px/1.05 "MaShan"; color: #fff2ac; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+
+      /* 15：纯白超粗无衬线，黑底分区 */
+      .v15 .top { top: 108px; }
+      .v15 .top1 { font-size: 80px; font-weight: 900; color: #fff; line-height: 1.1; }
+      .v15 .top2 { margin-top: 54px; font-size: 64px; font-weight: 900; color: #fff; }
+      .v15 .bottom2 { font-size: 92px; font-weight: 900; color: #fff; }
+
+      /* 16：米白小标题、白色大数字标题 */
+      .v16 .top1 { font: 400 48px/1.1 "XiaoWei"; color: #fff1af; -webkit-text-stroke: 5px #111; paint-order: stroke fill; }
+      .v16 .top2 { font: 400 68px/1.04 "XiaoWei"; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v16 .top3 { font-size: 52px; font-weight: 900; color: #fff; -webkit-text-stroke: 6px #111; paint-order: stroke fill; }
+      .v16 .bottom1 { font: 400 70px/1.04 "XiaoWei"; color: #fff0b0; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v16 .bottom2 { font: 400 70px/1.04 "XiaoWei"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+
+      /* 17：黄红白三层标题、超大关键词 */
+      .v17 .top1 { font-size: 74px; font-weight: 900; color: #ffdb16; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
+      .v17 .top2 { font-size: 64px; font-weight: 900; color: #fff; -webkit-text-stroke: 8px #d80c0c; paint-order: stroke fill; }
+      .v17 .top3 { font-size: 118px; font-weight: 900; color: #ffdb16; -webkit-text-stroke: 13px #111; paint-order: stroke fill; }
+      .v17 .bottom1 { font-size: 54px; font-weight: 900; color: #ffdb16; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v17 .bottom2 { font-size: 84px; font-weight: 900; color: #fff; -webkit-text-stroke: 10px #d80c0c; paint-order: stroke fill; }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-f7ns" id="root" class="v01" data-composition-id="main" data-start="0" data-duration="8" data-width="1080" data-height="1920">
+      <video data-hf-id="hf-u6nw" id="videoA" class="clip media-video" data-start="0" data-duration="4" data-track-index="0" data-var-src="videoA" src="assets/library/default-a.mp4" muted playsinline></video>
+      <video data-hf-id="hf-z723" id="videoB" class="clip media-video" data-start="4" data-duration="4" data-track-index="0" data-var-src="videoB" src="assets/library/default-b.mp4" muted playsinline></video>
+      <audio data-hf-id="hf-xex4" id="bgm" data-start="0" data-duration="8" data-track-index="10" data-volume="0.24" data-var-src="bgm" src="assets/bgm/silence.m4a"></audio>
+
+      <section data-hf-id="hf-8op4" id="typography" class="clip text-layer" data-start="0" data-duration="8" data-track-index="2">
+        <div data-hf-id="hf-sijt" class="top">
+          <div data-hf-id="hf-dno2" id="top1" class="top1" data-var-text="top1">在成都高新区</div>
+          <div data-hf-id="hf-50y7" id="top2" class="top2" data-var-text="top2">有一群不打麻将 不逛街</div>
+          <div data-hf-id="hf-ui9n" id="top3" class="top3" data-var-text="top3">一群同频高能的优秀伙伴搞事业</div>
+        </div>
+        <div data-hf-id="hf-tjil" class="bottom" data-layout-allow-caption-zone="">
+          <div data-hf-id="hf-hnwl" id="bottom1" class="bottom1" data-var-text="bottom1">社交破圈｜认知提升｜彼此赋能</div>
+          <div data-hf-id="hf-9rjf" id="bottom2" class="bottom2" data-var-text="bottom2">每周都有聚会 感兴趣回复“666”</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      let vars = window.__hyperframes.getVariables();
+      const previewRow = Number(document.documentElement.dataset.previewRow || 0);
+      if (previewRow > 0 && window.__previewRows?.[previewRow - 1]) {
+        vars = window.__previewRows[previewRow - 1];
+        document.getElementById("top1").textContent = vars.top1;
+        document.getElementById("top2").textContent = vars.top2;
+        document.getElementById("top3").textContent = vars.top3;
+        document.getElementById("bottom1").textContent = vars.bottom1;
+        document.getElementById("bottom2").textContent = vars.bottom2;
+        document.getElementById("videoA").src = vars.videoA;
+        document.getElementById("videoB").src = vars.videoB;
+        document.getElementById("bgm").src = vars.bgm;
+      }
+      document.getElementById("root").className = vars.variant;
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#videoA", { scale: 1.015 }, { scale: 1.04, duration: 4, ease: "none" }, 0);
+      tl.fromTo("#videoB", { scale: 1.015 }, { scale: 1.04, duration: 4, ease: "none" }, 4);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

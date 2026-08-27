@@ -1,4 +1,4 @@
-# 文案与模板矩阵视频 Skill v1.7.5
+# 文案与模板矩阵视频 Skill v1.8.0
 
 本安装包包含两个独立功能：
 
@@ -19,9 +19,11 @@ v1.7.4 取消标题、固定 CTA 和浮层文字的透明度渐入。文字从�
 
 v1.7.5 将默认 `native-bold` 更新为左对齐数据型排版：自动拆分小标题、超大主数字、对比结论和底部 CTA；没有数字时使用左对齐标题回退。播放器预览信息与进度线不会进入成片。
 
+v1.8.0 将当前确认的模板集整理为 8 套标准 FFmpeg 模板和 17 套 HyperFrames 参考排版模板，默认恢复为 `black-left-bold`。新增参考模板稳定 ID、五层文字输入、批量渲染脚本、17 条 MP4 案例和 17 张首帧 JPG。
+
 安装包不含 API 密钥、服务器密码、SSH 密钥或素材库原始文件；仅包含公开案例成片和预览图。
 
-安装包中的 `assets/examples/text-media-text` 包含公开案例成片，`assets/fonts` 包含模板运行所需字体，因此 v1.7.1 压缩包体积会明显大于旧版。
+安装包中的 `assets/examples/text-media-text` 包含 25 套公开案例成片和首帧预览，`assets/fonts` 包含模板运行所需字体，因此 v1.8.0 压缩包体积会明显大于旧版。
 
 ## Windows 一键安装
 
@@ -63,12 +65,13 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 
 - Python 3.10 或更高版本；
 - FFmpeg，且 `ffmpeg` 和 `ffprobe` 位于 `PATH`；
+- 使用 17 套 `ref-` 参考排版模板时，需要 Node.js 和 npm；渲染脚本固定调用 HyperFrames `0.8.16`；
 - 使用 AI 图片时，Codex 环境需要图片生成能力；
 - 使用阿里配音时，需要本机环境变量 `DASHSCOPE_API_KEY`；
 - 远程素材库需要 OpenSSH 和已配置的 SSH 密钥或 Agent。
 
 安装器不会安装 FFmpeg，也不会复制或保存 API 密钥、SSH 密钥或服务器密码。
-覆盖旧版本前，安装器会先校验 13 套模板目录、4 个字体文件、许可证和 SHA-256；分享包不完整时会停止，不会先移动现有 Skill。
+覆盖旧版本前，安装器会先校验 8 套标准模板、17 套参考模板、25 组案例文件、4 个字体文件、许可证和 SHA-256；分享包不完整时会停止，不会先移动现有 Skill。
 
 ## 素材库连接（首次安装必需）
 

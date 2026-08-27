@@ -1,0 +1,15 @@
+{
+  "rows": [
+    {
+      "name": "reference-template-preview",
+      "template_id": "ref-16-shenzhen-opc",
+      "top1": "我在深圳发起了\n共享创业 OPC 门店",
+      "top2": "1个人＋AI员工",
+      "top3": "接待｜导购｜成交｜复盘",
+      "bottom1": "坐标：深圳-南山",
+      "bottom2": "想了解私信 OPC",
+      "videoA": "../assets/library/default-a.mp4",
+      "videoB": "../assets/library/default-b.mp4"
+    }
+  ]
+}

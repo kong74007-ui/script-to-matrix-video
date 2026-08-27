@@ -16,18 +16,39 @@ if (-not (Test-Path -LiteralPath $sourceEntry -PathType Leaf)) {
 }
 
 $catalogPath = Join-Path $sourceSkill 'assets\templates\catalog.json'
+$referenceManifestPath = Join-Path $sourceSkill 'assets\templates\reference-typography-17\manifest.json'
+$referenceRendererPath = Join-Path $sourceSkill 'scripts\render_reference_typography.py'
 $fontRoot = Join-Path $sourceSkill 'assets\fonts'
 $fontSourcesPath = Join-Path $fontRoot 'sources.json'
-foreach ($requiredPath in @($catalogPath, $fontSourcesPath)) {
+foreach ($requiredPath in @($catalogPath, $referenceManifestPath, $referenceRendererPath, $fontSourcesPath)) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
-        throw "Skill v1.7 runtime files are incomplete: $requiredPath was not found."
+        throw "Skill v1.8 runtime files are incomplete: $requiredPath was not found."
     }
 }
 
 $catalog = Get-Content -LiteralPath $catalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $templateIds = @($catalog.templates | ForEach-Object { [string]$_.id })
-if ($catalog.version -ne 1 -or $templateIds.Count -ne 13 -or @($templateIds | Sort-Object -Unique).Count -ne 13) {
-    throw 'Template catalog must be version 1 with exactly 13 unique template IDs.'
+if ($catalog.version -ne 1 -or $templateIds.Count -ne 8 -or @($templateIds | Sort-Object -Unique).Count -ne 8) {
+    throw 'Standard template catalog must be version 1 with exactly 8 unique template IDs.'
+}
+
+$referenceManifest = Get-Content -LiteralPath $referenceManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$referenceTemplates = @($referenceManifest.templates)
+$referenceIds = @($referenceTemplates | ForEach-Object { [string]$_.id })
+if ($referenceManifest.version -ne 1 -or $referenceManifest.engine -ne 'hyperframes' -or $referenceTemplates.Count -ne 17 -or @($referenceIds | Sort-Object -Unique).Count -ne 17) {
+    throw 'Reference typography manifest must be version 1 with exactly 17 unique HyperFrames template IDs.'
+}
+foreach ($template in $referenceTemplates) {
+    if (-not ([string]$template.id).StartsWith('ref-')) {
+        throw "Reference template ID must start with ref-: $($template.id)"
+    }
+    foreach ($exampleField in @('example_mp4', 'example_jpg')) {
+        $relativeExample = [string]$template.$exampleField
+        $examplePath = [IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $referenceManifestPath) $relativeExample))
+        if (-not (Test-Path -LiteralPath $examplePath -PathType Leaf)) {
+            throw "Reference template example is missing: $relativeExample"
+        }
+    }
 }
 
 $fontSources = Get-Content -LiteralPath $fontSourcesPath -Raw -Encoding UTF8 | ConvertFrom-Json

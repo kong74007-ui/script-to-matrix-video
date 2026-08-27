@@ -1,40 +1,50 @@
-# 中文竖屏模板目录设计正本
+# 中文竖屏模板设计正本
 
 ## 产品上下文
 
-这 13 套模板服务于 `text-media-text`：上方固定标题、中部可追溯媒体、下方固定 CTA，面向 1080×1920 的中文信息流。它们不生成媒体、不复制参考作品；只为同一渲染契约提供可辨认的视觉选择。
+模板服务于 `text-media-text`：顶部固定文字、中间可追溯素材、底部固定 CTA，面向 1080×1920 中文信息流。模板只定义字体、字号、颜色、描边、对齐、位置和媒体窗口，不生成内容素材。
 
-## 记忆点与原创边界
+## 两组模板
 
-每套模板至少以两项以上的字体角色、信息密度、媒体窗口、色彩关系、标签或表面装饰区分。只借鉴「类别和信息层级」：不复用任何参考素材、CSS、图标、文案、播放控件或精确版式。
+Skill 共保留 25 套模板：
 
-## 字体与安全区
+- 8 套标准模板：纯黑或纯白背景，顶部约留 5% 空间，使用 FFmpeg/libass 渲染；默认是 `black-left-bold`。
+- 17 套参考排版模板：来自已通过成片确认的排版效果，保存为独立 HyperFrames 模板包，ID 从 `ref-01-...` 到 `ref-17-...`。
 
-- `Noto Sans SC`：清晰、功能性正文；`ZCOOL XiaoWei`：克制的人文标题；`Ma Shan Zheng`：国风题签；`ZCOOL KuaiLe`：轻松手账强调。
-- 标题位于媒体上方；标题从首 80 px 以下开始。CTA 中心不超过 y=1750，避开平台底部操作区；媒体框完整落在画布内。
-- 颜色以一主一辅为限；surface box 仅组织层次，不承载不可读的小字。
+标准模板目录为 `script-to-matrix-video/assets/templates/catalog.json`。参考模板目录为 `script-to-matrix-video/assets/templates/reference-typography-17/manifest.json`。
 
-## 模板一览
+## 文字层级
 
-| id | 名称 | 记忆点 |
-| --- | --- | --- |
-| native-bold | 默认原生大字 | 左对齐标题、超大黄色主数字、红色对比数据、模糊素材背景 |
-| video-diary | 视频日记 | 左对齐日期题签、圆角留白影像 |
-| minimal-headline | 极简大标题 | 超大黑字、细窄横向媒体 |
-| airy-blush | 轻透雅粉 | 半透明粉色层、温柔细边框 |
-| yellow-blue-pop | 鲜黄亮蓝 | 高反差色块、快速对比提示 |
-| business-black | 商务深黑 | 黑灰结构、冷蓝数据标签 |
-| black-gold-premium | 黑金高级 | 金色细线、低饱和高端留白 |
-| data-compare | 数据对比 | 双色比较条、两段式媒体窗口 |
-| chinese-title | 国风标题 | 书法题签、朱印感红色点题 |
-| torn-magazine | 撕边杂志 | 偏移纸张块、编辑感角标 |
-| vlog-journal | Vlog 手账 | 彩色便签、轻松手写强调 |
-| bilingual-split | 中英双语 | 中英文分层、冷白栅格 |
-| portrait-quote | 人物金句 | 人像竖窗、引号与金色强调 |
+标准模板使用 `top_text` 和 `bottom_text`。参考模板使用五个独立文字层：
 
-## 布局与动效原则
+- `top1`：城市、主题或第一钩子；
+- `top2`：核心利益点或人群；
+- `top3`：补充说明、方法或强结论；
+- `bottom1`：地点、身份、活动频率或信任信息；
+- `bottom2`：评论、私信、报名等 CTA。
 
-- 每条成片默认使用至少两份合规媒体，并保留媒体来源；目录不含预览图路径。
-- `kicker` 是一句短标签，位于标题层，不代替标题；`surface_boxes` 最多 24 个，当前仅作装饰和分区。
-- 动效仅允许克制的文字入场、媒体轻推或淡入淡出；色块和题签保持静止，避免抢读。
-- 未来网站只消费 `template_id` 与本 catalog；本轮不开发网站、API 或模板预览。
+每套参考模板固定这五层的字号、字体、颜色、描边、行距和位置。层可以留空，但不能复制同一句文案填满空层。
+
+## 素材与边界
+
+- 模板成片禁止 AI 生成图片或视频。
+- 只使用客户素材或素材库中状态为“可使用”的素材。
+- 17 套参考模板每条必须输入两个不同的视频素材；案例 MP4/JPG 不能反过来当成新视频素材。
+- 批量开启 BGM 时必须轮换曲目，相邻成片不得使用同一首。
+- 模板没有文字渐入；文字显示的第一帧即为完整不透明度。
+
+## 字体
+
+- `Noto Sans SC`：清晰、功能性粗体；
+- `ZCOOL XiaoWei`：克制的人文标题；
+- `Ma Shan Zheng`：手写与城市圈层标题；
+- `ZCOOL KuaiLe`：轻松、社交型强调。
+
+字体随 Skill 分发，不依赖另一台电脑已安装的字体。
+
+## 渲染入口
+
+- 标准模板：`python scripts/render_video.py project.json`
+- 参考模板：`python scripts/render_reference_typography.py batch.json --quality high --workers 4`
+
+参考模板源文件、17 条案例 MP4 和 17 张第一帧 JPG 都随 Skill 保存，便于同事先看效果再选 `template_id`。
