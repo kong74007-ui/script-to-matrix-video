@@ -29,6 +29,8 @@ The renderer merges the selected template first, then applies explicit project `
 | `vlog-journal` | Vlog 手账 | 旅行、打卡、过程分享 |
 | `bilingual-split` | 中英双语 | 品牌表达、术语解释、国际化内容 |
 | `portrait-quote` | 人物金句 | 访谈、观点摘录、人物故事 |
+| `full-overlay-bold` | 沉浸强标题 | 全屏素材、同城圈层、资源链接、私域转化 |
+| `poster-split` | 三段式活动海报 | 沙龙活动、社群招募、上文中图下行动号召 |
 
 These are original template definitions. Reference products may inform category names and information hierarchy, but do not copy their assets, icons, player chrome, CSS, or exact compositions.
 

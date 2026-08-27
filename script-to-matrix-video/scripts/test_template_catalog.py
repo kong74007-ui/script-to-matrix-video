@@ -33,7 +33,7 @@ def check_real_catalog() -> None:
     ids = [item.get("id") for item in catalog.get("templates", []) if isinstance(item, dict)]
     profiles = catalog.get("emphasis_profiles") or {}
     assert catalog.get("version") == 1
-    assert len(ids) == 13 and len(ids) == len(set(ids)) and all(ids)
+    assert len(ids) == 15 and len(ids) == len(set(ids)) and all(ids)
     assert set(profiles) == set(ids)
     for template_id in ids:
         project, resolved_id = renderer.resolve_template({"layout": {"template_id": template_id}})

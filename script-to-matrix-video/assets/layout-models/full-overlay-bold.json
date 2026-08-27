@@ -1,0 +1,46 @@
+{
+  "layout": {
+    "preset": "text-media-text",
+    "variant": "full-overlay-bold",
+    "background_mode": "blurred-media",
+    "band_color": "#080808",
+    "top_band_height": 650,
+    "top_band_opacity": 0.14,
+    "bottom_band_y": 1380,
+    "bottom_band_opacity": 0.38,
+    "top_text_color": "#FFFFFF",
+    "bottom_text_color": "#FFFFFF",
+    "text_outline_color": "#111111",
+    "top_text_outline": 8,
+    "bottom_text_outline": 7,
+    "accent_color": "#FFD400",
+    "secondary_accent_color": "#FF453A",
+    "auto_highlight": true,
+    "text_pop_in": true,
+    "top_font_size": 86,
+    "bottom_font_size": 78,
+    "top_min_font_size": 54,
+    "bottom_min_font_size": 48,
+    "top_max_chars": 12,
+    "top_max_lines": 4,
+    "bottom_max_chars": 12,
+    "bottom_max_lines": 3,
+    "top_text_y": 320,
+    "bottom_text_y": 1610,
+    "bottom_text_mode": "fixed",
+    "media": {"x": 0, "y": 0, "width": 1080, "height": 1920}
+  },
+  "scene_text_model": {
+    "top_text": "我在深圳有5000人\n高净值女性圈\n社交破圈｜资源共享｜女性成长",
+    "bottom_text": "坐标：深圳\n评论区扣“1”我拉你",
+    "top_highlights": [
+      {"text": "深圳", "color": "#FFD400"},
+      {"text": "5000人", "color": "#FFD400"},
+      {"text": "高净值女性圈", "color": "#FFD400"}
+    ],
+    "bottom_highlights": [
+      {"text": "深圳", "color": "#FFD400"},
+      {"text": "1", "color": "#FFD400"}
+    ]
+  }
+}

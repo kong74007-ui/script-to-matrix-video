@@ -50,9 +50,9 @@ def span(text: str, term: str, role: str) -> dict[str, object]:
 
 
 def render_profile_stills(output: Path, ffmpeg: str, source: Path) -> tuple[list[str], Path]:
-    """Exercise every catalog profile through ASS/libass without rendering 13 full MP4s."""
+    """Exercise every catalog profile through ASS/libass without rendering 15 full MP4s."""
 
-    top, bottom = "13套模板都有重点", "大字高亮 一眼看懂"
+    top, bottom = "15套模板都有重点", "大字高亮 一眼看懂"
     catalog = json.loads(renderer.TEMPLATE_CATALOG_PATH.read_text(encoding="utf-8"))
     template_ids = [str(item["id"]) for item in catalog["templates"]]
     still_root = output / "profile-stills"
@@ -141,7 +141,7 @@ def render_profile_stills(output: Path, ffmpeg: str, source: Path) -> tuple[list
     filters.append(
         "".join(labels) + f"xstack=inputs={len(previews)}:layout={'|'.join(layout_values)}[v]"
     )
-    contact_sheet = still_root / "all-13-contact-sheet.png"
+    contact_sheet = still_root / "all-15-contact-sheet.png"
     run(
         [
             ffmpeg,

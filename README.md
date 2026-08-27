@@ -30,9 +30,9 @@
 
 批量渲染前必须运行 `scripts/validate_template_batch.py`，它会阻止单素材、无理由纯图片、A/B 素材重复、BGM 未轮换以及时长不足的任务进入渲染。
 
-## 13 套原创视觉模板
+## 15 套原创视觉模板
 
-`text-media-text` 现在可直接用稳定的 `template_id` 选择：默认原生大字、视频日记、极简大标题、轻透雅粉、鲜黄亮蓝、商务深黑、黑金高级、数据对比、国风标题、撕边杂志、Vlog 手账、中英双语、人物金句。
+`text-media-text` 现在可直接用稳定的 `template_id` 选择：默认原生大字、视频日记、极简大标题、轻透雅粉、鲜黄亮蓝、商务深黑、黑金高级、数据对比、国风标题、撕边杂志、Vlog 手账、中英双语、人物金句、沉浸强标题、三段式活动海报。
 
 ```json
 {"layout": {"template_id": "native-bold"}}
@@ -40,7 +40,7 @@
 
 模板目录位于 `script-to-matrix-video/assets/templates/catalog.json`。渲染器先应用模板默认值，再应用项目显式覆盖；批量校验器使用同一份目录，因此网站或其他调用方以后只需要保存 `template_id`，不必复制整套版式参数。
 
-13 套模板现在都支持 `emphasis.v1` 语义重点：Codex 只输出原文中的重点区间和 `number / contrast / pain / benefit / conclusion / cta` 角色，模板目录决定放大、颜色、描边、荧光笔或下划线效果。未来黄雀 Agent 只需输出同一协议，无需修改渲染器。无效区间会被丢弃并回退到数字、日期、引号、转折和 CTA 的确定性规则；排版会先降低重点倍率、再降低基础字号，不截断文案。协议见 [semantic-emphasis.md](script-to-matrix-video/references/semantic-emphasis.md)。
+15 套模板现在都支持 `emphasis.v1` 语义重点：Codex 只输出原文中的重点区间和 `number / contrast / pain / benefit / conclusion / cta` 角色，模板目录决定放大、颜色、描边、荧光笔或下划线效果。未来黄雀 Agent 只需输出同一协议，无需修改渲染器。无效区间会被丢弃并回退到数字、日期、引号、转折和 CTA 的确定性规则；排版会先降低重点倍率、再降低基础字号，不截断文案。协议见 [semantic-emphasis.md](script-to-matrix-video/references/semantic-emphasis.md)。
 
 Skill 自带 `Noto Sans SC`、`ZCOOL XiaoWei`、`Ma Shan Zheng`、`ZCOOL KuaiLe` 四个 OFL 中文字体家族，并自动交给 FFmpeg 加载，不依赖运行电脑碰巧安装了什么字体。详细选择建议见 [视觉模板目录](script-to-matrix-video/references/style-templates.md)。
 
@@ -56,7 +56,9 @@ v1.7.4 取消所有标题、固定 CTA 和浮层文字的透明度渐入。文�
 
 v1.7.5 重做默认 `native-bold` 排版：标题、主数据、对比结论和 CTA 统一左对齐；自动把第一个关键数字提为黄色超大主视觉，后续对比数字使用红色，并加入短红色强调条。没有数字的文案会安全回退为左对齐标题，不复制播放器进度线或参考图中的预览信息。
 
-PR 会运行零付费模板回归：校验协议和 13 套重点档案，为全部 13 套模板生成真实 libass 首帧矩阵，再用 30/60fps 合成素材渲染鲜黄亮蓝、撕边杂志、国风标题三条 MP4 供审查。
+新增 `full-overlay-bold` 与 `poster-split` 两套私域转化模板：前者让图片和视频全屏混排并叠加强标题，后者固定上方标题、中部素材和下方 CTA，支持绿橙双层描边。
+
+PR 会运行零付费模板回归：校验协议和 15 套重点档案，为全部 15 套模板生成真实 libass 首帧矩阵，再用 30/60fps 合成素材渲染鲜黄亮蓝、撕边杂志、国风标题三条 MP4 供审查。
 
 ## 模板案例视频
 
@@ -145,7 +147,8 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 ```text
 script-to-matrix-video/   Skill 本体
   assets/fonts/           4 个开源中文字体家族及许可证
-  assets/templates/       13 套原创模板目录
+  assets/templates/       15 套原创模板目录
+  assets/layout-models/   两套私域转化通用模型载荷
   assets/examples/        12条模板案例视频与预览图
 install.ps1               Windows 安装器
 INSTALL.md                完整安装与连接配置

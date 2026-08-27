@@ -1234,55 +1234,80 @@ def resolve_layout(
         return None
 
     variant = str(raw.get("variant", "native-bold")).strip().lower()
-    if variant not in {"native-bold", "classic"}:
+    if variant not in {"native-bold", "classic", "full-overlay-bold", "poster-split"}:
         warnings.append(f"unsupported text-media-text variant {variant!r}; used 'native-bold'")
         variant = "native-bold"
     native_bold = variant == "native-bold"
+    full_overlay = variant == "full-overlay-bold"
+    poster_split = variant == "poster-split"
+    bold_layout = variant != "classic"
 
     media = raw.get("media") or {}
     if not isinstance(media, dict):
         media = {}
-    default_x = even_int(round(width * (0.0185 if native_bold else 0.0556)), 20 if native_bold else 60)
-    default_y = even_int(round(height * (0.2604 if native_bold else 0.21875)), 500 if native_bold else 420)
-    default_w = even_int(round(width * (0.9630 if native_bold else 0.8889)), 1040 if native_bold else 960)
-    default_h = even_int(round(height * (0.4896 if native_bold else 0.5417)), 940 if native_bold else 1040)
-    media_x = even_int(media.get("x"), default_x)
-    media_y = even_int(media.get("y"), default_y)
+    if full_overlay:
+        default_x, default_y, default_w, default_h = 0, 0, width, height
+    elif poster_split:
+        default_x, default_y = 0, even_int(round(height * 0.3125), 600)
+        default_w, default_h = width, even_int(round(height * 0.4271), 820)
+    else:
+        default_x = even_int(round(width * (0.0185 if native_bold else 0.0556)), 20 if native_bold else 60)
+        default_y = even_int(round(height * (0.2604 if native_bold else 0.21875)), 500 if native_bold else 420)
+        default_w = even_int(round(width * (0.9630 if native_bold else 0.8889)), 1040 if native_bold else 960)
+        default_h = even_int(round(height * (0.4896 if native_bold else 0.5417)), 940 if native_bold else 1040)
+    media_x = nonnegative_even_int(media.get("x"), default_x)
+    media_y = nonnegative_even_int(media.get("y"), default_y)
     media_width = even_int(media.get("width"), default_w)
     media_height = even_int(media.get("height"), default_h)
     if media_x + media_width > width or media_y + media_height > height:
         warnings.append("text-media-text media region exceeded the canvas; used default region")
         media_x, media_y, media_width, media_height = default_x, default_y, default_w, default_h
 
-    border_width = nonnegative_even_int(raw.get("media_border_width"), 0 if native_bold else 4)
+    border_width = nonnegative_even_int(raw.get("media_border_width"), 0 if bold_layout else 4)
     border_width = min(border_width, media_x, media_y, width - media_x - media_width, height - media_y - media_height)
     border_width = max(0, border_width - border_width % 2)
-    top_y = int(raw.get("top_text_y", round(height * (0.1406 if native_bold else 0.115))))
-    bottom_y = int(raw.get("bottom_text_y", round(height * (0.8594 if native_bold else 0.855))))
-    top_y = min(max(80, top_y), max(80, media_y - 70))
-    bottom_y = min(max(media_y + media_height + 70, bottom_y), height - 170)
+    default_top_y = round(
+        height * (0.1667 if full_overlay else 0.1276 if poster_split else 0.1406 if native_bold else 0.115)
+    )
+    default_bottom_y = round(
+        height * (0.8385 if full_overlay else 0.8438 if poster_split else 0.8594 if native_bold else 0.855)
+    )
+    top_y = int(raw.get("top_text_y", default_top_y))
+    bottom_y = int(raw.get("bottom_text_y", default_bottom_y))
+    if full_overlay:
+        top_y = min(max(80, top_y), height - 360)
+        bottom_y = min(max(top_y + 260, bottom_y), height - 170)
+    else:
+        top_y = min(max(80, top_y), max(80, media_y - 70))
+        bottom_y = min(max(media_y + media_height + 70, bottom_y), height - 170)
     bottom_mode = str(raw.get("bottom_text_mode", "captions")).strip().lower()
     if bottom_mode not in {"captions", "fixed"}:
         warnings.append(f"unsupported bottom_text_mode {bottom_mode!r}; used 'captions'")
         bottom_mode = "captions"
 
-    background_mode = str(raw.get("background_mode", "blurred-media" if native_bold else "solid")).strip().lower()
+    background_mode = str(
+        raw.get("background_mode", "blurred-media" if bold_layout and not poster_split else "solid")
+    ).strip().lower()
     if background_mode not in {"solid", "blurred-media"}:
         warnings.append(f"unsupported background_mode {background_mode!r}; used 'solid'")
         background_mode = "solid"
 
-    top_font_size = bounded_int(raw.get("top_font_size"), "layout.top_font_size", 80 if native_bold else 76, 12, height // 2)
-    bottom_font_size = bounded_int(raw.get("bottom_font_size"), "layout.bottom_font_size", 70 if native_bold else 62, 12, height // 2)
+    top_font_size = bounded_int(
+        raw.get("top_font_size"), "layout.top_font_size", 86 if full_overlay else 80 if bold_layout else 76, 12, height // 2
+    )
+    bottom_font_size = bounded_int(
+        raw.get("bottom_font_size"), "layout.bottom_font_size", 78 if full_overlay else 70 if bold_layout else 62, 12, height // 2
+    )
     top_min_font_size = min(
         top_font_size,
-        bounded_int(raw.get("top_min_font_size"), "layout.top_min_font_size", 52 if native_bold else 48, 12, height // 2),
+        bounded_int(raw.get("top_min_font_size"), "layout.top_min_font_size", 54 if full_overlay else 52 if bold_layout else 48, 12, height // 2),
     )
     bottom_min_font_size = min(
         bottom_font_size,
-        bounded_int(raw.get("bottom_min_font_size"), "layout.bottom_min_font_size", 46 if native_bold else 42, 12, height // 2),
+        bounded_int(raw.get("bottom_min_font_size"), "layout.bottom_min_font_size", 48 if full_overlay else 46 if bold_layout else 42, 12, height // 2),
     )
 
-    accent_color = str(raw.get("accent_color", "#FFD400" if native_bold else "#D97745"))
+    accent_color = str(raw.get("accent_color", "#FFD400" if bold_layout else "#D97745"))
     secondary_accent_color = str(raw.get("secondary_accent_color", "#FF453A"))
     text_alignment = str(raw.get("text_alignment", "center")).strip().lower()
     if text_alignment not in {"center", "left"}:
@@ -1296,18 +1321,18 @@ def resolve_layout(
         "preset": preset,
         "variant": variant,
         "background_mode": background_mode,
-        "background_color": str(raw.get("background_color", "#11151C" if native_bold else "#F5F1E8")),
+        "background_color": str(raw.get("background_color", "#70577C" if poster_split else "#11151C" if bold_layout else "#F5F1E8")),
         "background_blur": min(60.0, max(0.0, float(raw.get("background_blur", 28.0)))),
         "background_brightness": min(1.0, max(-1.0, float(raw.get("background_brightness", -0.22)))),
         "background_saturation": min(3.0, max(0.0, float(raw.get("background_saturation", 0.78)))),
-        "band_color": str(raw.get("band_color", "#101318")),
-        "top_band_height": min(height, max(0, int(raw.get("top_band_height", media_y)))),
-        "top_band_opacity": min(1.0, max(0.0, float(raw.get("top_band_opacity", 0.42 if native_bold else 0.0)))),
-        "bottom_band_y": min(height, max(0, int(raw.get("bottom_band_y", media_y + media_height)))),
-        "bottom_band_opacity": min(1.0, max(0.0, float(raw.get("bottom_band_opacity", 0.58 if native_bold else 0.0)))),
+        "band_color": str(raw.get("band_color", "#211A24" if poster_split else "#101318")),
+        "top_band_height": min(height, max(0, int(raw.get("top_band_height", round(height * 0.34) if full_overlay else media_y)))),
+        "top_band_opacity": min(1.0, max(0.0, float(raw.get("top_band_opacity", 0.14 if full_overlay else 0.08 if poster_split else 0.42 if native_bold else 0.0)))),
+        "bottom_band_y": min(height, max(0, int(raw.get("bottom_band_y", round(height * 0.72) if full_overlay else media_y + media_height)))),
+        "bottom_band_opacity": min(1.0, max(0.0, float(raw.get("bottom_band_opacity", 0.38 if full_overlay else 0.64 if poster_split else 0.58 if native_bold else 0.0)))),
         "divider_height": max(0, int(raw.get("divider_height", 0))),
         "divider_color": str(raw.get("divider_color", raw.get("accent_color", "#FFD400"))),
-        "media_border_color": str(raw.get("media_border_color", "#FFFFFF" if native_bold else "#D8D2C8")),
+        "media_border_color": str(raw.get("media_border_color", "#FFFFFF" if bold_layout else "#D8D2C8")),
         "media_border_width": border_width,
         "media_x": media_x,
         "media_y": media_y,
@@ -1342,22 +1367,26 @@ def resolve_layout(
         "top_min_font_size": top_min_font_size,
         "bottom_min_font_size": bottom_min_font_size,
         "top_max_chars": max(6, int(raw.get("top_max_chars", 12))),
-        "top_max_lines": min(4, max(1, int(raw.get("top_max_lines", 4 if native_bold else 2)))),
-        "bottom_max_chars": max(6, int(raw.get("bottom_max_chars", 12 if native_bold else 14))),
-        "bottom_max_lines": min(3, max(1, int(raw.get("bottom_max_lines", 3 if native_bold else 2)))),
-        "top_text_color": str(raw.get("top_text_color", "#FFFFFF" if native_bold else "#1F2430")),
-        "bottom_text_color": str(raw.get("bottom_text_color", "#FFFFFF" if native_bold else "#1F2430")),
+        "top_max_lines": min(4, max(1, int(raw.get("top_max_lines", 4 if bold_layout else 2)))),
+        "bottom_max_chars": max(6, int(raw.get("bottom_max_chars", 12 if bold_layout else 14))),
+        "bottom_max_lines": min(3, max(1, int(raw.get("bottom_max_lines", 3 if bold_layout else 2)))),
+        "top_text_color": str(raw.get("top_text_color", "#FFFFFF" if bold_layout else "#1F2430")),
+        "bottom_text_color": str(raw.get("bottom_text_color", "#FFFFFF" if bold_layout else "#1F2430")),
         "text_outline_color": str(raw.get("text_outline_color", "#111111")),
-        "top_text_outline": min(12, max(0, int(raw.get("top_text_outline", 8 if native_bold else 0)))),
-        "bottom_text_outline": min(12, max(0, int(raw.get("bottom_text_outline", 7 if native_bold else 0)))),
-        "text_shadow": min(6, max(0, int(raw.get("text_shadow", 2 if native_bold else 0)))),
+        "top_text_outline": min(12, max(0, int(raw.get("top_text_outline", 8 if bold_layout else 0)))),
+        "bottom_text_outline": min(12, max(0, int(raw.get("bottom_text_outline", 7 if bold_layout else 0)))),
+        "top_outer_outline": min(18, max(0, int(raw.get("top_outer_outline", 13 if poster_split else 0)))),
+        "bottom_outer_outline": min(18, max(0, int(raw.get("bottom_outer_outline", 12 if poster_split else 0)))),
+        "top_outer_outline_color": validated_color(raw.get("top_outer_outline_color", "#B8EF31"), "layout.top_outer_outline_color"),
+        "bottom_outer_outline_color": validated_color(raw.get("bottom_outer_outline_color", "#FF9A3D"), "layout.bottom_outer_outline_color"),
+        "text_shadow": min(6, max(0, int(raw.get("text_shadow", 2 if bold_layout else 0)))),
         "accent_color": accent_color,
         "secondary_accent_color": secondary_accent_color,
         "emphasis_profile": resolve_emphasis_profile(
             raw.get("emphasis_profile"), accent_color, secondary_accent_color
         ),
-        "auto_highlight": bool(raw.get("auto_highlight", native_bold)),
-        "text_pop_in": bool(raw.get("text_pop_in", native_bold)),
+        "auto_highlight": bool(raw.get("auto_highlight", bold_layout)),
+        "text_pop_in": bool(raw.get("text_pop_in", bold_layout)),
         "bottom_text_mode": bottom_mode,
         "kicker": resolve_kicker(raw.get("kicker"), width, height),
         "surface_boxes": resolve_surface_boxes(raw.get("surface_boxes"), width, height),
@@ -1396,10 +1425,14 @@ def write_ass(
         top_color = ass_primary_color(layout["top_text_color"])
         bottom_color = ass_primary_color(layout["bottom_text_color"])
         outline_color = ass_primary_color(layout["text_outline_color"])
+        top_outer_color = ass_primary_color(layout["top_outer_outline_color"])
+        bottom_outer_color = ass_primary_color(layout["bottom_outer_outline_color"])
         top_font = layout["top_font"] or font
         bottom_font = layout["bottom_font"] or font
         lines.extend(
             [
+                f"Style: TopTextGlow,{top_font},{layout['top_font_size']},&H00FFFFFF,&H00000000,{top_outer_color},&H00000000,-1,0,0,0,100,100,0,0,1,{layout['top_outer_outline']},0,5,54,54,0,1",
+                f"Style: BottomTextGlow,{bottom_font},{layout['bottom_font_size']},&H00FFFFFF,&H00000000,{bottom_outer_color},&H00000000,-1,0,0,0,100,100,0,0,1,{layout['bottom_outer_outline']},0,5,54,54,0,1",
                 f"Style: TopText,{top_font},{layout['top_font_size']},{top_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['top_text_outline']},{layout['text_shadow']},5,54,54,0,1",
                 f"Style: BottomText,{bottom_font},{layout['bottom_font_size']},{bottom_color},&H00000000,{outline_color},&H78000000,-1,0,0,0,100,100,0,0,1,{layout['bottom_text_outline']},{layout['text_shadow']},5,54,54,0,1",
             ]
@@ -1488,6 +1521,10 @@ def write_ass(
                 layout["top_text_outline"],
                 layout["text_outline_color"],
             )
+            if layout["top_outer_outline"] > 0:
+                lines.append(
+                    f"Dialogue: 0,{ass_time(0)},{ass_time(cover_end)},TopTextGlow,,0,0,0,,{cover_tags}{ass_escape(cover_text)}"
+                )
             lines.append(
                 f"Dialogue: 1,{ass_time(0)},{ass_time(cover_end)},TopText,,0,0,0,,{cover_tags}{cover_rendered}"
             )
@@ -1560,6 +1597,10 @@ def write_ass(
                             layout["top_text_outline"],
                             layout["text_outline_color"],
                         )
+                        if layout["top_outer_outline"] > 0:
+                            lines.append(
+                                f"Dialogue: 0,{ass_time(top_start)},{ass_time(entry['start'] + entry['duration'])},TopTextGlow,,0,0,0,,{top_tags}{ass_escape(top_text)}"
+                            )
                         lines.append(
                             f"Dialogue: 1,{ass_time(top_start)},{ass_time(entry['start'] + entry['duration'])},TopText,,0,0,0,,{top_tags}{top_rendered}"
                         )
@@ -1635,6 +1676,10 @@ def write_ass(
                     layout["bottom_text_outline"],
                     layout["text_outline_color"],
                 )
+                if layout["bottom_outer_outline"] > 0:
+                    lines.append(
+                        f"Dialogue: 0,{ass_time(entry['start'])},{ass_time(entry['start'] + entry['duration'])},BottomTextGlow,,0,0,0,,{bottom_tags}{ass_escape(fixed_bottom_text)}"
+                    )
                 lines.append(
                     f"Dialogue: 0,{ass_time(entry['start'])},{ass_time(entry['start'] + entry['duration'])},BottomText,,0,0,0,,{bottom_tags}{bottom_rendered}"
                 )

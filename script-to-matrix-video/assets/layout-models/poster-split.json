@@ -1,0 +1,45 @@
+{
+  "layout": {
+    "preset": "text-media-text",
+    "variant": "poster-split",
+    "background_mode": "solid",
+    "background_color": "#70577C",
+    "band_color": "#211A24",
+    "top_band_opacity": 0.08,
+    "bottom_band_opacity": 0.64,
+    "top_text_color": "#FFFFFF",
+    "bottom_text_color": "#FFFFFF",
+    "text_outline_color": "#111111",
+    "top_text_outline": 7,
+    "bottom_text_outline": 6,
+    "top_outer_outline": 13,
+    "bottom_outer_outline": 12,
+    "top_outer_outline_color": "#B8EF31",
+    "bottom_outer_outline_color": "#FF9A3D",
+    "accent_color": "#FFD400",
+    "secondary_accent_color": "#FF453A",
+    "auto_highlight": true,
+    "text_pop_in": true,
+    "top_font_size": 80,
+    "bottom_font_size": 70,
+    "top_min_font_size": 50,
+    "bottom_min_font_size": 44,
+    "top_max_chars": 12,
+    "top_max_lines": 4,
+    "bottom_max_chars": 13,
+    "bottom_max_lines": 3,
+    "top_text_y": 245,
+    "bottom_text_y": 1620,
+    "bottom_text_mode": "fixed",
+    "media": {"x": 0, "y": 600, "width": 1080, "height": 820}
+  },
+  "scene_text_model": {
+    "top_text": "在广州天河\n有一个高净值女性圈子\n每周举办不同主题沙龙\n资源共享 社交破圈",
+    "bottom_text": "下午茶已备好 同频的姐妹\n评论区扣“666”邀请您参加",
+    "top_highlights": [
+      {"text": "广州天河", "color": "#FFFFFF"},
+      {"text": "高净值女性圈子", "color": "#FFFFFF"}
+    ],
+    "bottom_highlights": [{"text": "666", "color": "#FFD400"}]
+  }
+}

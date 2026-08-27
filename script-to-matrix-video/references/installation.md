@@ -11,7 +11,7 @@ Copy the complete `script-to-matrix-video` folder to the user's Codex skills dir
 
 Keep `SKILL.md`, `agents`, `references`, `scripts`, and `requirements.txt` together. Restart Codex after installing so the Skill is rediscovered.
 
-Keep `assets/templates` and `assets/fonts` as well. The 13-style catalog and four licensed Chinese font families are part of the runtime, so no separate operating-system font installation is required for bundled templates.
+Keep `assets/templates`, `assets/layout-models`, and `assets/fonts` as well. The 15-style catalog, two reusable conversion model payloads, and four licensed Chinese font families are part of the runtime, so no separate operating-system font installation is required for bundled templates.
 
 The Windows installer runs the source environment check and catalog regression suite, then validates every bundled font SHA-256 before it backs up or replaces an existing Skill. A missing, malformed, or altered runtime asset must stop installation.
 
