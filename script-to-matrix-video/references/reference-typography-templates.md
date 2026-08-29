@@ -1,6 +1,6 @@
-# 17 套参考排版模板
+# 18 套参考排版模板
 
-这组模板保留了用户确认过的 17 套文字排版、字号、字体、颜色、描边、文字层级和中间素材结构。它们使用 HyperFrames 渲染，与 `assets/templates/catalog.json` 中的 8 套标准 FFmpeg 模板相互独立。
+这组模板保留了用户确认过的 18 套文字排版、字号、字体、颜色、描边、文字层级和中间素材结构。它们使用 HyperFrames 渲染，与 `assets/templates/catalog.json` 中的 8 套标准 FFmpeg 模板相互独立。
 
 ## 选择表
 
@@ -23,6 +23,7 @@
 | `ref-15-tianjin-monochrome` | 天津黑白极简 | 稳重圈层、退休生活、知识活动 |
 | `ref-16-shenzhen-opc` | 深圳 OPC 多层信息 | OPC、共享创业、项目招募 |
 | `ref-17-shenzhen-yellow-red` | 深圳黄红爆款层级 | 强钩子、强报名、矩阵引流 |
+| `ref-18-beauty-private-domain` | 美业粉白私域运营 | 美业、私域运营、朋友圈、女性创业 |
 
 ## 输入字段
 

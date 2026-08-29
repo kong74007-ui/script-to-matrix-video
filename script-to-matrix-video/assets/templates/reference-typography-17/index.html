@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN" data-resolution="portrait" data-preview-row="0" data-composition-variables="[
     {&quot;id&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;输出名称&quot;,&quot;default&quot;:&quot;01-chengdu-green-brush&quot;},
-    {&quot;id&quot;:&quot;variant&quot;,&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;版式&quot;,&quot;default&quot;:&quot;v01&quot;,&quot;options&quot;:[{&quot;value&quot;:&quot;v01&quot;,&quot;label&quot;:&quot;01&quot;},{&quot;value&quot;:&quot;v02&quot;,&quot;label&quot;:&quot;02&quot;},{&quot;value&quot;:&quot;v03&quot;,&quot;label&quot;:&quot;03&quot;},{&quot;value&quot;:&quot;v04&quot;,&quot;label&quot;:&quot;04&quot;},{&quot;value&quot;:&quot;v05&quot;,&quot;label&quot;:&quot;05&quot;},{&quot;value&quot;:&quot;v06&quot;,&quot;label&quot;:&quot;06&quot;},{&quot;value&quot;:&quot;v07&quot;,&quot;label&quot;:&quot;07&quot;},{&quot;value&quot;:&quot;v08&quot;,&quot;label&quot;:&quot;08&quot;},{&quot;value&quot;:&quot;v09&quot;,&quot;label&quot;:&quot;09&quot;},{&quot;value&quot;:&quot;v10&quot;,&quot;label&quot;:&quot;10&quot;},{&quot;value&quot;:&quot;v11&quot;,&quot;label&quot;:&quot;11&quot;},{&quot;value&quot;:&quot;v12&quot;,&quot;label&quot;:&quot;12&quot;},{&quot;value&quot;:&quot;v13&quot;,&quot;label&quot;:&quot;13&quot;},{&quot;value&quot;:&quot;v14&quot;,&quot;label&quot;:&quot;14&quot;},{&quot;value&quot;:&quot;v15&quot;,&quot;label&quot;:&quot;15&quot;},{&quot;value&quot;:&quot;v16&quot;,&quot;label&quot;:&quot;16&quot;},{&quot;value&quot;:&quot;v17&quot;,&quot;label&quot;:&quot;17&quot;}]},
+    {&quot;id&quot;:&quot;variant&quot;,&quot;type&quot;:&quot;enum&quot;,&quot;label&quot;:&quot;版式&quot;,&quot;default&quot;:&quot;v01&quot;,&quot;options&quot;:[{&quot;value&quot;:&quot;v01&quot;,&quot;label&quot;:&quot;01&quot;},{&quot;value&quot;:&quot;v02&quot;,&quot;label&quot;:&quot;02&quot;},{&quot;value&quot;:&quot;v03&quot;,&quot;label&quot;:&quot;03&quot;},{&quot;value&quot;:&quot;v04&quot;,&quot;label&quot;:&quot;04&quot;},{&quot;value&quot;:&quot;v05&quot;,&quot;label&quot;:&quot;05&quot;},{&quot;value&quot;:&quot;v06&quot;,&quot;label&quot;:&quot;06&quot;},{&quot;value&quot;:&quot;v07&quot;,&quot;label&quot;:&quot;07&quot;},{&quot;value&quot;:&quot;v08&quot;,&quot;label&quot;:&quot;08&quot;},{&quot;value&quot;:&quot;v09&quot;,&quot;label&quot;:&quot;09&quot;},{&quot;value&quot;:&quot;v10&quot;,&quot;label&quot;:&quot;10&quot;},{&quot;value&quot;:&quot;v11&quot;,&quot;label&quot;:&quot;11&quot;},{&quot;value&quot;:&quot;v12&quot;,&quot;label&quot;:&quot;12&quot;},{&quot;value&quot;:&quot;v13&quot;,&quot;label&quot;:&quot;13&quot;},{&quot;value&quot;:&quot;v14&quot;,&quot;label&quot;:&quot;14&quot;},{&quot;value&quot;:&quot;v15&quot;,&quot;label&quot;:&quot;15&quot;},{&quot;value&quot;:&quot;v16&quot;,&quot;label&quot;:&quot;16&quot;},{&quot;value&quot;:&quot;v17&quot;,&quot;label&quot;:&quot;17&quot;},{&quot;value&quot;:&quot;v18&quot;,&quot;label&quot;:&quot;18&quot;}]},
     {&quot;id&quot;:&quot;top1&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题1&quot;,&quot;default&quot;:&quot;在成都高新区&quot;},
     {&quot;id&quot;:&quot;top2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题2&quot;,&quot;default&quot;:&quot;有一群不打麻将 不逛街\n70 80 90 后\n相互成长 资源共享&quot;},
     {&quot;id&quot;:&quot;top3&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题3&quot;,&quot;default&quot;:&quot;一群同频高能的优秀伙伴搞事业&quot;},
@@ -16,7 +16,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1080, height=1920">
-    <title>17套参考文字排版</title>
+    <title>18套参考文字排版</title>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <script src="preview-data.js"></script>
     <style>
@@ -32,8 +32,9 @@
       .clip { position: absolute; }
       .media-video {
         left: 0; width: 1080px; height: 1920px; object-fit: cover; object-position: center;
-        transform-origin: center center; background: #000;
+        transform-origin: center center; background: #000; opacity: 0;
       }
+      #videoA { opacity: 1; }
       .text-layer {
         inset: 0; width: 1080px; height: 1920px; z-index: 3; color: #fff;
         pointer-events: none; overflow: hidden;
@@ -173,13 +174,46 @@
       .v17 .top3 { font-size: 118px; font-weight: 900; color: #ffdb16; -webkit-text-stroke: 13px #111; paint-order: stroke fill; }
       .v17 .bottom1 { font-size: 54px; font-weight: 900; color: #ffdb16; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
       .v17 .bottom2 { font-size: 84px; font-weight: 900; color: #fff; -webkit-text-stroke: 10px #d80c0c; paint-order: stroke fill; }
+
+      /* 18：黑色外框圆角视频卡，粉白私域运营标题 */
+      .v18 .media-video {
+        left: 52px; top: 90px; width: 976px; height: 1740px;
+        border-radius: 70px; object-position: center center;
+      }
+      .v18 .text-layer::before { background: none; }
+      .v18 .top { top: 210px; padding-left: 72px; padding-right: 72px; }
+      .v18 .top1 {
+        font: 400 88px/1.02 "XiaoWei"; color: #e95d94;
+        -webkit-text-stroke: 5px #21141a; paint-order: stroke fill;
+        text-shadow: 0 4px 0 rgba(0,0,0,.7);
+      }
+      .v18 .top2 {
+        margin-top: 16px; font-size: 62px; font-weight: 900; color: #fff;
+        -webkit-text-stroke: 7px #101010; paint-order: stroke fill;
+        letter-spacing: .025em;
+      }
+      .v18 .top3 {
+        margin-top: 14px; font-size: 46px; font-weight: 800; color: #fff;
+        -webkit-text-stroke: 6px #111; paint-order: stroke fill;
+      }
+      .v18 .bottom { bottom: 430px; padding-left: 76px; padding-right: 76px; }
+      .v18 .bottom1 {
+        font: 400 92px/1.02 "XiaoWei"; color: #fff;
+        -webkit-text-stroke: 7px #111; paint-order: stroke fill;
+        text-shadow: 0 4px 0 rgba(0,0,0,.75);
+      }
+      .v18 .bottom2 {
+        margin-top: 20px; font: 400 90px/1.02 "XiaoWei"; color: #e95d94;
+        -webkit-text-stroke: 6px #24131b; paint-order: stroke fill;
+        text-shadow: 0 4px 0 rgba(0,0,0,.75);
+      }
     </style>
   </head>
   <body>
     <div data-hf-id="hf-f7ns" id="root" class="v01" data-composition-id="main" data-start="0" data-width="1080" data-height="1920">
-      <video data-hf-id="hf-u6nw" id="videoA" class="clip media-video" data-start="0" data-duration="2.666667" data-track-index="0" data-var-src="videoA" src="assets/library/default-a.mp4" muted playsinline></video>
-      <video data-hf-id="hf-z723" id="videoB" class="clip media-video" data-start="2.666667" data-duration="2.666666" data-track-index="0" data-var-src="videoB" src="assets/library/default-b.mp4" muted playsinline></video>
-      <video data-hf-id="hf-q9pk" id="videoC" class="clip media-video" data-start="5.333333" data-duration="2.666667" data-track-index="0" data-var-src="videoC" src="assets/library/default-c.mp4" muted playsinline></video>
+      <video data-hf-id="hf-u6nw" id="videoA" class="clip media-video" data-start="0" data-duration="8" data-track-index="0" data-var-src="videoA" src="assets/library/default-a.mp4" muted playsinline></video>
+      <video data-hf-id="hf-z723" id="videoB" class="clip media-video" data-start="0" data-duration="8" data-track-index="1" data-var-src="videoB" src="assets/library/default-b.mp4" muted playsinline></video>
+      <video data-hf-id="hf-q9pk" id="videoC" class="clip media-video" data-start="0" data-duration="8" data-track-index="3" data-var-src="videoC" src="assets/library/default-c.mp4" muted playsinline></video>
       <audio data-hf-id="hf-xex4" id="bgm" data-start="0" data-duration="8" data-track-index="10" data-volume="0.24" data-var-src="bgm" src="assets/bgm/silence.m4a"></audio>
 
       <section data-hf-id="hf-8op4" id="typography" class="clip text-layer" data-start="0" data-duration="8" data-track-index="2">
@@ -212,8 +246,6 @@
       }
       const duration = Math.max(8, Math.min(15, Math.round(Number(vars.duration) || 8)));
       const segment = duration / 3;
-      const segmentStarts = [0, segment, segment * 2];
-      const segmentDurations = [segment, segment, duration - segment * 2];
       const root = document.getElementById("root");
       const typography = document.getElementById("typography");
       const bgm = document.getElementById("bgm");
@@ -226,13 +258,18 @@
       root.dataset.duration = String(duration);
       typography.dataset.duration = String(duration);
       bgm.dataset.duration = String(duration);
-      videos.forEach((video, index) => {
-        video.dataset.start = String(segmentStarts[index]);
-        video.dataset.duration = String(segmentDurations[index]);
+      videos.forEach((video) => {
+        video.dataset.duration = String(duration);
       });
       const tl = gsap.timeline({ paused: true });
-      videos.forEach((video, index) => {
-        tl.fromTo(video, { scale: 1.015 }, { scale: 1.04, duration: segmentDurations[index], ease: "none" }, segmentStarts[index]);
+      tl.set(videos[0], { autoAlpha: 1 }, 0)
+        .set([videos[1], videos[2]], { autoAlpha: 0 }, 0)
+        .set(videos[0], { autoAlpha: 0 }, segment)
+        .set(videos[1], { autoAlpha: 1 }, segment)
+        .set(videos[1], { autoAlpha: 0 }, segment * 2)
+        .set(videos[2], { autoAlpha: 1 }, segment * 2);
+      videos.forEach((video) => {
+        tl.fromTo(video, { scale: 1.015 }, { scale: 1.04, duration, ease: "none" }, 0);
       });
       window.__timelines["main"] = tl;
     </script>

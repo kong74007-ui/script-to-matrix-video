@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the bundled 17-style reference typography pack with HyperFrames.
+"""Render the bundled 18-style reference typography pack with HyperFrames.
 
 This wrapper keeps user media outside the Skill directory. It copies the immutable
 template pack into a task-owned work directory, stages three distinct approved video
@@ -333,7 +333,7 @@ def render(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Render the 17 bundled reference typography templates"
+        description="Render the 18 bundled reference typography templates"
     )
     parser.add_argument("batch", help="JSON file with a rows or jobs array")
     parser.add_argument("--workdir", help="Task-owned HyperFrames project directory")

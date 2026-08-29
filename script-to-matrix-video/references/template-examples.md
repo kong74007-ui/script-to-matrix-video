@@ -1,6 +1,6 @@
 # text-media-text template examples
 
-Read this reference when the user asks to see the 25 bundled templates or when visual calibration is needed.
+Read this reference when the user asks to see the 26 bundled templates or when visual calibration is needed.
 
 All examples use the same copy, 1080×1920 output, about 5% visible top margin, central approved video material, fixed bottom CTA, no narration, and no extra template effects. They are accepted visual references only; do not reuse their footage for a new client unless the user explicitly authorizes it.
 
@@ -28,9 +28,9 @@ Opening-frame previews:
 
 Preserve the structural idea and template typography. New productions must still select contextually suitable client/library media and rotate BGM according to batch rules.
 
-## 17 套参考排版案例
+## 18 套参考排版案例
 
-这些案例逐一对应 [17 套参考排版模板](reference-typography-templates.md)。每套同时保存 MP4 和第一帧 JPG。
+这些案例逐一对应 [18 套参考排版模板](reference-typography-templates.md)。每套同时保存 MP4 和第一帧 JPG。
 
 | Template | MP4 | JPG |
 | --- | --- | --- |
@@ -51,5 +51,6 @@ Preserve the structural idea and template typography. New productions must still
 | ref-15-tianjin-monochrome | [视频](../assets/examples/text-media-text/reference-typography-17/15-tianjin-monochrome.mp4) | [预览](../assets/examples/text-media-text/reference-typography-17/15-tianjin-monochrome.jpg) |
 | ref-16-shenzhen-opc | [视频](../assets/examples/text-media-text/reference-typography-17/16-shenzhen-opc.mp4) | [预览](../assets/examples/text-media-text/reference-typography-17/16-shenzhen-opc.jpg) |
 | ref-17-shenzhen-yellow-red | [视频](../assets/examples/text-media-text/reference-typography-17/17-shenzhen-yellow-red.mp4) | [预览](../assets/examples/text-media-text/reference-typography-17/17-shenzhen-yellow-red.jpg) |
+| ref-18-beauty-private-domain | [视频](../assets/examples/text-media-text/reference-typography-17/18-beauty-private-domain.mp4) | [预览](../assets/examples/text-media-text/reference-typography-17/18-beauty-private-domain.jpg) |
 
 这些案例同样只用于模板选择和视觉核对，禁止把案例 MP4 重新作为新成片的中间素材。

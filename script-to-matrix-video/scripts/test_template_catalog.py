@@ -73,9 +73,9 @@ def check_reference_typography_pack() -> None:
     assert manifest.get("duration_mode") == "random_integer_per_output"
     assert manifest.get("duration_range_seconds") == [8, 15]
     assert manifest.get("generated_fields") == ["duration"]
-    assert len(templates) == 17 and len(ids) == len(set(ids))
+    assert len(templates) == 18 and len(ids) == len(set(ids))
     assert all(isinstance(value, str) and value.startswith("ref-") for value in ids)
-    assert variants == [f"v{index:02d}" for index in range(1, 18)]
+    assert variants == [f"v{index:02d}" for index in range(1, 19)]
 
     index_html = (pack_root / "index.html").read_text(encoding="utf-8")
     for variable in (

@@ -10,7 +10,7 @@ Use template 1 unless the user chooses another:
 
 The eight standard IDs are listed in [style-templates.md](style-templates.md). The standard catalog owns typography, background, top position, media rectangle, CTA position, and semantic-emphasis styling. Prefer a template_id over duplicating the full layout object.
 
-The additional 17 `ref-` IDs are listed in [reference-typography-templates.md](reference-typography-templates.md). They preserve five independent text layers and use the dedicated HyperFrames wrapper; do not pass them to `render_video.py`.
+The additional 18 `ref-` IDs are listed in [reference-typography-templates.md](reference-typography-templates.md). They preserve five independent text layers and use the dedicated HyperFrames wrapper; do not pass them to `render_video.py`.
 
 ## Structural contract
 
@@ -31,7 +31,7 @@ Shared defaults:
 - media_border_width: 0, divider_height: 0, and empty surface_boxes;
 - text_pop_in: false.
 
-Do not add a divider, background blur, progress bar, player chrome, or fade-in unless the selected template explicitly defines that text treatment. The 17 reference templates may use colored text bands or button-like CTA backgrounds because those are part of their approved typography.
+Do not add a divider, background blur, progress bar, player chrome, or fade-in unless the selected template explicitly defines that text treatment. The 18 reference templates may use colored text bands, rounded media cards, or button-like CTA backgrounds because those are part of their approved typography.
 
 ## Copy fitting
 

@@ -202,5 +202,18 @@ window.__previewRows = [
     "videoA": "assets/library/clip15.mov",
     "videoB": "assets/library/clip12.mov",
     "bgm": "assets/bgm/bgm02.mp3"
+  },
+  {
+    "name": "18-beauty-private-domain",
+    "variant": "v18",
+    "top1": "美业人私域运营",
+    "top2": "｜怎么发朋友圈更有效｜",
+    "top3": "",
+    "bottom1": "美业老板",
+    "bottom2": "做私域运营",
+    "videoA": "assets/library/default-a.mp4",
+    "videoB": "assets/library/default-b.mp4",
+    "videoC": "assets/library/default-c.mp4",
+    "bgm": "assets/bgm/silence.m4a"
   }
 ];

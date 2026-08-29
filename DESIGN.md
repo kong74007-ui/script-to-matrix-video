@@ -6,10 +6,10 @@
 
 ## 两组模板
 
-Skill 共保留 25 套模板：
+Skill 共保留 26 套模板：
 
 - 8 套标准模板：纯黑或纯白背景，顶部约留 5% 空间，使用 FFmpeg/libass 渲染；默认是 `black-left-bold`。
-- 17 套参考排版模板：来自已通过成片确认的排版效果，保存为独立 HyperFrames 模板包，ID 从 `ref-01-...` 到 `ref-17-...`。
+- 18 套参考排版模板：来自已通过成片确认的排版效果，保存为独立 HyperFrames 模板包，ID 从 `ref-01-...` 到 `ref-18-...`。
 
 标准模板目录为 `script-to-matrix-video/assets/templates/catalog.json`。参考模板目录为 `script-to-matrix-video/assets/templates/reference-typography-17/manifest.json`。
 
@@ -29,7 +29,7 @@ Skill 共保留 25 套模板：
 
 - 模板成片禁止 AI 生成图片或视频。
 - 只使用客户素材或素材库中状态为“可使用”的素材。
-- 17 套参考模板每条必须输入三个不同的视频素材；案例 MP4/JPG 不能反过来当成新视频素材。
+- 18 套参考模板每条必须输入三个不同的视频素材；案例 MP4/JPG 不能反过来当成新视频素材。
 - 参考模板的单条时长不由用户填写；任务准备阶段随机生成 8–15 秒整数并记录，三个素材按该时长自动均分。
 - 批量开启 BGM 时必须轮换曲目，相邻成片不得使用同一首。
 - 模板没有文字渐入；文字显示的第一帧即为完整不透明度。
@@ -48,4 +48,4 @@ Skill 共保留 25 套模板：
 - 标准模板：`python scripts/render_video.py project.json`
 - 参考模板：`python scripts/render_reference_typography.py batch.json --quality high --workers 4`
 
-参考模板源文件、17 条案例 MP4 和 17 张第一帧 JPG 都随 Skill 保存，便于同事先看效果再选 `template_id`。
+参考模板源文件、18 条案例 MP4 和 18 张第一帧 JPG 都随 Skill 保存，便于同事先看效果再选 `template_id`。

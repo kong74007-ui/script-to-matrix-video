@@ -2,10 +2,10 @@
 
 Read this reference when the user asks to choose, compare, or batch-rotate text-media-text styles.
 
-The Skill contains 25 approved templates in two engines:
+The Skill contains 26 approved templates in two engines:
 
 - eight standard FFmpeg templates whose machine-readable source of truth is `assets/templates/catalog.json`;
-- 17 exact HyperFrames reference-typography templates whose source of truth is `assets/templates/reference-typography-17/manifest.json`.
+- 18 exact HyperFrames reference-typography templates whose source of truth is `assets/templates/reference-typography-17/manifest.json`.
 
 Select a standard template with:
 
@@ -26,13 +26,13 @@ The renderer resolves the selected template first and then applies explicit proj
 | 8 | white-left-playful | 白底左排趣味体 | 社交话题、轻知识、活动招募 |
 | 9 | black-center-editorial | 黑底居中编辑体 | 品牌观点、趋势洞察、高级感表达 |
 
-The additional stable IDs are listed in [the 17-template reference pack](reference-typography-templates.md). They run through `scripts/render_reference_typography.py`, not `scripts/render_video.py`.
+The additional stable IDs are listed in [the 18-template reference pack](reference-typography-templates.md). They run through `scripts/render_reference_typography.py`, not `scripts/render_video.py`.
 
 No other bundled template_id is supported. Do not invent, alias, or silently fall back from a removed template.
 
 ## Shared structure
 
-Every bundled template follows the same top-text / middle-media / bottom-text structure. The 17 reference templates may split the top into three independently styled text layers and the bottom into two independently styled text layers.
+Every bundled template follows the same top-text / middle-media / bottom-text structure. The 18 reference templates may split the top into three independently styled text layers and the bottom into two independently styled text layers. `ref-18-beauty-private-domain` uses a black outer frame with an inset rounded video card while keeping the same five text inputs.
 
 - 1080×1920 vertical canvas.
 - Visible top margin is about 5% (96–100px).

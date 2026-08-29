@@ -35,8 +35,8 @@ if ($catalog.version -ne 1 -or $templateIds.Count -ne 8 -or @($templateIds | Sor
 $referenceManifest = Get-Content -LiteralPath $referenceManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $referenceTemplates = @($referenceManifest.templates)
 $referenceIds = @($referenceTemplates | ForEach-Object { [string]$_.id })
-if ($referenceManifest.version -ne 1 -or $referenceManifest.engine -ne 'hyperframes' -or $referenceTemplates.Count -ne 17 -or @($referenceIds | Sort-Object -Unique).Count -ne 17) {
-    throw 'Reference typography manifest must be version 1 with exactly 17 unique HyperFrames template IDs.'
+if ($referenceManifest.version -ne 2 -or $referenceManifest.engine -ne 'hyperframes' -or $referenceTemplates.Count -ne 18 -or @($referenceIds | Sort-Object -Unique).Count -ne 18) {
+    throw 'Reference typography manifest must be version 2 with exactly 18 unique HyperFrames template IDs.'
 }
 foreach ($template in $referenceTemplates) {
     if (-not ([string]$template.id).StartsWith('ref-')) {

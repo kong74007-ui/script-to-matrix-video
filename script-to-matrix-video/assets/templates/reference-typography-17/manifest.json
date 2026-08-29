@@ -159,6 +159,14 @@
       "description": "黄色超粗标题、红白冲突强调和大号底部 CTA，适合高吸引力引流与强报名口令。",
       "example_mp4": "../../examples/text-media-text/reference-typography-17/17-shenzhen-yellow-red.mp4",
       "example_jpg": "../../examples/text-media-text/reference-typography-17/17-shenzhen-yellow-red.jpg"
+    },
+    {
+      "id": "ref-18-beauty-private-domain",
+      "variant": "v18",
+      "name": "美业粉白私域运营",
+      "description": "黑色外框、圆角视频卡片、粉白双色标题和中下部结论，适合美业、私域运营、朋友圈与女性创业内容。",
+      "example_mp4": "../../examples/text-media-text/reference-typography-17/18-beauty-private-domain.mp4",
+      "example_jpg": "../../examples/text-media-text/reference-typography-17/18-beauty-private-domain.jpg"
     }
   ]
 }

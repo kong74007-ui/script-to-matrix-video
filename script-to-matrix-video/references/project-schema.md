@@ -158,7 +158,7 @@ For one of the eight bundled standard styles, set only a stable template identif
 
 The renderer loads its defaults from `assets/templates/catalog.json`. Explicit project `layout` and `render` fields override template defaults. Read [style-templates.md](style-templates.md) for the complete catalog. Bundled templates can set independent `top_font` and `bottom_font`, one persistent `kicker`, validated `surface_boxes` decoration, and one catalog-owned semantic `emphasis_profile`. The Skill automatically supplies `assets/fonts` to FFmpeg/libass; set `render.fonts_dir` only for a custom font directory contained inside the current project.
 
-The 17 IDs beginning with `ref-` use a separate five-layer HyperFrames batch schema rather than this `project.json` schema. Read [reference-typography-templates.md](reference-typography-templates.md) and render them with `scripts/render_reference_typography.py`; do not pass a `ref-` ID to `render_video.py`.
+The 18 IDs beginning with `ref-` use a separate five-layer HyperFrames batch schema rather than this `project.json` schema. Read [reference-typography-templates.md](reference-typography-templates.md) and render them with `scripts/render_reference_typography.py`; do not pass a `ref-` ID to `render_video.py`.
 
 An unsupported layout falls back to `full-frame` and is recorded in `render_report.warnings`.
 
