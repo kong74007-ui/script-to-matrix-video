@@ -175,10 +175,10 @@
       .v17 .bottom1 { font-size: 54px; font-weight: 900; color: #ffdb16; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
       .v17 .bottom2 { font-size: 84px; font-weight: 900; color: #fff; -webkit-text-stroke: 10px #d80c0c; paint-order: stroke fill; }
 
-      /* 18：黑色外框圆角视频卡，粉白私域运营标题 */
+      /* 18：直角全画幅视频，粉白私域运营标题 */
       .v18 .media-video {
-        left: 52px; top: 90px; width: 976px; height: 1740px;
-        border-radius: 70px; object-position: center center;
+        left: 0; top: 0; width: 1080px; height: 1920px;
+        border-radius: 0; object-position: center center;
       }
       .v18 .text-layer::before { background: none; }
       .v18 .top { top: 210px; padding-left: 72px; padding-right: 72px; }
@@ -211,9 +211,9 @@
   </head>
   <body>
     <div data-hf-id="hf-f7ns" id="root" class="v01" data-composition-id="main" data-start="0" data-width="1080" data-height="1920">
-      <video data-hf-id="hf-u6nw" id="videoA" class="clip media-video" data-start="0" data-duration="8" data-track-index="0" data-var-src="videoA" src="assets/library/default-a.mp4" muted playsinline></video>
-      <video data-hf-id="hf-z723" id="videoB" class="clip media-video" data-start="0" data-duration="8" data-track-index="1" data-var-src="videoB" src="assets/library/default-b.mp4" muted playsinline></video>
-      <video data-hf-id="hf-q9pk" id="videoC" class="clip media-video" data-start="0" data-duration="8" data-track-index="3" data-var-src="videoC" src="assets/library/default-c.mp4" muted playsinline></video>
+      <video data-hf-id="hf-u6nw" id="videoA" class="clip media-video" data-start="0" data-duration="15" data-track-index="0" data-var-src="videoA" src="assets/library/default-a.mp4" muted playsinline></video>
+      <video data-hf-id="hf-z723" id="videoB" class="clip media-video" data-start="0" data-duration="15" data-track-index="1" data-var-src="videoB" src="assets/library/default-b.mp4" muted playsinline></video>
+      <video data-hf-id="hf-q9pk" id="videoC" class="clip media-video" data-start="0" data-duration="15" data-track-index="3" data-var-src="videoC" src="assets/library/default-c.mp4" muted playsinline></video>
       <audio data-hf-id="hf-xex4" id="bgm" data-start="0" data-duration="8" data-track-index="10" data-volume="0.24" data-var-src="bgm" src="assets/bgm/silence.m4a"></audio>
 
       <section data-hf-id="hf-8op4" id="typography" class="clip text-layer" data-start="0" data-duration="8" data-track-index="2">
@@ -258,9 +258,6 @@
       root.dataset.duration = String(duration);
       typography.dataset.duration = String(duration);
       bgm.dataset.duration = String(duration);
-      videos.forEach((video) => {
-        video.dataset.duration = String(duration);
-      });
       const tl = gsap.timeline({ paused: true });
       tl.set(videos[0], { autoAlpha: 1 }, 0)
         .set([videos[1], videos[2]], { autoAlpha: 0 }, 0)

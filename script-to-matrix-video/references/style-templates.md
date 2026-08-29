@@ -32,7 +32,7 @@ No other bundled template_id is supported. Do not invent, alias, or silently fal
 
 ## Shared structure
 
-Every bundled template follows the same top-text / middle-media / bottom-text structure. The 18 reference templates may split the top into three independently styled text layers and the bottom into two independently styled text layers. `ref-18-beauty-private-domain` uses a black outer frame with an inset rounded video card while keeping the same five text inputs.
+Every bundled template follows the same top-text / middle-media / bottom-text structure. The 18 reference templates may split the top into three independently styled text layers and the bottom into two independently styled text layers. `ref-18-beauty-private-domain` uses straight-edged full-frame video with the same five text inputs; it does not reproduce the rounded app-card container from its screenshot reference.
 
 - 1080×1920 vertical canvas.
 - Visible top margin is about 5% (96–100px).

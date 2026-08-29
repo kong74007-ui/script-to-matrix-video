@@ -2,7 +2,7 @@
   "version": 2,
   "pack_id": "reference-typography-17",
   "engine": "hyperframes",
-  "hyperframes_version": "0.8.16",
+  "hyperframes_version": "0.8.17",
   "duration_mode": "random_integer_per_output",
   "duration_range_seconds": [8, 15],
   "resolution": "1080x1920",
@@ -164,7 +164,7 @@
       "id": "ref-18-beauty-private-domain",
       "variant": "v18",
       "name": "美业粉白私域运营",
-      "description": "黑色外框、圆角视频卡片、粉白双色标题和中下部结论，适合美业、私域运营、朋友圈与女性创业内容。",
+      "description": "直角全画幅视频、粉白双色标题和中下部结论，适合美业、私域运营、朋友圈与女性创业内容。",
       "example_mp4": "../../examples/text-media-text/reference-typography-17/18-beauty-private-domain.mp4",
       "example_jpg": "../../examples/text-media-text/reference-typography-17/18-beauty-private-domain.jpg"
     }

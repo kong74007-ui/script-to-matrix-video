@@ -18,6 +18,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -34,6 +35,7 @@ FONT_FILES = (
 NAME_RE = re.compile(r"[^0-9A-Za-z_-]+")
 DURATION_MIN_SECONDS = 8
 DURATION_MAX_SECONDS = 15
+HYPERFRAMES_VERSION = "0.8.17"
 
 
 class InputError(ValueError):
@@ -72,6 +74,92 @@ def stage_file(source: Path, directory: Path, stem: str) -> str:
     target = directory / f"{stem}{suffix}"
     shutil.copy2(source, target)
     return target.relative_to(directory.parents[1]).as_posix()
+
+
+def stage_video(
+    source: Path,
+    directory: Path,
+    stem: str,
+    ffmpeg: str,
+    normalize: bool,
+) -> str:
+    """Stage a video that can provide valid frames for the full 15-second render."""
+
+    if not normalize:
+        return stage_file(source, directory, stem)
+
+    target = directory / f"{stem}.mp4"
+    command = [
+        ffmpeg,
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-stream_loop",
+        "-1",
+        "-i",
+        str(source),
+        "-t",
+        str(DURATION_MAX_SECONDS),
+        "-map",
+        "0:v:0",
+        "-an",
+        "-vf",
+        "fps=30,format=yuv420p",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "20",
+        "-movflags",
+        "+faststart",
+        str(target),
+    ]
+    completed = subprocess.run(command, check=False)
+    if completed.returncode != 0 or not target.is_file() or target.stat().st_size == 0:
+        raise InputError(f"Could not normalize video for the reference template: {source}")
+    return target.relative_to(directory.parents[1]).as_posix()
+
+
+def trim_render(raw: Path, final: Path, duration: int, ffmpeg: str) -> int:
+    """Trim the fixed 15-second HyperFrames render to the recorded task duration."""
+
+    started = time.perf_counter()
+    command = [
+        ffmpeg,
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-i",
+        str(raw),
+        "-t",
+        str(duration),
+        "-map",
+        "0:v:0",
+        "-map",
+        "0:a:0?",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "fast",
+        "-crf",
+        "18",
+        "-pix_fmt",
+        "yuv420p",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-movflags",
+        "+faststart",
+        str(final),
+    ]
+    completed = subprocess.run(command, check=False)
+    if completed.returncode != 0 or not final.is_file() or final.stat().st_size == 0:
+        raise InputError(f"Could not trim rendered output: {raw}")
+    return round((time.perf_counter() - started) * 1000)
 
 
 def load_or_create_batch_seed(batch_dir: Path) -> str:
@@ -128,7 +216,7 @@ def resolve_browser_environment(npx: str, workdir: Path) -> dict[str, str]:
         return env
     try:
         result = subprocess.run(
-            [npx, "--yes", "hyperframes@0.8.16", "browser", "path"],
+            [npx, "--yes", f"hyperframes@{HYPERFRAMES_VERSION}", "browser", "path"],
             cwd=workdir,
             check=False,
             capture_output=True,
@@ -190,6 +278,9 @@ def prepare(args: argparse.Namespace) -> tuple[Path, Path, list[dict[str, object
         if isinstance(item, dict) and "id" in item and "variant" in item
     }
     validate_bgm_rotation(rows, batch_path.parent)
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise InputError("ffmpeg is required for reference typography video staging")
 
     workdir = (
         Path(args.workdir).expanduser().resolve()
@@ -264,9 +355,9 @@ def prepare(args: argparse.Namespace) -> tuple[Path, Path, list[dict[str, object
                 "bottom1": bottom_values[0],
                 "bottom2": bottom_values[1],
                 "duration": random_duration(batch_seed, row, index),
-                "videoA": stage_file(video_a, input_dir, f"{index:02d}-a"),
-                "videoB": stage_file(video_b, input_dir, f"{index:02d}-b"),
-                "videoC": stage_file(video_c, input_dir, f"{index:02d}-c"),
+                "videoA": stage_video(video_a, input_dir, f"{index:02d}-a", ffmpeg, not args.dry_run),
+                "videoB": stage_video(video_b, input_dir, f"{index:02d}-b", ffmpeg, not args.dry_run),
+                "videoC": stage_video(video_c, input_dir, f"{index:02d}-c", ffmpeg, not args.dry_run),
                 "bgm": bgm,
             }
         )
@@ -299,12 +390,17 @@ def render(args: argparse.Namespace) -> int:
     npx = shutil.which("npx")
     if not npx:
         raise InputError("Node.js/npm is required for the reference typography templates")
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise InputError("ffmpeg is required to finalize reference typography renders")
 
-    output_pattern = (output_dir / "{name}.mp4").as_posix()
+    raw_dir = output_dir / ".hyperframes-raw"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    output_pattern = (raw_dir / "{name}.mp4").as_posix()
     command = [
         npx,
         "--yes",
-        "hyperframes@0.8.16",
+        f"hyperframes@{HYPERFRAMES_VERSION}",
         "render",
         "--batch",
         "batch/prepared-rows.json",
@@ -328,7 +424,44 @@ def render(args: argparse.Namespace) -> int:
         env=resolve_browser_environment(npx, workdir),
         check=False,
     )
-    return completed.returncode
+    if completed.returncode != 0:
+        return completed.returncode
+
+    finalized_rows: list[dict[str, object]] = []
+    for row in rows:
+        name = str(row["name"])
+        duration = int(row["duration"])
+        raw = raw_dir / f"{name}.mp4"
+        final = output_dir / f"{name}.mp4"
+        if not raw.is_file():
+            raise InputError(f"HyperFrames did not create the expected output: {raw}")
+        finalization_ms = trim_render(raw, final, duration, ffmpeg)
+        finalized_rows.append(
+            {
+                "name": name,
+                "status": "completed",
+                "durationSeconds": duration,
+                "outputPath": str(final),
+                "hyperframesRawPath": str(raw),
+                "finalizationTimeMs": finalization_ms,
+            }
+        )
+
+    manifest = {
+        "type": "batch-complete",
+        "engine": f"hyperframes-{HYPERFRAMES_VERSION}+ffmpeg",
+        "renderDurationSeconds": DURATION_MAX_SECONDS,
+        "total": len(finalized_rows),
+        "completed": len(finalized_rows),
+        "failed": 0,
+        "rows": finalized_rows,
+    }
+    (output_dir / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(json.dumps(manifest, ensure_ascii=False))
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:

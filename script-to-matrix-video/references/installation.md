@@ -21,7 +21,7 @@ Rendering requires:
 
 - Python 3.10 or newer.
 - FFmpeg with both `ffmpeg` and `ffprobe` available on `PATH`.
-- Node.js with npm is required only for the 18 `ref-` HyperFrames typography templates; the wrapper pins HyperFrames `0.8.16`.
+- Node.js with npm is required only for the 18 `ref-` HyperFrames typography templates; the wrapper pins HyperFrames `0.8.17`.
 - An image-generation capability in the running Codex environment, or user-supplied local images.
 
 Material-library access is required on the first installation. Connect either a
