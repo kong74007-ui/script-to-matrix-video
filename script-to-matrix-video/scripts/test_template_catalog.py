@@ -99,6 +99,11 @@ def check_reference_typography_pack() -> None:
     assert (skill_root / "assets" / "fonts" / "NotoSerifSC-Variable.ttf").is_file()
     assert 'font-family: "NotoSerifSC"' in index_html
     assert 'font: 700 122px/1.04 "NotoSerifSC"' in index_html
+    assert "font-style: oblique 3deg" in index_html
+    if reference_renderer.os.name == "nt":
+        hidden_kwargs = reference_renderer.hidden_process_kwargs()
+        assert hidden_kwargs["creationflags"] == subprocess.CREATE_NO_WINDOW
+        assert hidden_kwargs["startupinfo"].wShowWindow == subprocess.SW_HIDE
     for variant in variants:
         assert f".{variant} " in index_html
 

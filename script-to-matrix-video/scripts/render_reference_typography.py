@@ -43,6 +43,20 @@ class InputError(ValueError):
     pass
 
 
+def hidden_process_kwargs() -> dict[str, object]:
+    """Keep renderer helper processes off the Windows desktop."""
+
+    if os.name != "nt":
+        return {}
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
+    return {
+        "startupinfo": startupinfo,
+        "creationflags": subprocess.CREATE_NO_WINDOW,
+    }
+
+
 def load_json(path: Path) -> object:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -117,7 +131,7 @@ def stage_video(
         "+faststart",
         str(target),
     ]
-    completed = subprocess.run(command, check=False)
+    completed = subprocess.run(command, check=False, **hidden_process_kwargs())
     if completed.returncode != 0 or not target.is_file() or target.stat().st_size == 0:
         raise InputError(f"Could not normalize video for the reference template: {source}")
     return target.relative_to(directory.parents[1]).as_posix()
@@ -157,7 +171,7 @@ def trim_render(raw: Path, final: Path, duration: int, ffmpeg: str) -> int:
         "+faststart",
         str(final),
     ]
-    completed = subprocess.run(command, check=False)
+    completed = subprocess.run(command, check=False, **hidden_process_kwargs())
     if completed.returncode != 0 or not final.is_file() or final.stat().st_size == 0:
         raise InputError(f"Could not trim rendered output: {raw}")
     return round((time.perf_counter() - started) * 1000)
@@ -215,6 +229,18 @@ def resolve_browser_environment(npx: str, workdir: Path) -> dict[str, str]:
     env = os.environ.copy()
     if os.name != "nt" or env.get("HYPERFRAMES_BROWSER_PATH"):
         return env
+
+    candidates = (
+        Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+        Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+        Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
+        Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+    )
+    installed_browser = next((path for path in candidates if path.is_file()), None)
+    if installed_browser:
+        env["HYPERFRAMES_BROWSER_PATH"] = str(installed_browser)
+        return env
+
     try:
         result = subprocess.run(
             [npx, "--yes", f"hyperframes@{HYPERFRAMES_VERSION}", "browser", "path"],
@@ -223,6 +249,7 @@ def resolve_browser_environment(npx: str, workdir: Path) -> dict[str, str]:
             capture_output=True,
             text=True,
             timeout=30,
+            **hidden_process_kwargs(),
         )
         bundled = Path(result.stdout.strip()) if result.returncode == 0 else None
         if bundled and bundled.is_file():
@@ -231,30 +258,13 @@ def resolve_browser_environment(npx: str, workdir: Path) -> dict[str, str]:
                 check=False,
                 capture_output=True,
                 timeout=10,
+                **hidden_process_kwargs(),
             )
             if probe.returncode == 0:
                 return env
     except (OSError, subprocess.SubprocessError):
         pass
 
-    candidates = (
-        Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
-        Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
-        Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
-        Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
-    )
-    fallback = next((path for path in candidates if path.is_file()), None)
-    if fallback:
-        env["HYPERFRAMES_BROWSER_PATH"] = str(fallback)
-        print(
-            json.dumps(
-                {
-                    "warning": "Bundled HyperFrames Chrome could not start; using an installed Chromium browser for this run",
-                    "browser": str(fallback),
-                },
-                ensure_ascii=False,
-            )
-        )
     return env
 
 
@@ -424,6 +434,7 @@ def render(args: argparse.Namespace) -> int:
         cwd=workdir,
         env=resolve_browser_environment(npx, workdir),
         check=False,
+        **hidden_process_kwargs(),
     )
     if completed.returncode != 0:
         return completed.returncode
