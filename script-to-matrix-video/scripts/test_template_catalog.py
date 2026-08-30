@@ -96,6 +96,9 @@ def check_reference_typography_pack() -> None:
     root_tag = re.search(r'<div[^>]+id="root"[^>]*>', index_html)
     assert root_tag and "data-duration" not in root_tag.group(0)
     assert (pack_root / "assets" / "library" / "default-c.mp4").is_file()
+    assert (skill_root / "assets" / "fonts" / "NotoSerifSC-Variable.ttf").is_file()
+    assert 'font-family: "NotoSerifSC"' in index_html
+    assert 'font: 700 122px/1.04 "NotoSerifSC"' in index_html
     for variant in variants:
         assert f".{variant} " in index_html
 

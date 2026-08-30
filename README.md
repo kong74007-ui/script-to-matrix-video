@@ -2,7 +2,7 @@
 
 一个面向中文矩阵引流内容的 Codex Skill，输出可直接发布的 9:16 MP4。
 
-当前版本：`v1.8.4`
+当前版本：`v1.8.5`
 
 ## 两个独立功能
 
@@ -44,7 +44,7 @@
 
 8 套标准模板支持 `emphasis.v1` 语义重点；18 套参考模板直接固定五层文字的字号、颜色、描边和层级，输入 `top1`/`top2`/`top3` 与 `bottom1`/`bottom2` 即可复用，不在渲染期间调用模型。
 
-Skill 自带 `Noto Sans SC`、`ZCOOL XiaoWei`、`Ma Shan Zheng`、`ZCOOL KuaiLe` 四个 OFL 中文字体家族，并自动交给 FFmpeg 加载，不依赖运行电脑碰巧安装了什么字体。详细选择建议见 [视觉模板目录](script-to-matrix-video/references/style-templates.md)。
+Skill 自带 `Noto Sans SC`、`Noto Serif SC`、`ZCOOL XiaoWei`、`Ma Shan Zheng`、`ZCOOL KuaiLe` 五个 OFL 中文字体家族，并自动交给对应渲染器加载，不依赖运行电脑碰巧安装了什么字体。详细选择建议见 [视觉模板目录](script-to-matrix-video/references/style-templates.md)。
 
 v1.7.0 同时修复了两项真实批量问题：中英混排会保留英文词间空格；`blurred-media` 使用 50/60fps 素材时会先统一到项目帧率，不再因 `-frames:v` 提前结束。
 
@@ -67,6 +67,8 @@ v1.8.2 新增 `ref-18-beauty-private-domain`：粉白双色美业私域标题，
 v1.8.3 将第 18 套改为直角全画幅素材，移除误带入的圆角应用卡片；参考模板输入视频会先在任务目录循环补足到 15 秒，固定渲染后再按随机 8–15 秒精确裁切，避免最后一段素材黑屏。
 
 v1.8.4 重新校准第 18 套的字体与坐标：粉色主标题放大并上移，白色副标题改用同款宋体，底部两行采用左起、右移的错位排版，同时收紧描边和阴影层次。
+
+v1.8.5 将第 18 套从浏览器合成加粗的装饰宋体换成内置 `Noto Serif SC` 真实 600/700 字重，并按参考图重新收紧字距、描边和硬阴影；示例 MP4/JPG 同步更新。
 
 PR 会运行零付费模板回归，校验标准模板目录、参考模板清单、字体、示例文件和批量输入规则。
 

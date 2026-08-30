@@ -28,6 +28,7 @@ PACK_MANIFEST = PACK_ROOT / "manifest.json"
 FONT_ROOT = SKILL_ROOT / "assets" / "fonts"
 FONT_FILES = (
     "NotoSansSC-Variable.ttf",
+    "NotoSerifSC-Variable.ttf",
     "MaShanZheng-Regular.ttf",
     "ZCOOLKuaiLe-Regular.ttf",
     "ZCOOLXiaoWei-Regular.ttf",
