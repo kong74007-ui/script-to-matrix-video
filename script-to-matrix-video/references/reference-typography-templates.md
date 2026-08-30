@@ -23,7 +23,7 @@
 | `ref-15-tianjin-monochrome` | 天津黑白极简 | 稳重圈层、退休生活、知识活动 |
 | `ref-16-shenzhen-opc` | 深圳 OPC 多层信息 | OPC、共享创业、项目招募 |
 | `ref-17-shenzhen-yellow-red` | 深圳黄红爆款层级 | 强钩子、强报名、矩阵引流 |
-| `ref-18-beauty-private-domain` | 美业粉白私域运营 | 美业、私域运营、朋友圈、女性创业 |
+| `ref-18-beauty-private-domain` | 美业粉白宋体＋底部错位 | 美业、私域运营、朋友圈、女性创业 |
 
 ## 输入字段
 
