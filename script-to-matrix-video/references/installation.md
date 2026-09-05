@@ -1,6 +1,6 @@
 # Installation and first run
 
-Read this reference only when installing the Skill on a new machine or diagnosing missing dependencies.
+Read this reference only when installing the Skill on a new machine or diagnosing hosted/local runtime dependencies.
 
 ## Install the Skill
 
@@ -11,20 +11,25 @@ Copy the complete `script-to-matrix-video` folder to the user's Codex skills dir
 
 Keep `SKILL.md`, `agents`, `references`, `scripts`, and `requirements.txt` together. Restart Codex after installing so the Skill is rediscovered.
 
-Keep `assets/templates` and `assets/fonts` as well. The 13-style catalog and four licensed Chinese font families are part of the runtime, so no separate operating-system font installation is required for bundled templates.
+Keep `assets/templates` and `assets/fonts` as well. The 26 bundled templates and five licensed Chinese font families are part of the local runtime, so no separate operating-system font installation is required for them.
 
 The Windows installer runs the source environment check and catalog regression suite, then validates every bundled font SHA-256 before it backs up or replaces an existing Skill. A missing, malformed, or altered runtime asset must stop installation.
 
 ## Runtime dependencies
 
-Rendering requires:
+The hosted current-website route requires:
+
+- HQ CLI 0.15.4 or newer.
+- An authenticated Huangque account with template-video access.
+
+The bundled local renderer requires:
 
 - Python 3.10 or newer.
 - FFmpeg with both `ffmpeg` and `ffprobe` available on `PATH`.
 - Node.js with npm is required only for the 18 `ref-` HyperFrames typography templates; the wrapper pins HyperFrames `0.8.17`.
 - An image-generation capability in the running Codex environment, or user-supplied local images.
 
-Material-library access is required on the first installation. Connect either a
+Local material-library access is required by the packaged Windows installer and before local rendering. Connect either a
 local/mounted library root or OpenSSH (`ssh`) plus an already configured SSH
 key/agent. Passwords are not accepted by the helper and must not be added to
 this Skill.
@@ -39,12 +44,39 @@ On macOS or Linux, use `python3` and the corresponding `~/.codex/skills/...` pat
 
 Configure `DASHSCOPE_API_KEY` as a user or process environment variable. Do not paste it into `project.json`, source code, chat output, or the Skill archive. Restart Codex after changing a persistent environment variable.
 
-No-narration videos do not require DashScope or an Alibaba API key.
+No-narration local videos and all hosted template-video voiceovers do not require a local DashScope key. The hosted service owns its provider configuration.
 
-## Connect the required material library
+## Verify HQ CLI for current website templates
 
-Every new machine must connect and validate its own library before installation
-can complete or a video can render. The connection profile is per-user and is
+Install or update HQ CLI using the official main-site installer, then log in:
+
+```powershell
+irm https://huangquechuanmei.com/downloads/hq/install.ps1 | iex
+hq login --json
+```
+
+On macOS/Linux:
+
+```sh
+curl -fsSL https://huangquechuanmei.com/downloads/hq/install.sh | sh
+hq login --json
+```
+
+Verify the free read path before any quote or paid generation:
+
+```sh
+hq version --json
+hq status --json
+hq run matrix-template-capability --json
+hq run matrix-template-templates --json
+```
+
+For voiceover also run `hq run voices --json`. If readiness fails, fix CLI installation, login, capability state, or voice status before quoting. Do not switch to a local render after a hosted quote has been issued.
+
+## Connect the required local material library
+
+Every machine using the packaged installer or bundled local renderer must connect and validate its own library before installation
+can complete or a local video can render. The connection profile is per-user and is
 not bundled with the Skill.
 
 Connect a local or mounted root and save the verified profile:
@@ -117,6 +149,12 @@ Example without narration using the structured layout:
 使用 $script-to-matrix-video 的模板成片功能，无配音。采用上方标题、中间素材库图片或视频、下方固定副标题；禁止AI生成素材，直接输出成片：……
 ```
 
+Example using the current hosted template service:
+
+```text
+使用 $script-to-matrix-video 调用黄雀主站当前模板成片，选择我的个人复刻音色，语速1.2。先展示模板、音色和点数报价，等我确认后再生成：……
+```
+
 Generated project folders and media must stay outside the installed Skill directory.
 
 ## Common setup failures
@@ -130,3 +168,5 @@ Generated project folders and media must stay outside the installed Skill direct
 - `Material status is ...`: only `可使用` records are eligible by default; update the source library through its approved review process rather than bypassing the filter.
 - BGM is enabled but skipped: copy a selected track into the project and set `bgm.path`, or disable BGM explicitly.
 - `fonts_dir is not a directory`: reinstall the complete Skill, or point `render.fonts_dir` at a custom font directory inside the current project. Do not use a machine-specific external path in a portable project.
+- `hq` is missing or older than 0.15.4: update with the official installer, reopen the terminal, and rerun `hq version --json`.
+- HQ CLI reports unauthenticated or a voice is not ready: complete `hq login`, then choose only a `ready=true` item returned by `hq run voices --json`.
