@@ -1,4 +1,4 @@
-# 文案与模板矩阵视频 Skill v1.8.6
+# 文案与模板矩阵视频 Skill v1.8.7
 
 本安装包包含两个独立功能：
 
@@ -30,6 +30,8 @@ v1.8.4 进一步贴合美业参考图：重做粉白宋体效果、放大顶部�
 v1.8.5 为美业模板内置 `Noto Serif SC` 可变宋体，使用真实 600/700 字重替代小薇体的合成加粗，避免不同电脑出现字形和粗细偏差。
 
 v1.8.6 为美业模板四层文字增加约 3° 轻微右倾，并在 Windows 上隐藏 HyperFrames、浏览器和 FFmpeg 渲染子进程窗口，避免批量渲染弹出多个黑窗。
+
+v1.8.7 将 18 套参考排版模板的 HyperFrames 固定版本从 `0.8.17` 升级到 `0.8.29`，获得 Windows 子进程隐藏、中文字体子集、嵌套素材、音频时长和 Studio 文件热更新等稳定性修复。
 
 安装包不含 API 密钥、服务器密码、SSH 密钥或素材库原始文件；仅包含公开案例成片和预览图。
 
@@ -75,7 +77,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 
 - Python 3.10 或更高版本；
 - FFmpeg，且 `ffmpeg` 和 `ffprobe` 位于 `PATH`；
-- 使用 18 套 `ref-` 参考排版模板时，需要 Node.js 和 npm；渲染脚本固定调用 HyperFrames `0.8.17`；
+- 使用 18 套 `ref-` 参考排版模板时，需要 Node.js 和 npm；渲染脚本固定调用 HyperFrames `0.8.29`；
 - 使用 AI 图片时，Codex 环境需要图片生成能力；
 - 使用阿里配音时，需要本机环境变量 `DASHSCOPE_API_KEY`；
 - 远程素材库需要 OpenSSH 和已配置的 SSH 密钥或 Agent。

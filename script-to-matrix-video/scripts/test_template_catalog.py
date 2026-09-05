@@ -69,7 +69,7 @@ def check_reference_typography_pack() -> None:
     ids = [item.get("id") for item in templates]
     variants = [item.get("variant") for item in templates]
     assert manifest.get("version") == 2 and manifest.get("engine") == "hyperframes"
-    assert manifest.get("hyperframes_version") == "0.8.17"
+    assert manifest.get("hyperframes_version") == "0.8.29"
     assert manifest.get("duration_mode") == "random_integer_per_output"
     assert manifest.get("duration_range_seconds") == [8, 15]
     assert manifest.get("generated_fields") == ["duration"]

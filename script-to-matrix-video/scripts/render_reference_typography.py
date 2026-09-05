@@ -36,7 +36,7 @@ FONT_FILES = (
 NAME_RE = re.compile(r"[^0-9A-Za-z_-]+")
 DURATION_MIN_SECONDS = 8
 DURATION_MAX_SECONDS = 15
-HYPERFRAMES_VERSION = "0.8.17"
+HYPERFRAMES_VERSION = "0.8.29"
 
 
 class InputError(ValueError):

@@ -2,7 +2,7 @@
   "version": 2,
   "pack_id": "reference-typography-17",
   "engine": "hyperframes",
-  "hyperframes_version": "0.8.17",
+  "hyperframes_version": "0.8.29",
   "duration_mode": "random_integer_per_output",
   "duration_range_seconds": [8, 15],
   "resolution": "1080x1920",
