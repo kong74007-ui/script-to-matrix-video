@@ -1,6 +1,6 @@
 interface:
   display_name: "文案与模板矩阵视频"
-  short_description: "默认生成上文中素材下文模板成片，也支持完整文案一键成片"
-  default_prompt: "使用 $script-to-matrix-video 默认按 text-media-text 模板成片，生成可发布的9:16矩阵视频；只有我明确要求完整文案、配音或语义分镜时才使用文案一键成片。"
+  short_description: "模板成片支持主站音色配音与本地渲染，也支持完整文案成片"
+  default_prompt: "使用 $script-to-matrix-video 默认按 text-media-text 模板成片；主站路径可选择公共或个人复刻音色和语速。只有我明确要求完整文案、逐镜口播、语义分镜或语音同步字幕时才使用文案一键成片。"
 policy:
   allow_implicit_invocation: true

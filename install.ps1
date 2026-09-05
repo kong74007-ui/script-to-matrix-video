@@ -22,7 +22,7 @@ $fontRoot = Join-Path $sourceSkill 'assets\fonts'
 $fontSourcesPath = Join-Path $fontRoot 'sources.json'
 foreach ($requiredPath in @($catalogPath, $referenceManifestPath, $referenceRendererPath, $fontSourcesPath)) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
-        throw "Skill v1.8 runtime files are incomplete: $requiredPath was not found."
+        throw "Skill v1.9 runtime files are incomplete: $requiredPath was not found."
     }
 }
 
@@ -52,8 +52,8 @@ foreach ($template in $referenceTemplates) {
 }
 
 $fontSources = Get-Content -LiteralPath $fontSourcesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-if (@($fontSources.fonts).Count -ne 4) {
-    throw 'Font source manifest must contain exactly four bundled font families.'
+if (@($fontSources.fonts).Count -ne 5) {
+    throw 'Font source manifest must contain exactly five bundled font families.'
 }
 foreach ($font in $fontSources.fonts) {
     $fontName = [string]$font.file
