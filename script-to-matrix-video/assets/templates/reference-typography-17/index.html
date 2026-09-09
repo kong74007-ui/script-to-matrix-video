@@ -59,12 +59,12 @@
       }
 
       /* 01：黑底三段式，绿色手写描边 */
-      .v01 .top1 { font: 400 68px/1.08 "MaShan"; color: #f7f5ec; -webkit-text-stroke: 11px #789822; paint-order: stroke fill; }
-      .v01 .top2 { font: 400 62px/1.15 "MaShan"; color: #f8f7ef; -webkit-text-stroke: 9px #789822; paint-order: stroke fill; }
-      .v01 .top3 { font-size: 50px; font-weight: 900; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v01 .top1 { font: 400 70px/1.08 "MaShan"; color: #f7f5ec; -webkit-text-stroke: 11px #789822; paint-order: stroke fill; }
+      .v01 .top2 { font: 400 64px/1.15 "MaShan"; color: #f8f7ef; -webkit-text-stroke: 9px #789822; paint-order: stroke fill; }
+      .v01 .top3 { font-size: 52px; font-weight: 900; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
       .v01 .bottom { bottom: 132px; }
-      .v01 .bottom1 { font: 400 54px/1.05 "MaShan"; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
-      .v01 .bottom2 { width: max-content; max-width: 900px; padding: 14px 26px; border-radius: 22px; background: #f5f4ee; color: #426d24; font: 400 72px/1.15 "MaShan"; box-shadow: 0 9px 0 rgba(0,0,0,.45); }
+      .v01 .bottom1 { font: 400 56px/1.05 "MaShan"; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v01 .bottom2 { width: max-content; max-width: 900px; padding: 14px 26px; border-radius: 22px; background: #f5f4ee; color: #426d24; font: 400 74px/1.15 "MaShan"; box-shadow: 0 9px 0 rgba(0,0,0,.45); }
 
       /* 02：橙白书法标题，三行CTA */
       .v02 .top { top: 126px; }
@@ -86,14 +86,62 @@
       .v04 .top2 { font-size: 72px; font-weight: 900; color: #fff; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
       .v04 .top3 { display: inline-block; margin-top: 22px; padding: 14px 24px; border-radius: 12px; background: #ffd916; color: #111; font-size: 48px; font-weight: 900; }
       .v04 .bottom1 { font-size: 58px; font-weight: 900; color: #ffd923; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
-      .v04 .bottom2 { font-size: 52px; font-weight: 900; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v04 .bottom2 { font-size: 80px; font-weight: 900; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
 
-      /* 05：超粗白主标题，红色说明 */
-      .v05 .top1 { font: 400 70px/1.06 "MaShan"; color: #fff; -webkit-text-stroke: 11px #111; paint-order: stroke fill; }
-      .v05 .top2 { font: 400 98px/1.02 "MaShan"; color: #fff; -webkit-text-stroke: 13px #111; paint-order: stroke fill; }
-      .v05 .top3 { font: 400 62px/1.05 "MaShan"; color: #d51f2c; -webkit-text-stroke: 7px #fff; paint-order: stroke fill; }
-      .v05 .bottom1 { font-size: 64px; font-weight: 900; color: #ffd825; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
-      .v05 .bottom2 { font: 400 82px/1.05 "MaShan"; color: #fff; -webkit-text-stroke: 11px #111; paint-order: stroke fill; }
+      /* 05：超粗方黑，蓝黑厚描边与黄色 CTA */
+      .v05 .text-layer::before {
+        background: linear-gradient(to bottom, rgba(8,15,24,.50) 0%, rgba(8,15,24,.08) 42%, rgba(8,15,24,.02) 58%, rgba(8,15,24,.48) 100%);
+      }
+      .v05 .top { top: 112px; }
+      .v05 .top1 {
+        font: 900 102px/1.02 "NotoSC";
+        letter-spacing: -.045em;
+        color: #f4f7f2;
+        -webkit-text-stroke: 12px #203449;
+        text-shadow: 8px 10px 0 #07111e;
+        paint-order: stroke fill;
+      }
+      .v05 .top2 {
+        margin-top: 12px;
+        font: 900 104px/1.01 "NotoSC";
+        letter-spacing: -.045em;
+        color: #f4f7f2;
+        -webkit-text-stroke: 13px #203449;
+        text-shadow: 9px 11px 0 #07111e;
+        paint-order: stroke fill;
+      }
+      .v05 .top3 {
+        margin-top: 24px;
+        font: 900 68px/1.04 "NotoSC";
+        letter-spacing: -.045em;
+        color: #fff8d9;
+        -webkit-text-stroke: 9px #26394a;
+        text-shadow: 7px 8px 0 #07111e;
+        paint-order: stroke fill;
+      }
+      .v05 .bottom { bottom: 128px; }
+      .v05 .bottom1 {
+        font: 900 68px/1.05 "NotoSC";
+        letter-spacing: -.045em;
+        color: #ffe000;
+        -webkit-text-stroke: 9px #263e32;
+        text-shadow: 6px 7px 0 rgba(3,12,8,.9);
+        paint-order: stroke fill;
+      }
+      .v05 .bottom2 {
+        display: inline-block;
+        width: auto;
+        max-width: 930px;
+        margin-top: 28px;
+        padding: 18px 34px 24px;
+        border-radius: 28px;
+        background: #f4c900;
+        color: #26362d;
+        font: 900 70px/1.06 "NotoSC";
+        letter-spacing: -.035em;
+        box-shadow: 0 10px 0 rgba(17,36,29,.85), 0 15px 24px rgba(0,0,0,.35);
+        paint-order: stroke fill;
+      }
 
       /* 06：白色超大标题，黄色按钮 */
       .v06 .top1 { font-size: 104px; font-weight: 900; color: #fff; -webkit-text-stroke: 13px #111; paint-order: stroke fill; }
@@ -116,16 +164,17 @@
       .v08 .bottom2 { display: inline-block; padding: 10px 24px; background: #ffd719; color: #fff; font: 400 64px/1.1 "MaShan"; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
 
       /* 09：米黄手写标题，薄荷绿说明 */
-      .v09 .top1 { font: 400 78px/1.08 "MaShan"; color: #fff0a8; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
+      .v09 .top { top: 116px; }
+      .v09 .top1 { font: 400 88px/1.08 "MaShan"; color: #fff0a8; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
       .v09 .top2 { font-size: 50px; font-weight: 700; color: #baf0bd; -webkit-text-stroke: 5px #234629; paint-order: stroke fill; }
       .v09 .bottom1 { font: 400 60px/1.05 "MaShan"; color: #a5ed7a; -webkit-text-stroke: 7px #234629; paint-order: stroke fill; }
       .v09 .bottom2 { font: 400 66px/1.05 "MaShan"; color: #fff0a8; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
 
       /* 10：黄白层级，左对齐意向词 */
       .v10 .top { top: 92px; }
-      .v10 .top1 { font: 400 70px/1.02 "XiaoWei"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
+      .v10 .top1 { font: 400 85px/1.02 "XiaoWei"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
       .v10 .top2 { font: 400 78px/1.03 "XiaoWei"; color: #ffd819; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
-      .v10 .top3 { font-size: 54px; font-weight: 800; color: #fff; -webkit-text-stroke: 6px #111; paint-order: stroke fill; }
+      .v10 .top3 { font-size: 65px; font-weight: 800; color: #fff; -webkit-text-stroke: 6px #111; paint-order: stroke fill; }
       .v10 .bottom { text-align: left; padding-left: 68px; bottom: 118px; }
       .v10 .bottom1 { margin-left: 0; font: 400 68px/1.04 "XiaoWei"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
       .v10 .bottom2 { margin-left: 0; font: 400 80px/1.03 "XiaoWei"; color: #fff; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
@@ -139,9 +188,9 @@
       .v11 .bottom2 { font: 400 76px/1.08 "MaShan"; color: #d82424; -webkit-text-stroke: 7px #fff; paint-order: stroke fill; }
 
       /* 12：黑白手写标题，黄色信息行 */
-      .v12 .top1 { font: 400 72px/1.08 "MaShan"; color: #fff; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
+      .v12 .top1 { font: 400 80px/1.08 "MaShan"; color: #fff; -webkit-text-stroke: 10px #111; paint-order: stroke fill; }
       .v12 .top2 { font: 400 62px/1.05 "MaShan"; color: #fff; -webkit-text-stroke: 9px #111; paint-order: stroke fill; }
-      .v12 .top3 { font: 400 50px/1.12 "MaShan"; color: #ffe036; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
+      .v12 .top3 { font: 400 70px/1.12 "MaShan"; color: #ffe036; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
       .v12 .bottom1 { font: 400 58px/1.08 "MaShan"; color: #fff; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
       .v12 .bottom2 { font: 400 62px/1.08 "MaShan"; color: #ffe036; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
 
@@ -163,7 +212,7 @@
       .v15 .bottom2 { font-size: 92px; font-weight: 900; color: #fff; }
 
       /* 16：米白小标题、白色大数字标题 */
-      .v16 .top1 { font: 400 48px/1.1 "XiaoWei"; color: #fff1af; -webkit-text-stroke: 5px #111; paint-order: stroke fill; }
+      .v16 .top1 { font: 400 80px/1.1 "XiaoWei"; color: #fff1af; -webkit-text-stroke: 5px #111; paint-order: stroke fill; }
       .v16 .top2 { font: 400 68px/1.04 "XiaoWei"; color: #fff; -webkit-text-stroke: 7px #111; paint-order: stroke fill; }
       .v16 .top3 { font-size: 52px; font-weight: 900; color: #fff; -webkit-text-stroke: 6px #111; paint-order: stroke fill; }
       .v16 .bottom1 { font: 400 70px/1.04 "XiaoWei"; color: #fff0b0; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
@@ -175,6 +224,8 @@
       .v17 .top3 { font-size: 118px; font-weight: 900; color: #ffdb16; -webkit-text-stroke: 13px #111; paint-order: stroke fill; }
       .v17 .bottom1 { font-size: 54px; font-weight: 900; color: #ffdb16; -webkit-text-stroke: 8px #111; paint-order: stroke fill; }
       .v17 .bottom2 { font-size: 84px; font-weight: 900; color: #fff; -webkit-text-stroke: 10px #d80c0c; paint-order: stroke fill; }
+      #root:not(.v18) .top { top: 8%; }
+      #root:not(.v18) .bottom { bottom: 15%; }
 
       /* 18：直角全画幅视频，粉白私域运营标题 */
       .v18 .media-video {
