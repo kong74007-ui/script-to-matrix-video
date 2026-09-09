@@ -42,7 +42,7 @@ window.__previewRows = [
     "top2": "发起100场老板茶话会",
     "top3": "想进群评论区扣666 拉你进群",
     "bottom1": "实体老板｜自媒体博主｜行业精英",
-    "bottom2": "交友破圈｜信息差｜自媒体｜AI智能体",
+    "bottom2": "交友破圈｜信息差｜\n自媒体｜AI智能体",
     "videoA": "assets/library/clip12.mov",
     "videoB": "assets/library/clip13.mov",
     "bgm": "assets/bgm/bgm01.mp3"
@@ -112,7 +112,7 @@ window.__previewRows = [
     "variant": "v10",
     "top1": "我在深圳发起100场",
     "top2": "欢迎70.80.90的姐妹",
-    "top3": "自媒体｜AI沙龙｜抄经｜睡眠沙龙",
+    "top3": "自媒体｜AI沙龙｜\n抄经｜睡眠沙龙",
     "bottom1": "想要\n自我提升的",
     "bottom2": "扣666，我邀请你",
     "videoA": "assets/library/clip15.mov",
@@ -182,7 +182,7 @@ window.__previewRows = [
   {
     "name": "16-shenzhen-opc",
     "variant": "v16",
-    "top1": "我在深圳发起了\n共享办公 共享创业 OPC 自媒体平台",
+    "top1": "我在深圳发起了共享办公\n共享创业 OPC 自媒体平台",
     "top2": "我有流量 共创600场地",
     "top3": "专注成长 搞💰 又懂感恩 共享创业",
     "bottom1": "坐标：深圳-南山",
