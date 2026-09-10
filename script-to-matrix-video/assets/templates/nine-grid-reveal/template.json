@@ -1,0 +1,19 @@
+{
+ "id":"nine-grid-reveal",
+ "name":"九宫格开场·全屏展示",
+ "version":3,
+ "renderer":"hyperframes@0.8.33",
+ "canvas":[1080,1920],"fps":30,"duration":12,
+ "grid_reveal_order":[5,4,1,2,3,6,9,8,7],
+ "grid_reveal_frames":[5,23,32,42,51,60,68,78,85],
+ "fullscreen_frame":96,"text_frame":0,
+ "text_fields":["title","tagline"],
+ "grid_media_fields":["grid1","grid2","grid3","grid4","grid5","grid6","grid7","grid8","grid9"],
+ "full_screen_media_fields":["main1","main2","main3"],
+ "bgm":{"mode":"bound","path":"assets/audio/reference-bgm.m4a","sha256":"d9b3d892623b9dfc9dee4f8642e2844e3700c13a9795e76b48e3a96b24ac9874","duration":12,"start":0,"volume":1},
+ "text_limits":{"title":9,"tagline":16},
+ "grid_source_min_seconds":3.2,
+ "fullscreen_source_windows":[{"field":"main1","in":3.2,"out":6.3},{"field":"main2","in":2,"out":4.7},{"field":"main3","in":2,"out":5}],
+ "audio_note":"固定绑定用户参考视频的原BGM，随模板保存；任务无需传入BGM，不随机选曲、不参与批量轮换。仓库所有者已确认随模板公开同步；音轨不因此成为开源音频，其他使用者仍须确认自身使用权限。",
+ "media_policy":"仅用户提供或已审核素材库视频，不生成AI素材。九格使用9段独立素材，全屏可复用其中3段。"
+}

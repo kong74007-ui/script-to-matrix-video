@@ -2,10 +2,11 @@
 
 Read this reference when the user asks to choose, compare, or batch-rotate text-media-text styles.
 
-The Skill contains 26 approved templates in two engines:
+The Skill contains 27 approved templates across two engines and three groups:
 
 - eight standard FFmpeg templates whose machine-readable source of truth is `assets/templates/catalog.json`;
-- 18 exact HyperFrames reference-typography templates whose source of truth is `assets/templates/reference-typography-17/manifest.json`.
+- 18 exact HyperFrames reference-typography templates whose source of truth is `assets/templates/reference-typography-17/manifest.json`;
+- one independent HyperFrames `nine-grid-reveal` template whose source of truth is `assets/templates/nine-grid-reveal/template.json`.
 
 Select a standard template with:
 
@@ -28,11 +29,13 @@ The renderer resolves the selected template first and then applies explicit proj
 
 The additional stable IDs are listed in [the 18-template reference pack](reference-typography-templates.md). They run through `scripts/render_reference_typography.py`, not `scripts/render_video.py`.
 
+For 九宫格开场接全屏展示, choose `nine-grid-reveal` and read [its independent workflow](nine-grid-reveal.md). It runs through `scripts/prepare_nine_grid.py` and HyperFrames `0.8.33`: 1080×1920, 30 fps, fixed 12 seconds, title and CTA visible from frame 0 through the end, nine distinct grid videos, and three full-screen inputs. Its bundled reference BGM is copied unchanged and does not participate in batch music rotation. The standard catalog and `ref-` manifest remain unchanged.
+
 No other bundled template_id is supported. Do not invent, alias, or silently fall back from a removed template.
 
 ## Shared structure
 
-Every bundled template follows the same top-text / middle-media / bottom-text structure. The 18 reference templates may split the top into three independently styled text layers and the bottom into two independently styled text layers. `ref-18-beauty-private-domain` uses straight-edged full-frame video, bundled Noto Serif SC at real 600/700 weights, a subtle 3-degree right oblique, large pink and white Song-style top copy, and an offset two-line lower block; it does not reproduce the rounded app-card container from its screenshot reference.
+The eight standard and 18 reference templates follow the top-text / middle-media / bottom-text structure below. The independent nine-grid composition follows its own fixed layout and motion specification. The 18 reference templates may split the top into three independently styled text layers and the bottom into two independently styled text layers. `ref-18-beauty-private-domain` uses straight-edged full-frame video, bundled Noto Serif SC at real 600/700 weights, a subtle 3-degree right oblique, large pink and white Song-style top copy, and an offset two-line lower block; it does not reproduce the rounded app-card container from its screenshot reference.
 
 - 1080×1920 vertical canvas.
 - Visible top margin is about 5% (96–100px).
@@ -43,7 +46,7 @@ Every bundled template follows the same top-text / middle-media / bottom-text st
 
 ## Semantic emphasis
 
-Each template owns its colors and scale through the catalog's emphasis_profiles. Providers emit only neutral [emphasis.v1](semantic-emphasis.md) spans. Use emphasis sparingly: one or two decisive phrases in the title and the CTA keyword.
+Each standard template owns its colors and scale through the catalog's emphasis_profiles. Providers emit only neutral [emphasis.v1](semantic-emphasis.md) spans. Use emphasis sparingly: one or two decisive phrases in the title and the CTA keyword. Nine-grid keeps its own fixed title and tagline typography.
 
 ## Fonts
 

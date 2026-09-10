@@ -1,0 +1,11 @@
+{
+  "name": "nine-grid-reveal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.33 preview",
+    "check": "npx --yes hyperframes@0.8.33 check",
+    "render": "npx --yes hyperframes@0.8.33 render --sdr --fps 30 --quality high --workers 4",
+    "publish": "npx --yes hyperframes@0.8.33 publish"
+  }
+}

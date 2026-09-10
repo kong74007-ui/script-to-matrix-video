@@ -4,6 +4,8 @@
 
 当前版本：`v1.8.7`
 
+2026-09-10 模板更新：新增独立的 `nine-grid-reveal` 九宫格开场·全屏展示，固定 12 秒，标题与 CTA 从首帧显示至结尾，并随模板保存和复用已授权同步到仓库的参考 BGM。
+
 ## 两个独立功能
 
 默认入口是 `text-media-text` 模板成片。用户未指定功能、只说“出个视频”、只给主题，或提供标题/CTA、截图、表格时，直接进入模板成片；只有明确要求完整文案成片、口播配音、语义分镜或保留长文案为完整视频时，才进入文案一键成片。
@@ -18,7 +20,7 @@
 
 模板成片只允许使用客户素材或素材库中状态为“可使用”的图片和视频，禁止 AI 生成素材。没有合适素材时返回 `material_missing`，不会使用无关素材填充。
 
-模板成片总时长硬性不低于 8 秒，常规范围为 8–15 秒。无配音时按以下公式计算：
+标准模板成片总时长硬性不低于 8 秒，常规范围为 8–15 秒。无配音时按以下公式计算：
 
 ```text
 目标时长 = max(8秒, 文字阅读时间 + 1.5秒)
@@ -28,13 +30,13 @@
 
 例外：18 套 `ref-` 参考排版不让用户填写时长。每条新任务自动随机生成 8–15 秒整数时长，并记录到准备清单；同一次任务重跑保持一致。每条固定使用 3 段不同的素材库视频并按总时长均分。选择它们时仍必须先把长文案压缩或拆条，不能为了塞字而破坏已确认的字号和层级。
 
-模板素材采用视频优先策略：8–10 秒至少使用 2 个不同素材，10–15 秒至少 3 个，默认至少包含 1 个素材库视频。只有两次视频检索均无合适结果并写明原因时，才允许纯图片成片。批量开启 BGM 时会轮换曲库：2–3 条成片至少 2 首，4 条及以上至少 3 首，相邻成片不得使用同一首。
+标准模板素材采用视频优先策略：8–10 秒至少使用 2 个不同素材，10–15 秒至少 3 个，默认至少包含 1 个素材库视频。只有两次视频检索均无合适结果并写明原因时，才允许纯图片成片。标准模板和参考排版批量开启 BGM 时会轮换曲库：2–3 条成片至少 2 首，4 条及以上至少 3 首，相邻成片不得使用同一首。九宫格使用下方独立规则，保留绑定音乐。
 
-批量渲染前必须运行 `scripts/validate_template_batch.py`，它会阻止单素材、无理由纯图片、A/B 素材重复、BGM 未轮换以及时长不足的任务进入渲染。
+标准模板批量渲染前必须运行 `scripts/validate_template_batch.py`，它会阻止单素材、无理由纯图片、A/B 素材重复、BGM 未轮换以及时长不足的任务进入渲染。
 
-## 26 套可复用视觉模板
+## 27 套可复用视觉模板
 
-`text-media-text` 现在包含两组稳定模板：8 套黑白字体排版标准模板，以及 18 套根据已确认案例保留下来的 HyperFrames 参考排版模板。默认仍是黑底左排粗体 `black-left-bold`；参考模板 ID 使用 `ref-01-...` 到 `ref-18-...`，覆盖 AI 沙龙、城市圈层、女性成长、同城活动、OPC 招募、美业私域和强 CTA 等排版。
+模板成片包含三组稳定模板：8 套黑白字体排版标准模板、18 套根据已确认案例保留下来的 HyperFrames 参考排版模板，以及独立的 `nine-grid-reveal`。默认仍是黑底左排粗体 `black-left-bold`；参考模板 ID 使用 `ref-01-...` 到 `ref-18-...`，覆盖 AI 沙龙、城市圈层、女性成长、同城活动、OPC 招募、美业私域和强 CTA 等排版。
 
 ```json
 {"layout": {"template_id": "black-left-bold"}}
@@ -43,6 +45,12 @@
 8 套标准模板位于 `script-to-matrix-video/assets/templates/catalog.json`，使用 FFmpeg 渲染；18 套参考排版位于 `script-to-matrix-video/assets/templates/reference-typography-17/`，使用固定版本 HyperFrames 渲染，并由 `scripts/render_reference_typography.py` 统一准备素材与批量输出。完整 ID、输入字段和适用场景见 [参考排版模板目录](script-to-matrix-video/references/reference-typography-templates.md)。
 
 8 套标准模板支持 `emphasis.v1` 语义重点；18 套参考模板直接固定五层文字的字号、颜色、描边和层级，输入 `top1`/`top2`/`top3` 与 `bottom1`/`bottom2` 即可复用，不在渲染期间调用模型。
+
+### 九宫格开场·全屏展示
+
+指定 `nine-grid-reveal` 或“九宫格开场接全屏展示”即可使用。模板固定为 1080×1920、30 fps、12 秒，标题和底部 CTA 从第 0 帧保持到结尾；九格按固定顺序显现，3.2 秒切全屏，并在 6.3、9 秒切换后续素材。输入 `title`、`tagline`、9 条独立 `grid` 视频和 3 条 `main` 视频；全屏素材可以复用九格素材，只允许客户提供或素材库中状态为“可使用”的视频。
+
+模板绑定 `assets/audio/reference-bgm.m4a`，准备脚本校验 SHA-256 后原样复制，不随机选曲、不参与批量 BGM 轮换。使用 `scripts/prepare_nine_grid.py` 在新项目目录准备，再用 HyperFrames `0.8.33` 检查并渲染；原有 18 套参考排版继续使用 `0.8.29`。完整输入、素材时长和出片流程见 [九宫格模板说明](script-to-matrix-video/references/nine-grid-reveal.md)。
 
 Skill 自带 `Noto Sans SC`、`Noto Serif SC`、`ZCOOL XiaoWei`、`Ma Shan Zheng`、`ZCOOL KuaiLe` 五个 OFL 中文字体家族，并自动交给对应渲染器加载，不依赖运行电脑碰巧安装了什么字体。详细选择建议见 [视觉模板目录](script-to-matrix-video/references/style-templates.md)。
 
@@ -74,11 +82,11 @@ v1.8.6 为第 18 套顶部和底部文字统一增加约 3° 的轻微右倾，�
 
 v1.8.7 将参考排版模板的 HyperFrames 固定版本从 `0.8.17` 升级到 `0.8.29`，提升 Windows 批量渲染、中文字体、音频时长、嵌套素材和 Studio 热更新的稳定性。
 
-PR 会运行零付费模板回归，校验标准模板目录、参考模板清单、字体、示例文件和批量输入规则。
+PR 会运行零付费模板回归，校验标准模板目录、参考模板清单、字体、示例文件、批量输入规则，以及九宫格绑定音频的完整性和复用行为。Windows 安装器在复制 Skill 前执行同样的九宫格校验。
 
 ## 模板案例视频
 
-仓库现在为全部 26 套模板保存了可直接查看的 MP4 和第一帧 JPG：8 套标准模板案例，以及 18 套参考排版案例。参考排版案例为 1080×1920、H.264/AAC；新任务时长随机为 8–15 秒。
+仓库为原有 26 套模板保存了可直接查看的 MP4 和第一帧 JPG：8 套标准模板案例，以及 18 套参考排版案例。参考排版案例为 1080×1920、H.264/AAC；新任务时长随机为 8–15 秒。新增九宫格提供可复用源模板和绑定 BGM，未将客户视频打包成公开案例。
 
 - [查看案例文案与 A/B 视频索引](script-to-matrix-video/references/template-examples.md)
 - [打开案例视频目录](script-to-matrix-video/assets/examples/text-media-text/)
@@ -101,7 +109,7 @@ Skill 首次安装必须连接自己的本地或 SSH 素材库，连接成功后
 ~/.codex/script-to-matrix-video/material-library.json
 ```
 
-个人配置只保存主机别名、用户名和素材库目录。密码、SSH 私钥、API 密钥和素材文件不会进入 Skill 或仓库。新电脑未通过 `inspect` 前不会开始成片，配置方式见 [安装说明](INSTALL.md)。
+个人配置只保存主机别名、用户名和素材库目录。密码、SSH 私钥、API 密钥和客户视频不会进入 Skill 或仓库；九宫格绑定 BGM 经用户授权随本次模板更新同步。新电脑未通过 `inspect` 前不会开始成片，配置方式见 [安装说明](INSTALL.md)。
 
 ## Windows 安装
 
@@ -130,6 +138,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 
 - Python 3.10+
 - FFmpeg 和 FFprobe
+- HyperFrames 模板需要 Node.js/npm；参考排版固定 `0.8.29`，九宫格固定 `0.8.33`
 - 阿里配音需要本机环境变量 `DASHSCOPE_API_KEY`
 - 远程素材库需要 OpenSSH 和已授权的 SSH 密钥
 - AI 图片能力只用于文案一键成片，不用于模板成片
@@ -154,14 +163,20 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 使用 $script-to-matrix-video 的“模板成片”批量功能，提取这些截图中的文案，每条生成2个版本；只使用客户素材或素材库素材，禁止AI生成；不要配音，BGM自动，并记录总时间和单条耗时。
 ```
 
+九宫格成片：
+
+```text
+使用 $script-to-matrix-video 的 nine-grid-reveal 模板，标题“输入公司名称”，底部“品质｜细节｜诚信｜口碑”；使用我提供的9条视频，保留模板固定BGM，直接输出12秒MP4。
+```
+
 更完整的功能边界和输入格式见 [功能介绍](功能介绍.md)。
 
 ## 仓库结构
 
 ```text
 script-to-matrix-video/   Skill 本体
-  assets/fonts/           4 个开源中文字体家族及许可证
-  assets/templates/       8 套标准模板与 18 套 HyperFrames 参考排版模板
+  assets/fonts/           5 个开源中文字体家族及许可证
+  assets/templates/       8 套标准模板、18 套参考排版及独立九宫格模板
   assets/examples/        26 套模板案例视频与首帧预览图
 install.ps1               Windows 安装器
 INSTALL.md                完整安装与连接配置

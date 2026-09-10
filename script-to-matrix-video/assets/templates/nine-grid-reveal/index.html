@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-composition-variables="[
+ {&quot;id&quot;:&quot;title&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题（最多9字）&quot;,&quot;default&quot;:&quot;输入公司名称&quot;,&quot;maxLength&quot;:9},
+ {&quot;id&quot;:&quot;tagline&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;底部短句（最多16字）&quot;,&quot;default&quot;:&quot;品质｜细节｜诚信｜口碑&quot;,&quot;maxLength&quot;:16},
+ {&quot;id&quot;:&quot;grid1&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;左上素材&quot;,&quot;default&quot;:&quot;assets/grid/01.mp4&quot;},
+ {&quot;id&quot;:&quot;grid2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;上中素材&quot;,&quot;default&quot;:&quot;assets/grid/02.mp4&quot;},
+ {&quot;id&quot;:&quot;grid3&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;右上素材&quot;,&quot;default&quot;:&quot;assets/grid/03.mp4&quot;},
+ {&quot;id&quot;:&quot;grid4&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;中左素材&quot;,&quot;default&quot;:&quot;assets/grid/04.mp4&quot;},
+ {&quot;id&quot;:&quot;grid5&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;中心素材&quot;,&quot;default&quot;:&quot;assets/grid/05.mp4&quot;},
+ {&quot;id&quot;:&quot;grid6&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;中右素材&quot;,&quot;default&quot;:&quot;assets/grid/06.mp4&quot;},
+ {&quot;id&quot;:&quot;grid7&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;左下素材&quot;,&quot;default&quot;:&quot;assets/grid/07.mp4&quot;},
+ {&quot;id&quot;:&quot;grid8&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;下中素材&quot;,&quot;default&quot;:&quot;assets/grid/08.mp4&quot;},
+ {&quot;id&quot;:&quot;grid9&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;右下素材&quot;,&quot;default&quot;:&quot;assets/grid/09.mp4&quot;},
+ {&quot;id&quot;:&quot;main1&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;全屏素材一&quot;,&quot;default&quot;:&quot;assets/main/01.mp4&quot;},
+ {&quot;id&quot;:&quot;main2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;全屏素材二&quot;,&quot;default&quot;:&quot;assets/main/02.mp4&quot;},
+ {&quot;id&quot;:&quot;main3&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;全屏素材三&quot;,&quot;default&quot;:&quot;assets/main/03.mp4&quot;}
+]">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=1080, height=1920">
+ <title>九宫格开场 · 全屏展示</title>
+ <script src="assets/vendor/gsap.min.js"></script>
+ <style>
+ @font-face{font-family:TemplateSerif;src:url('assets/fonts/NotoSerifSC-Variable.ttf') format('truetype');font-weight:100 900;font-display:block}
+ @font-face{font-family:TemplateSans;src:url('assets/fonts/NotoSansSC-Variable.ttf') format('truetype');font-weight:100 900;font-display:block}
+ *{box-sizing:border-box;margin:0;padding:0}
+ html,body,#root{width:1080px;height:1920px;overflow:hidden;background:#000000}
+ #root{position:relative;isolation:isolate}
+ .background{position:absolute;inset:0;background:#000000}
+ #grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,360px);grid-template-rows:repeat(3,640px);z-index:1}
+ .cell{position:relative;width:360px;height:640px;overflow:hidden;opacity:0;border-right:3px solid #000000;border-bottom:3px solid #000000}
+ .cell:nth-child(3n){border-right:0}.cell:nth-child(n+7){border-bottom:0}
+ .grid-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+ .fullscreen{position:absolute;inset:0;width:1080px;height:1920px;overflow:hidden;z-index:2}
+ .main-visual{position:absolute;inset:0;width:1080px;height:1920px;transform-origin:50% 50%}
+ .main-video{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover}
+ #type{position:absolute;inset:0;z-index:10;pointer-events:none;opacity:1}
+ #headline{position:absolute;left:54px;right:54px;top:190px;height:116px;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;font-family:TemplateSerif,serif;font-weight:900;font-size:82px;line-height:1.12;color:#ffffff;-webkit-text-stroke:2px #000000;paint-order:stroke fill;text-shadow:5px 6px 3px #000000}
+ #tagline{position:absolute;left:55px;right:55px;top:1590px;height:102px;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-family:TemplateSans,sans-serif;font-weight:900;font-size:58px;line-height:1.15;letter-spacing:1px;color:#ffffff;-webkit-text-stroke:2px #000000;paint-order:stroke fill;text-shadow:3px 4px 2px #000000}
+ </style>
+</head>
+<body>
+ <div id="root" data-composition-id="nine-grid-reveal" data-width="1080" data-height="1920" data-duration="12" data-fps="30">
+  <div class="background"></div>
+  <div id="grid">
+   <div id="cell1" class="cell"><video id="grid-video1" class="clip grid-video" src="assets/grid/01.mp4" data-var-src="grid1" data-start="0" data-duration="3.2" data-track-index="1" muted playsinline></video></div>
+   <div id="cell2" class="cell"><video id="grid-video2" class="clip grid-video" src="assets/grid/02.mp4" data-var-src="grid2" data-start="0" data-duration="3.2" data-track-index="2" muted playsinline></video></div>
+   <div id="cell3" class="cell"><video id="grid-video3" class="clip grid-video" src="assets/grid/03.mp4" data-var-src="grid3" data-start="0" data-duration="3.2" data-track-index="3" muted playsinline></video></div>
+   <div id="cell4" class="cell"><video id="grid-video4" class="clip grid-video" src="assets/grid/04.mp4" data-var-src="grid4" data-start="0" data-duration="3.2" data-track-index="4" muted playsinline></video></div>
+   <div id="cell5" class="cell"><video id="grid-video5" class="clip grid-video" src="assets/grid/05.mp4" data-var-src="grid5" data-start="0" data-duration="3.2" data-track-index="5" muted playsinline></video></div>
+   <div id="cell6" class="cell"><video id="grid-video6" class="clip grid-video" src="assets/grid/06.mp4" data-var-src="grid6" data-start="0" data-duration="3.2" data-track-index="6" muted playsinline></video></div>
+   <div id="cell7" class="cell"><video id="grid-video7" class="clip grid-video" src="assets/grid/07.mp4" data-var-src="grid7" data-start="0" data-duration="3.2" data-track-index="7" muted playsinline></video></div>
+   <div id="cell8" class="cell"><video id="grid-video8" class="clip grid-video" src="assets/grid/08.mp4" data-var-src="grid8" data-start="0" data-duration="3.2" data-track-index="8" muted playsinline></video></div>
+   <div id="cell9" class="cell"><video id="grid-video9" class="clip grid-video" src="assets/grid/09.mp4" data-var-src="grid9" data-start="0" data-duration="3.2" data-track-index="9" muted playsinline></video></div>
+  </div>
+  <div class="fullscreen"><div id="main1-visual" class="main-visual"><video data-color-grading="{&quot;preset&quot;:null,&quot;intensity&quot;:1,&quot;adjust&quot;:{&quot;exposure&quot;:0,&quot;contrast&quot;:0,&quot;highlights&quot;:0,&quot;shadows&quot;:0,&quot;whites&quot;:0,&quot;blacks&quot;:0,&quot;temperature&quot;:0,&quot;tint&quot;:0,&quot;vibrance&quot;:0,&quot;saturation&quot;:0},&quot;details&quot;:{&quot;vignette&quot;:0,&quot;vignetteMidpoint&quot;:0.5,&quot;vignetteRoundness&quot;:0,&quot;vignetteFeather&quot;:0.65,&quot;grain&quot;:0,&quot;grainSize&quot;:0.25,&quot;grainRoughness&quot;:0.5},&quot;effects&quot;:{&quot;blur&quot;:0.1,&quot;pixelate&quot;:0,&quot;chromaBleed&quot;:0,&quot;tapeDamage&quot;:0,&quot;tapeTracking&quot;:0,&quot;tapeNoise&quot;:1,&quot;tapeSpeed&quot;:0.5,&quot;filmArtifacts&quot;:0,&quot;halftone&quot;:0,&quot;halftoneSize&quot;:0,&quot;twoInkPrint&quot;:0,&quot;twoInkPrintSize&quot;:0,&quot;ascii&quot;:0,&quot;asciiSize&quot;:0.06578947368421052,&quot;asciiInvert&quot;:0,&quot;asciiStyle&quot;:0,&quot;asciiColor&quot;:1,&quot;asciiRotation&quot;:0,&quot;dither&quot;:0,&quot;ditherSize&quot;:0,&quot;bloom&quot;:0,&quot;bloomRadius&quot;:8,&quot;monoScreen&quot;:0,&quot;monoScreenSize&quot;:0,&quot;monoScreenAngle&quot;:0,&quot;monoScreenSpread&quot;:0,&quot;monoScreenShape&quot;:0,&quot;monoScreenInvert&quot;:0,&quot;scanlines&quot;:0,&quot;scanlineCount&quot;:0,&quot;scanlineSoftness&quot;:0,&quot;chromaticAberration&quot;:0,&quot;chromaticAngle&quot;:0,&quot;crtCurvature&quot;:0,&quot;digitalGlitch&quot;:0,&quot;digitalGlitchColorSplit&quot;:0,&quot;digitalGlitchLineTear&quot;:0,&quot;digitalGlitchPixelate&quot;:0,&quot;digitalGlitchBlockAmount&quot;:0,&quot;digitalGlitchBlockDisplacement&quot;:0,&quot;digitalGlitchBlockOpacity&quot;:0,&quot;digitalGlitchSpeed&quot;:0,&quot;engraving&quot;:0,&quot;engravingSpacing&quot;:0.4117647058823529,&quot;engravingMinThickness&quot;:0.2,&quot;engravingMaxThickness&quot;:0.4571428571428572,&quot;engravingAngle&quot;:0.25,&quot;engravingContrast&quot;:0.4666666666666667,&quot;engravingSharpness&quot;:0.59,&quot;engravingWave&quot;:0.2,&quot;engravingWaveFrequency&quot;:0.2222222222222222,&quot;crosshatch&quot;:0,&quot;crosshatchSpacing&quot;:0.28,&quot;crosshatchThickness&quot;:0.25,&quot;crosshatchAngle&quot;:0.25,&quot;crosshatchContrast&quot;:0.3333333333333333,&quot;crosshatchEdges&quot;:0.5,&quot;crosshatchLineWeight&quot;:0,&quot;crosshatchWave&quot;:0.33,&quot;crosshatchWaveFrequency&quot;:0.2222222222222222,&quot;kuwahara&quot;:0,&quot;kuwaharaRadius&quot;:0.14285714285714285,&quot;kuwaharaSharpness&quot;:0.3125,&quot;kuwaharaSaturation&quot;:0.5},&quot;lut&quot;:null,&quot;colorSpace&quot;:&quot;rec709&quot;}" style="--hf-color-grading-blur:0.1" id="main-video1" class="clip main-video" src="assets/main/01.mp4" data-var-src="main1" data-start="3.2" data-duration="3.1" data-media-start="3.2" data-track-index="11" muted playsinline></video></div></div>
+  <div class="fullscreen"><div id="main2-visual" class="main-visual"><video id="main-video2" class="clip main-video" src="assets/main/02.mp4" data-var-src="main2" data-start="6.3" data-duration="2.7" data-media-start="2" data-track-index="12" muted playsinline></video></div></div>
+  <div class="fullscreen"><div id="main3-visual" class="main-visual"><video id="main-video3" class="clip main-video" src="assets/main/03.mp4" data-var-src="main3" data-start="9" data-duration="3" data-media-start="2" data-track-index="13" muted playsinline></video></div></div>
+  <div id="type">
+   <div id="headline"><span aria-hidden="true">—</span><span id="title" data-var-text="title">输入公司名称</span><span aria-hidden="true">—</span></div>
+   <div id="tagline" data-var-text="tagline">品质｜细节｜诚信｜口碑</div>
+  </div>
+  <audio id="bgm" class="clip" src="assets/audio/reference-bgm.m4a" data-start="0" data-duration="12" data-track-index="20" data-volume="1"></audio>
+ </div>
+ <script>
+ // Registry stagger-lattice informed the slot structure. The reference has
+ // instantaneous reveals, not the registry example's styling/slide/fade.
+ const tl = gsap.timeline({paused:true});
+ tl.set('#cell5',{opacity:1},5/30);
+ tl.set('#cell4',{opacity:1},23/30);
+ tl.set('#cell1',{opacity:1},32/30);
+ tl.set('#cell2',{opacity:1},42/30);
+ tl.set('#cell3',{opacity:1},51/30);
+ tl.set('#cell6',{opacity:1},60/30);
+ tl.set('#cell9',{opacity:1},68/30);
+ tl.set('#cell8',{opacity:1},78/30);
+ tl.set('#cell7',{opacity:1},85/30);
+ tl.set('#grid',{opacity:0},96/30);
+ // One-frame impact, not slow enlargement of the entire nine-grid.
+ tl.set('#main1-visual',{scale:1.17},96/30);
+ tl.set('#main1-visual',{scale:1},97/30);
+ tl.set('#main-video1',{'--hf-color-grading-blur':0},97/30);
+ window.__timelines = window.__timelines || {};
+ window.__timelines['nine-grid-reveal'] = tl;
+ </script>
+</body>
+</html>

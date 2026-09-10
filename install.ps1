@@ -18,9 +18,12 @@ if (-not (Test-Path -LiteralPath $sourceEntry -PathType Leaf)) {
 $catalogPath = Join-Path $sourceSkill 'assets\templates\catalog.json'
 $referenceManifestPath = Join-Path $sourceSkill 'assets\templates\reference-typography-17\manifest.json'
 $referenceRendererPath = Join-Path $sourceSkill 'scripts\render_reference_typography.py'
+$nineGridManifestPath = Join-Path $sourceSkill 'assets\templates\nine-grid-reveal\template.json'
+$nineGridPreparerPath = Join-Path $sourceSkill 'scripts\prepare_nine_grid.py'
+$nineGridTestPath = Join-Path $sourceSkill 'scripts\test_nine_grid_bgm.py'
 $fontRoot = Join-Path $sourceSkill 'assets\fonts'
 $fontSourcesPath = Join-Path $fontRoot 'sources.json'
-foreach ($requiredPath in @($catalogPath, $referenceManifestPath, $referenceRendererPath, $fontSourcesPath)) {
+foreach ($requiredPath in @($catalogPath, $referenceManifestPath, $referenceRendererPath, $fontSourcesPath, $nineGridManifestPath, $nineGridPreparerPath, $nineGridTestPath)) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
         throw "Skill v1.8 runtime files are incomplete: $requiredPath was not found."
     }
@@ -52,8 +55,8 @@ foreach ($template in $referenceTemplates) {
 }
 
 $fontSources = Get-Content -LiteralPath $fontSourcesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-if (@($fontSources.fonts).Count -ne 4) {
-    throw 'Font source manifest must contain exactly four bundled font families.'
+if (@($fontSources.fonts).Count -ne 5) {
+    throw 'Font source manifest must contain exactly five bundled font families.'
 }
 foreach ($font in $fontSources.fonts) {
     $fontName = [string]$font.file
@@ -88,6 +91,10 @@ if ($LASTEXITCODE -ne 0) {
 & $pythonCommand.Source (Join-Path $sourceSkill 'scripts\test_material_library.py')
 if ($LASTEXITCODE -ne 0) {
     throw 'Source Skill material-library regression failed; the existing installation was not changed.'
+}
+& $pythonCommand.Source $nineGridTestPath
+if ($LASTEXITCODE -ne 0) {
+    throw 'Source Skill nine-grid template/bound-BGM validation failed; the existing installation was not changed.'
 }
 
 if ($isFirstInstall) {
