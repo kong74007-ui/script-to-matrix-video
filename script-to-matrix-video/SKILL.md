@@ -81,6 +81,7 @@ updated: 2026-09-11T00:00:00Z
 
 - 字体：**模板锁定**（内置私有字体），不传 font_family。
 - 时长：**随机整数 8~15 秒**，按任务锁定，用户不可指定（§6.1）。
+- **批量限制（2026-09-10 客户实录）**：HyperFrames 模板（ref-* 与 nine-grid-reveal）平台**直接拒绝批量**（报「HyperFrames 模板暂仅支持单条生成」）；要 N 条只能逐条 generate、每条文案必须不同（同参数 5 分钟去重只返回同一 job_id，ok=false 是正常提示不是失败），或如实告知一次只能出一条并问清是否改文案。
 - 排版：**AI 语义断句**（§6.2）把标题/行动文案按真实字体排进模板的 top1/top2/(top3)/bottom2 层。
 - 素材：3~5 段（服务端选，§6.3）。
 - 详情见 `references/reference-typography-templates.md`。
@@ -148,6 +149,7 @@ updated: 2026-09-11T00:00:00Z
 - 提交后**只轮询 task** 查原 job_id(s) 直到终态；batch 保存全部 job_ids。
 - 平台渲染并发上限 active_job_cap=5：「有任务在排队/生成中」是限流排队，**不是报错**，如实告知用户稍候即可。
 - 批量部分失败：保留已接受任务，按返回的结构化恢复指引处理（jobs/job_ids），**绝不新建整批**；仅当返回 batch_result_pending 且明确要求恢复时，才用完全相同输入重放一次。
+- **批量只对非字体锁定模板开放**（当前 full-overlay-bold / poster-split）：ref-* 与 nine-grid-reveal 平台直接拒绝批量（「HyperFrames 模板暂仅支持单条生成」），要 N 条 = 逐条 generate 且每条文案必须不同（同参数 5 分钟去重只返回同一 job_id），或如实告知一次只能出一条（详见规则 3 口径）。
 
 ## 8. 渲染链路（技术背景，Agent 无感）
 
