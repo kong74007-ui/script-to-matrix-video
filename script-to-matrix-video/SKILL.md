@@ -207,6 +207,8 @@ updated: 2026-09-11T00:00:00Z
 
 ## 11. 仓库文件地图与部署注意
 
+- 新增离线资产 [双语错位字幕·配音成片（bilingual-stagger-salon）](references/bilingual-stagger-salon.md)：白色手写标题、黄色关键词、中英双层字幕按配音逐字错位入场，三条以上不同真实视频、短叠化和微推近。用 `scripts/prepare_bilingual_stagger.py` 准备任务，HyperFrames 0.8.38 检查与渲染。时长跟随配音，不随机 8–15 秒，无绑定 BGM；此模板明确保留文字动效，不改变其他模板。只公开代码、共享字体及许可证，配音和库视频不公开。仅离线源码，不代表上线主站；实时目录未返回此 ID 时不得提交生产任务。
+
 - 新增离线资产 [固定双镜开场·横向甩切（fixed-opening-whip）](references/fixed-opening-whip.md)：519 帧（17.3 秒），固定开头两段原画面及字幕，标题/辅助文案/CTA 从第 97 帧开始静态显示；后续四条不同视频填六槽，绑定原音轨。用户于 2026-09-14 允许公开两段开场提取视频；其余演示素材不分发。仅同步离线模板，未部署主站，实时目录未返回该 ID 时不得提交生产任务。
 
 - 新增离线资产 `brush-panel-transitions`（横屏笔刷分片·上下黑底）：454 帧、HyperFrames 0.8.34、七条不同视频与八个素材槽、红黄首帧静态文字、绑定原 BGM，不含原视频文字。使用说明见 [brush-panel-transitions](references/brush-panel-transitions.md)。仅同步离线源码与绑定音乐，不代表主站上线；实时目录未返回该 ID 时不得提交生产任务。

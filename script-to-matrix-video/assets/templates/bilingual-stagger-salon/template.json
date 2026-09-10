@@ -1,0 +1,19 @@
+{
+ "id":"bilingual-stagger-salon",
+ "name":"双语错位字幕·配音成片",
+ "status":"saved",
+ "renderer":"hyperframes",
+ "cliVersion":"0.8.38",
+ "dependencySha256":{"assets/vendor/gsap.min.js":"01dd8b539f953295af50578925270cdfd15260974e6aed4892ec9a76292d129b","../../fonts/MaShanZheng-Regular.ttf":"6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb","../../fonts/NotoSerifSC-Variable.ttf":"050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9"},
+ "width":1080,"height":1920,"fps":30,
+ "durationPolicy":"actual narration duration plus approximately 0.6 second tail; never random 8-15 seconds",
+ "bgm":null,"boundBgm":false,
+ "voicePolicy":"user supplied narration; transcribe and review per-character timestamps anew for each audio",
+ "fontDependencies":{"directory":"../../fonts","files":["MaShanZheng-Regular.ttf","OFL-MaShanZheng.txt","NotoSerifSC-Variable.ttf","OFL-NotoSerifSC.txt"]},
+ "fontSizes":{"title":128,"subtitle":80,"chineseCaption":82,"englishCaption":38},
+ "layout":{"titleY":140,"subtitleY":278,"captionRowY":[1260,1450]},
+ "motion":{"chinese":"0.20s character rise 48/58/68px, alternating -5/+6deg rotation; word-aligned starts","english":"0.18s word rise with 0.035s stagger","title":"0.30s slide/rise entrance, 0.18s exit unless held to final frame","media":"0.18s crossfade, proportional 2.5-3% push"},
+ "mediaPolicy":{"minimumDistinctSources":3,"aiGeneratedAllowed":false,"demonstrationFootageBundled":false},
+ "distribution":"Template HTML source, preparation helper, GSAP runtime and shared OFL fonts only; excludes narration, library video, reference video, screenshots and completed examples.",
+ "validation":{"approvedPrivateExamplesSeconds":[12.1,21.1],"formats":"1080x1920 30fps H264/AAC","fontMatch":"Portable approximate match to reference, confirmed in rendered examples"}
+}

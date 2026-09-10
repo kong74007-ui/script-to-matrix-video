@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-resolution="portrait">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080, height=1920">
+<title>双语错位字幕 · 配音成片</title>
+<script src="assets/vendor/gsap.min.js"></script>
+<script src="captions.js"></script>
+<style>
+@font-face{font-family:Brush;src:url('assets/fonts/MaShanZheng-Regular.ttf')}
+@font-face{font-family:ReferenceSerif;src:url('assets/fonts/NotoSerifSC-Variable.ttf');font-weight:100 900}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{width:1080px;height:1920px;overflow:hidden;background:#000000}
+#root{position:relative;color:#ffffff}
+.shot{position:absolute;inset:0;overflow:hidden}
+.camera{position:absolute;inset:0;transform-origin:50% 50%}
+.camera.later{opacity:0}
+video{width:100%;height:100%;object-fit:cover;display:block}
+.headline{position:absolute;left:60px;width:960px;top:140px;text-align:center;font:128px/1.1 Brush;letter-spacing:5px;text-shadow:0 5px 5px #17130f,0 2px 2px #17130f;-webkit-text-stroke:1px #17130f;paint-order:stroke fill}
+ .headline.subtitle{top:278px;color:#fff36a;font:800 80px/1.2 ReferenceSerif;letter-spacing:0}
+.title-visual{opacity:0}
+.cue{position:absolute;left:65px;width:950px;top:1260px;text-align:center;white-space:nowrap;font-family:ReferenceSerif;color:#ffffff;text-shadow:0 5px 5px #17130f,0 2px 2px #17130f}
+.cue.row-1{top:1450px}
+.zh{font-weight:700;font-size:82px;line-height:1.24;-webkit-text-stroke:1px #17130f;paint-order:stroke fill}
+.en{font-size:38px;font-weight:400;line-height:1.4;margin-top:2px;-webkit-text-stroke:2px #17130f;paint-order:stroke fill}
+.char,.word{display:inline-block;opacity:0;transform-origin:50% 85%;will-change:transform,opacity}
+.accent{color:#fff36a}
+</style>
+</head>
+<body>
+<main id="root" data-composition-id="main" data-start="0" data-duration="__DURATION__" data-width="1080" data-height="1920">
+__MEDIA_HTML__
+__TITLE_HTML__
+ <div id="captions"></div>
+ <audio id="narration" data-start="0" data-duration="__VOICE_DURATION__" data-track-index="10" src="__VOICE_PATH__" data-volume="1"></audio>
+</main>
+<script>
+const tl=gsap.timeline({paused:true});
+__MEDIA_MOTION__
+function title(id,start,end,x){
+ tl.fromTo(id,{opacity:0,x,y:20},{opacity:1,x:0,y:0,duration:.30,ease:'power3.out'},start);
+ tl.to(id,{opacity:0,x:-35,duration:.18,ease:'power2.in'},end-.18);
+}
+__TITLE_MOTION__
+for(const cue of window.CAPTION_CUES){
+ const el=document.createElement('div');el.id=cue.id;el.className=`cue row-${cue.row}`;
+ // Individual cues are timeline-driven because stacked bilingual rows have overlapping windows.
+ const zh=document.createElement('div');zh.className='zh';
+ const en=document.createElement('div');en.className='en';
+ el.append(zh,en);document.querySelector('#captions').append(el);
+ // Exit the whole bilingual cue so a late glyph entrance cannot revive a quote or letter.
+ if(cue.end<__DURATION__)tl.to(el,{opacity:0,duration:.055,ease:'none'},cue.end-.055);
+ Array.from(cue.text).forEach((char,i)=>{
+  const span=document.createElement('span');span.className='char'+((cue.yellow||[]).includes(i)?' accent':'');span.textContent=char;zh.append(span);
+  const when=cue.times[i];
+  tl.fromTo(span,{opacity:0,y:48+(i%3)*10,rotation:(i%2?6:-5)},{opacity:1,y:0,rotation:0,duration:.20,ease:'power3.out'},when);
+ });
+ cue.en.split(' ').forEach((word,i)=>{
+  const span=document.createElement('span');span.className='word';span.textContent=word;en.append(span,document.createTextNode(' '));
+  tl.fromTo(span,{opacity:0,y:28,rotation:3},{opacity:1,y:0,rotation:0,duration:.18,ease:'power3.out'},cue.times[0]+.05+i*.035);
+ });
+}
+window.__timelines=window.__timelines||{};window.__timelines['main']=tl;
+</script>
+</body>
+</html>

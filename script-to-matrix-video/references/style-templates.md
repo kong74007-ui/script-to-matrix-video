@@ -1,6 +1,6 @@
 # 模板目录（主站现行，2026-09-10）
 
-> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。本仓库离线资产现保留 25 个模板（18 ref + 7 动效），原 8 个标准 FFmpeg 预设已删除。**2026-09-11 渲染服务侧实测 22 个模板：2 FFmpeg + 17 ref + nine-grid + triple-strip + yellow-banner**；主站对外目录因单个模板契约校验失败（ref-07）暂不可刷新、报「模板目录暂不可用」，用户可见模板数以主站页面实时为准（见 production-platform.md 的「目录刷新失败」）。两代区别见 `legacy-local-renderer.md`。
+> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。本仓库离线资产现保留 26 个模板（18 ref + 8 动效），原 8 个标准 FFmpeg 预设已删除。**2026-09-11 渲染服务侧实测 22 个模板：2 FFmpeg + 17 ref + nine-grid + triple-strip + yellow-banner**；主站对外目录因单个模板契约校验失败（ref-07）暂不可刷新、报「模板目录暂不可用」，用户可见模板数以主站页面实时为准（见 production-platform.md 的「目录刷新失败」）。两代区别见 `legacy-local-renderer.md`。
 
 渲染服务侧现行共 **22 个模板**（2026-09-11 实测）：2 个 FFmpeg 固定版式 + 17 个 HyperFrames 参考排版（ref-01~ref-17）+ 1 个九宫格开场 + 2 个特殊动效（triple-strip-shutter / yellow-banner-zoom）。**数量以实时目录为准，不要记写死的数字。**
 
@@ -8,7 +8,9 @@
 
 ### 仓库新增离线资产（不是线上目录项）
 
-2026-09-14 新增 [固定双镜开场·横向甩切（fixed-opening-whip）](fixed-opening-whip.md)：519 帧（17.3 秒），固定两段开头原画面和字幕，模板文字从第 97 帧开始静态显示；后续四条不同实拍素材填六槽，绑定原音轨。两段固定提取视频已获本次明确公开授权。当前离线资产为 **25 个（18 ref + 7 动效）**，本机另有 ref-19；未部署主站。
+新增 [双语错位字幕·配音成片](bilingual-stagger-salon.md)：`bilingual-stagger-salon`，白色手写标题、中英双层字幕按配音逐字错位入场，黄色关键词；至少三条不同实拍视频，短叠化和微推近。时长跟随配音，无绑定 BGM，默认不加音乐。只分发可复用代码、共享字体及许可证，不分发配音或库视频。当前离线共 26 个（18 ref + 8 动效），本机另有 ref-19；未部署主站。
+
+2026-09-14 新增 [固定双镜开场·横向甩切（fixed-opening-whip）](fixed-opening-whip.md)：519 帧（17.3 秒），固定两段开头原画面和字幕，模板文字从第 97 帧开始静态显示；后续四条不同实拍素材填六槽，绑定原音轨。两段固定提取视频已获本次明确公开授权。当时离线资产为 **25 个（18 ref + 7 动效）**，本机另有 ref-19；未部署主站。
 
 2026-09-11 新增 [brush-panel-transitions · 横屏笔刷分片·上下黑底](brush-panel-transitions.md)：454 帧（约 15.13 秒）、七条不同视频/八个槽、红黄首帧静态文字、绑定原 BGM，采用 HyperFrames 0.8.34；不含参考原文字。此前离线资产为 **24 个（18 ref + 6 动效）**，本机另有 ref-19。仅同步源码，不代表已部署；线上调用仍以实时目录为准。
 

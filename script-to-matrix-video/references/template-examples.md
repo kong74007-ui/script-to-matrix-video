@@ -1,5 +1,7 @@
 # Retained template examples
 
+`bilingual-stagger-salon`（双语错位字幕·配音成片）已保存为可复用模板，见 [使用说明](bilingual-stagger-salon.md)。已确认的配音演示仅保留在本机，不随公开 Skill 分发；无绑定 BGM。不能把演示配音或库视频作为模板依赖。
+
 The eight standard FFmpeg templates and their MP4/JPG examples were removed on 2026-09-10. Retained examples are visual references, not source footage for new productions. Motion templates retain their own source and bound BGM.
 
 ## 18 套参考排版案例
