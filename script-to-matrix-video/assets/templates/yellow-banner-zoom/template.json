@@ -1,0 +1,23 @@
+{
+  "id": "yellow-banner-zoom",
+  "name": "黄条标题·变幅冲击",
+  "version": 1,
+  "renderer": "hyperframes",
+  "hyperframesVersion": "0.8.33",
+  "width": 1080, "height": 1920, "fps": 30,
+  "frames": 302, "duration": 10.066666666666666,
+  "cutFrames": [0, 86, 183, 302],
+  "mediaSlots": 3,
+  "durationPolicy": "fixed-reference-bgm",
+  "textVisibleFromFrame": 0,
+  "aiGeneratedMediaAllowed": false,
+  "boundBgm": {
+    "path": "assets/audio/bound-bgm.m4a",
+    "sha256": "7822689569adca0db3ca2113cb17d2a0ace947a2af8d220a6e96f2b9cfe8db8f",
+    "duration": 10.053991, "start": 0, "volume": 1,
+    "source": "User reference 飞书20260910-043755.mp4, original AAC stream copied without re-encoding",
+    "publicRedistributionAuthorized": true
+  },
+  "fields": {"title":12,"subtitle1":16,"subtitle2":16,"sourceLabel":8,"body":90,"cta":24},
+  "notes": "Reference layout and cut boundaries measured; exact font and proprietary effect parameters are approximations. Optional subtitle2/sourceLabel/cta may be empty. No source footage is bundled."
+}

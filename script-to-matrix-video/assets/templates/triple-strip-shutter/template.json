@@ -1,0 +1,25 @@
+{
+  "id":"triple-strip-shutter",
+  "name":"三横屏开场·光栅快切",
+  "version":1,
+  "renderer":"hyperframes",
+  "duration":17.6,
+  "fps":30,
+  "width":1080,
+  "height":1920,
+  "durationPolicy":"fixed-reference-bgm",
+  "cutFrames":[0,117,199,281,363,445,528],
+  "openingSlots":3,
+  "mainSlots":5,
+  "textVisibleFromFrame":0,
+  "aiGeneratedMediaAllowed":false,
+  "boundBgm":{
+    "path":"assets/audio/bound-bgm.m4a",
+    "sha256":"96895f960060f986c034c13fcd5eb8ef1f467c7da250104f4d1976fd86b3c558",
+    "duration":17.577007,
+    "source":"User-supplied reference 飞书20260910-014627.mp4; extracted AAC without re-encoding",
+    "publicRedistributionAuthorized":true
+  },
+  "fields":{"title":10,"subtitle":18,"ctaLine1":14,"ctaLine2":14},
+  "notes":"Original font/rotation parameters cannot be recovered uniquely; measured cut and mask poses preserved. Text starts at frame zero by user override."
+}

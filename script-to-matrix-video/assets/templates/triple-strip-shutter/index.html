@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"主标题","default":"源头工厂","maxLength":10},{"id":"subtitle","type":"string","label":"副标题","default":"某某门窗工厂 实拍","maxLength":18},{"id":"ctaLine1","type":"string","label":"底部第一行","default":"品质铸就基石","maxLength":14},{"id":"ctaLine2","type":"string","label":"底部第二行","default":"服务赢得未来","maxLength":14}]'>
+<head>
+<meta charset="utf-8"><title>三横屏开场·光栅快切</title>
+<script src="assets/vendor/gsap.min.js"></script>
+<style>
+@font-face{font-family:"StripSans";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+*{box-sizing:border-box}body{margin:0;background:#000}
+#root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"StripSans",sans-serif;color:#fff}
+.backdrop{position:absolute;inset:0;background:#000}.shot{position:absolute;inset:0;width:1080px;height:1920px}
+.copy{position:absolute;inset:0;z-index:20;pointer-events:none}
+.title-box{position:absolute;left:144px;top:140px;width:792px;height:228px;display:flex;align-items:center;justify-content:center}
+.title{margin:0;font-size:186px;line-height:1.18;font-weight:900;white-space:nowrap;letter-spacing:-.065em;transform:skewX(-11deg);color:#fff;paint-order:stroke fill;-webkit-text-stroke:4px #142334;text-shadow:-4px -3px 0 #ed53c5,5px 5px 0 #26c9ff,11px 9px 0 #0b71ae}
+.subtitle-box{position:absolute;left:158px;top:410px;width:765px;height:135px;display:flex;align-items:center;justify-content:center}
+.subtitle{margin:0;font-size:78px;line-height:1.25;font-weight:900;letter-spacing:-.025em;white-space:nowrap;transform:skewX(-9deg);paint-order:stroke fill;-webkit-text-stroke:4px #142334;color:#fff;text-shadow:-3px -3px 0 #b9f6ff,4px 4px 0 #20bdff,7px 6px 0 #153d77}
+.underline{position:absolute;left:337px;top:362px;width:627px;height:23px;display:flex;gap:8px;align-items:center}
+.underline .line{height:6px;flex:1;background:#56ddff}.underline .slash{width:38px;height:20px;background:#36bff2;transform:skewX(-42deg)}.underline .slash:last-child{background:#4d63ec;width:86px}
+.chevrons{position:absolute;left:166px;top:56px;width:210px;height:90px;overflow:hidden;display:flex;gap:0}
+.chevron{flex:0 0 55px;height:83px;position:relative}.chevron svg{width:68px;height:83px;display:block;overflow:visible}
+.footer{position:absolute;left:164px;top:1507px;width:768px;height:224px;display:flex;flex-direction:column;gap:8px}
+.footer-row{height:94px;display:flex;align-items:center;max-width:660px}.footer-row:last-child{align-self:flex-end}
+.footer-text{display:block;margin:0;font-size:69px;line-height:1.2;font-weight:750;letter-spacing:-.025em;white-space:nowrap;transform:skewX(-10deg);paint-order:stroke fill;-webkit-text-stroke:4px #142334;text-shadow:3px 4px 0 #269dc8,7px 7px 1px #23587c;color:#fff}
+</style>
+</head><body>
+<div id="root" data-composition-id="triple-strip-shutter" data-width="1080" data-height="1920" data-duration="17.6">
+<div class="backdrop" data-layout-ignore></div>
+<div id="opening" class="shot clip" data-composition-id="strip-opening" data-composition-src="compositions/opening.html" data-width="1080" data-height="1920" data-start="0" data-duration="3.9" data-track-index="1"></div>
+<div id="main-01" class="shot clip" data-composition-id="strip-main-01" data-composition-src="compositions/main-01.html" data-width="1080" data-height="1920" data-start="3.9" data-duration="2.7333333333333334" data-track-index="1"></div>
+<div id="main-02" class="shot clip" data-composition-id="strip-main-02" data-composition-src="compositions/main-02.html" data-width="1080" data-height="1920" data-start="6.633333333333334" data-duration="2.7333333333333334" data-track-index="1"></div>
+<div id="main-03" class="shot clip" data-composition-id="strip-main-03" data-composition-src="compositions/main-03.html" data-width="1080" data-height="1920" data-start="9.366666666666667" data-duration="2.7333333333333334" data-track-index="1"></div>
+<div id="main-04" class="shot clip" data-composition-id="strip-main-04" data-composition-src="compositions/main-04.html" data-width="1080" data-height="1920" data-start="12.1" data-duration="2.7333333333333334" data-track-index="1"></div>
+<div id="main-05" class="shot clip" data-composition-id="strip-main-05" data-composition-src="compositions/main-05.html" data-width="1080" data-height="1920" data-start="14.833333333333334" data-duration="2.7666666666666666" data-track-index="1"></div>
+<div id="copy" class="copy clip" data-start="0" data-duration="17.6" data-track-index="20">
+<div class="chevrons" data-layout-ignore>
+<div class="chevron"><svg viewBox="0 0 68 83"><path d="M3 4 L64 41 L3 79 L3 63 L39 41 L3 19Z" fill="none" stroke="#42d8ff" stroke-width="2"/></svg></div>
+<div class="chevron"><svg viewBox="0 0 68 83"><path d="M3 4 L64 41 L3 79 L3 63 L39 41 L3 19Z" fill="none" stroke="#42d8ff" stroke-width="2"/></svg></div>
+<div class="chevron"><svg viewBox="0 0 68 83"><path d="M3 4 L64 41 L3 79 L3 63 L39 41 L3 19Z" fill="#23d5ff" stroke="#42d8ff" stroke-width="2"/></svg></div>
+<div class="chevron"><svg viewBox="0 0 68 83"><path d="M3 4 L64 41 L3 79 L3 63 L39 41 L3 19Z" fill="none" stroke="#42d8ff" stroke-width="2"/></svg></div>
+</div>
+<div class="title-box"><h1 id="title" class="title" data-var-text="title">源头工厂</h1></div>
+<div class="underline" data-layout-ignore><span class="line"></span><span class="slash"></span><span class="slash"></span><span class="slash"></span></div>
+<div class="subtitle-box"><p id="subtitle" class="subtitle" data-var-text="subtitle">某某门窗工厂 实拍</p></div>
+<div class="footer"><div class="footer-row"><p id="ctaLine1" class="footer-text" data-var-text="ctaLine1">品质铸就基石</p></div><div class="footer-row"><p id="ctaLine2" class="footer-text" data-var-text="ctaLine2">服务赢得未来</p></div></div>
+</div>
+<audio id="bound-bgm" class="clip" src="assets/audio/bound-bgm.m4a" data-start="0" data-duration="17.577007" data-track-index="30" data-volume="1"></audio>
+</div>
+<script>
+// User override: all four text layers stay opaque from frame zero; no delayed entrance.
+const tl=gsap.timeline({paused:true});
+tl.fromTo('.chevron',{x:0},{x:55,duration:.8,ease:'none',repeat:21},0);
+window.__timelines=window.__timelines||{};
+window.__timelines['triple-strip-shutter']=tl;
+document.fonts.ready.then(()=>{
+ const ctx=document.createElement('canvas').getContext('2d');
+ [['title',186,900,732],['subtitle',78,900,738],['ctaLine1',69,750,620],['ctaLine2',69,750,620]].forEach(([id,max,weight,width])=>{
+  const el=document.getElementById(id);let size=max;ctx.font=weight+' '+size+'px StripSans';
+  while(ctx.measureText(el.textContent).width>width&&size>30){size-=1;ctx.font=weight+' '+size+'px StripSans';}
+  el.style.fontSize=size+'px';
+ });
+});
+</script></body></html>

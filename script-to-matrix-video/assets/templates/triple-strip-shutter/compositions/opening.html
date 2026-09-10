@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"></head><body>
+<template>
+  <style>
+    #root { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; }
+    .black-ground { position:absolute; inset:0; width:1080px; height:1920px; background:#000; }
+    .strip { position:absolute; left:0; width:1080px; overflow:hidden; }
+    .strip-top { top:0; height:611px; }
+    .strip-middle { top:622.5px; height:642px; }
+    .strip-bottom { top:1276.5px; height:643.5px; }
+    .strip video { display:block; position:absolute; inset:0; width:1080px; height:100%; object-fit:cover; object-position:center; }
+  </style>
+  <div id="root" data-composition-id="strip-opening" data-width="1080" data-height="1920" data-duration="3.9">
+    <div class="black-ground"></div>
+    <div id="strip-opening-top" class="strip strip-top">
+      <video id="strip-opening-video-01" class="clip" src="assets/opening/01.mp4" data-start="0" data-duration="3.9" data-media-start="0" data-track-index="0" muted playsinline preload="auto"></video>
+    </div>
+    <div id="strip-opening-middle" class="strip strip-middle">
+      <video id="strip-opening-video-02" class="clip" src="assets/opening/02.mp4" data-start="0" data-duration="3.9" data-media-start="0" data-track-index="1" muted playsinline preload="auto"></video>
+    </div>
+    <div id="strip-opening-bottom" class="strip strip-bottom">
+      <video id="strip-opening-video-03" class="clip" src="assets/opening/03.mp4" data-start="0" data-duration="3.9" data-media-start="0" data-track-index="2" muted playsinline preload="auto"></video>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused:true });
+      // Measured reference frame positions, scaled uniformly from 720 to 1080.
+      // The frame-117 switch to full screen belongs to the host edit timeline.
+      const xAtFrame = [720,648,574,498,425,352,282,219,163,115,76,46,25,10,2,0];
+      const subjects = [
+        { selector:"#strip-opening-top", direction:1 },
+        { selector:"#strip-opening-middle", direction:-1 },
+        { selector:"#strip-opening-bottom", direction:1 }
+      ];
+      subjects.forEach(({selector,direction}) => {
+        tl.set(selector, {x:1080*direction}, 0);
+        for (let f=1; f<xAtFrame.length; f+=1) {
+          tl.fromTo(selector,
+            {x:xAtFrame[f-1]*1.5*direction},
+            {x:xAtFrame[f]*1.5*direction,duration:1/30,ease:"none",immediateRender:false},
+            (f-1)/30);
+        }
+      });
+      window.__timelines["strip-opening"] = tl;
+    })();
+  </script>
+</template>
+</body></html>

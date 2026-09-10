@@ -32,6 +32,10 @@ jobs:
         run: python script-to-matrix-video/scripts/test_material_library.py
       - name: Verify nine-grid template and bound BGM
         run: python script-to-matrix-video/scripts/test_nine_grid_bgm.py
+      - name: Verify triple-strip template and bound BGM
+        run: python script-to-matrix-video/scripts/test_triple_strip.py
+      - name: Verify yellow-banner template and bound BGM
+        run: python script-to-matrix-video/scripts/test_yellow_banner.py
       - name: Render zero-cost review artifacts
         run: python script-to-matrix-video/scripts/render_ci_artifacts.py "${{ runner.temp }}/template-regression"
       - name: Upload contact sheet and representative videos

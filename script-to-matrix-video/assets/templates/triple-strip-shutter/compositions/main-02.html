@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"></head><body>
+<template>
+  <style>
+    #root { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; }
+    .black-ground { position:absolute; inset:0; background:#000; }
+    .media-fill { position:absolute; inset:0; width:1080px; height:1920px; }
+    .media-fill video { position:absolute; inset:0; display:block; width:1080px; height:1920px; object-fit:cover; object-position:center; }
+  </style>
+  <div id="root" data-composition-id="strip-main-02" data-width="1080" data-height="1920" data-duration="2.7333333333333334">
+    <div class="black-ground"></div>
+    <div class="media-fill">
+      <video id="strip-main-02-video" class="clip" src="assets/main/02.mp4" data-start="0" data-duration="2.7333333333333334" data-media-start="0" data-track-index="0" muted playsinline preload="auto"></video>
+    </div>
+  </div>
+  <script>
+    (() => {
+      // The reference uses a hard cut here; source-camera movement remains in the footage.
+      const tl = gsap.timeline({ paused:true });
+      window.__timelines["strip-main-02"] = tl;
+    })();
+  </script>
+</template>
+</body></html>

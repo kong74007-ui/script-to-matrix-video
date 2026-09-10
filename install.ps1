@@ -21,6 +21,10 @@ $referenceRendererPath = Join-Path $sourceSkill 'scripts\render_reference_typogr
 $nineGridManifestPath = Join-Path $sourceSkill 'assets\templates\nine-grid-reveal\template.json'
 $nineGridPreparerPath = Join-Path $sourceSkill 'scripts\prepare_nine_grid.py'
 $nineGridTestPath = Join-Path $sourceSkill 'scripts\test_nine_grid_bgm.py'
+$additionalMotionTests = @(
+    (Join-Path $sourceSkill 'scripts\test_triple_strip.py'),
+    (Join-Path $sourceSkill 'scripts\test_yellow_banner.py')
+)
 $fontRoot = Join-Path $sourceSkill 'assets\fonts'
 $fontSourcesPath = Join-Path $fontRoot 'sources.json'
 foreach ($requiredPath in @($catalogPath, $referenceManifestPath, $referenceRendererPath, $fontSourcesPath, $nineGridManifestPath, $nineGridPreparerPath, $nineGridTestPath)) {
@@ -95,6 +99,15 @@ if ($LASTEXITCODE -ne 0) {
 & $pythonCommand.Source $nineGridTestPath
 if ($LASTEXITCODE -ne 0) {
     throw 'Source Skill nine-grid template/bound-BGM validation failed; the existing installation was not changed.'
+}
+foreach ($motionTest in $additionalMotionTests) {
+    if (-not (Test-Path -LiteralPath $motionTest -PathType Leaf)) {
+        throw "Motion-template validation entry is missing: $motionTest"
+    }
+    & $pythonCommand.Source $motionTest
+    if ($LASTEXITCODE -ne 0) {
+        throw "Motion-template/bound-BGM validation failed: $motionTest; the existing installation was not changed."
+    }
 }
 
 if ($isFirstInstall) {

@@ -1,0 +1,59 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"></head><body>
+<template>
+  <style>
+    #root { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; }
+    .black-ground { position:absolute; inset:0; width:1080px; height:1920px; background:#000; }
+    .reveal-mask, .incoming-picture { position:absolute; inset:0; display:block; width:1080px; height:1920px; }
+    .reveal-mask { overflow:hidden; }
+    .incoming-picture { transform-origin:50% 50%; }
+    .incoming-picture video { position:absolute; inset:0; display:block; width:1080px; height:1920px; object-fit:cover; object-position:center; }
+  </style>
+  <div id="root" data-composition-id="strip-main-03" data-width="1080" data-height="1920" data-duration="2.7333333333333334">
+    <div class="black-ground"></div>
+    <div id="strip-main-03-mask" class="reveal-mask">
+      <div id="strip-main-03-picture" class="incoming-picture">
+        <video id="strip-main-03-video" class="clip" src="assets/main/03.mp4" data-start="0" data-duration="2.7333333333333334" data-media-start="0" data-track-index="0" muted playsinline preload="auto"></video>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused:true });
+      const mask = "#strip-main-03-mask";
+      const picture = "#strip-main-03-picture";
+      // These three visible polygons are measured from the two identical reference entrances.
+      // Equal vertex counts make every intermediate seek deterministic.
+      const masks = [
+        "polygon(0px 454.5px,102px 277.5px,1080px 841.5px,1080px 1920px,0px 1920px)",
+        "polygon(0px 823.5px,0px 823.5px,1080px 135px,1080px 1920px,0px 1920px)",
+        "polygon(0px 360px,255px 0px,1080px 0px,1080px 1920px,0px 1920px)",
+        "polygon(0px 0px,0px 0px,1080px 0px,1080px 1920px,0px 1920px)"
+      ];
+      tl.set(mask, {clipPath:masks[0]}, 0);
+      for (let f=1; f<masks.length; f+=1) {
+        tl.fromTo(mask, {clipPath:masks[f-1]},
+          {clipPath:masks[f],duration:1/30,ease:"none",immediateRender:false}, (f-1)/30);
+      }
+      // Approximation: the flattened reference does not reveal the original transform
+      // origin or source-camera angle. This short alternating rotational whip provides
+      // the observed energetic entrance while the outer masks preserve exact geometry.
+      const poses = [
+        {f:0,rotation:30,scale:1.95},
+        {f:1,rotation:-32.5,scale:1.82},
+        {f:2,rotation:-12,scale:1.48},
+        {f:3,rotation:4,scale:1.18},
+        {f:6,rotation:0,scale:1}
+      ];
+      tl.set(picture, {rotation:poses[0].rotation,scale:poses[0].scale}, 0);
+      for (let i=1; i<poses.length; i+=1) {
+        const previous=poses[i-1], next=poses[i];
+        tl.fromTo(picture, {rotation:previous.rotation,scale:previous.scale},
+          {rotation:next.rotation,scale:next.scale,duration:(next.f-previous.f)/30,
+           ease:i===poses.length-1?"power2.out":"none",immediateRender:false}, previous.f/30);
+      }
+      window.__timelines["strip-main-03"] = tl;
+    })();
+  </script>
+</template>
+</body></html>
