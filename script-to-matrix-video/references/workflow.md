@@ -1,115 +1,42 @@
-# Complete production workflow
+# 平台端到端工作流（主站现行）
 
-Use this reference when planning or running a full video job.
+## 标准单条流程
 
-```mermaid
-mindmap
-  root((客户文案一键成片))
-    输入与理解
-      保留原始文案
-      识别客户与受众
-      提炼痛点与承诺
-      判断语气与内容类型
-      提取强制信息与禁用表达
-    全片策略
-      原生信息流风格
-      9比16通用母版
-      视觉圣经
-        色彩
-        人物与场景
-        镜头语言
-        字幕版式
-        动效强度
-      CTA
-        文案自带优先
-        约束池随机
-    语义分镜
-      开头钩子
-      痛点展开
-      原因或证据
-      解决方案
-      行动指令
-      每镜头一至三个素材
-    素材检索与生成
-      客户素材优先
-      可使用素材库
-        图片
-        视频
-        BGM
-        元数据语义检索
-        候选画面复核
-        复制到项目目录
-      AI图片补缺
-        素材提示词
-          全文上下文
-          当前分镜任务
-          统一画面风格
-          竖屏构图与字幕留白
-          负面约束
-        封面图
-        分镜主图
-        细节或对比图
-        失败最多重试两次
-        文字卡兜底
-    阿里语音
-      CosyVoice合成
-      分镜独立缓存
-      48k单声道WAV
-      读取真实音频时长
-      失败最多重试两次
-    时间轴锁定
-      音频时长加尾部缓冲
-      字幕按语义切块
-      素材时长分配
-      动效节奏
-      转场窗口
-    剪辑与包装
-      图片运镜
-        轻推近
-        轻拉远
-        横向平移
-        局部揭示
-      字幕烧录
-      语义音效
-      BGM
-        按整体内容选曲
-        交叉循环
-        淡入淡出
-        人声避让
-      风格化转场
-      分镜拼接
-    封面与首帧
-      独立封面文案
-      第一帧展示
-      不把文字交给生图模型
-    渲染与质检
-      H264加AAC
-      1080乘1920
-      30帧
-      检查首帧中段CTA
-      检查字幕安全区
-      检查音视频时长
-      输出MP4
-    可恢复与复用
-      项目清单
-      哈希缓存
-      单镜头重跑
-      素材库检索与来源记录
-      多客户矩阵生产
-```
+1. **要什么**：用户要「模板成片」= 顶部标题 + 底部行动文案两要素；缺则一次问清（不重复确认）。
+2. **查目录**：`matrix-template-templates` 拿实时模板 + 字体；`matrix-template-capability` 确认渠道可用。
+3. **给用户选**：挂带封面预览的模板选择卡（小样链接页面渲染成小缩略图，点开才播）；用户挑模板（+FFmpeg 模板可选字体）。
+4. **生成**：`matrix-template-generate`（top_text/bottom_text/template_id [+font_family/voiceover]）→ 第一段报价 → 运行时自动确认直出 → 拿 job_id。
+5. **轮询**：task 查原 job_id 到终态。
+6. **交付**：completed → 成片本体链接（相对路径、裸文本一行）+ 实测时长 + 「内测期免费、不扣点」；素材清单/来源链接绝不贴。
 
-## Stage gates
+## 批量流程
 
-| Gate | Must be true before continuing |
-|---|---|
-| Copy analysis | Audience, pain point, promised value, tone, and CTA policy are explicit |
-| Storyboard | Every source-copy idea is represented and each scene has one narrative function |
-| Material resolution | Every selected library record is `可使用`, has been visually checked, and is copied into the project; missing scenes have an AI-generation plan |
-| Visual generation | A global visual bible exists and each generated scene prompt inherits it |
-| Timing lock | With narration, every scene has a successfully probed audio duration; without narration, every scene has a positive explicit duration |
-| Render | Images/videos, audio, optional BGM, caption chunks, motion, and transition values resolve to local files or allowed defaults |
-| Delivery | Final MP4 probes successfully; opening, middle, CTA, contextual relevance, and audio balance spot checks pass |
+同上，第 4 步换 `matrix-template-batch-generate` + count 2~5；第 5 步保存全部 job_ids；部分失败按 `template-batch.md` 恢复指引处理。
 
-## Resume logic
+## 配音流程（可选）
 
-Resume from the first failed or stale artifact. An artifact is stale when its input hash no longer matches the copy, prompt, voice settings, or render settings recorded in the manifest. Do not discard unaffected scenes.
+1. `voices` 查音色，复制 ready 项的 voice_key（+voice_scope）。
+2. generate 带 `voiceover{text≤120, voice, voice_scope, speed}`；配音时 bgm 默认关。
+3. 成片时长跟随口播实测；完成后报实测时长。
+
+## 用户自带素材流程（通道未开通，现状）
+
+1. 素材先 image-upload / video-upload 拿 upload_id（confirm 直发、免费）。
+2. generate 带 user_materials（1~20 条）。
+3. 被 400「不支持的参数」拒 → 降级 ChatCut 剪辑出同款（照片全屏铺底 + 标题/底字按模板样式 9:16、时长对齐）并如实说明一句。
+4. 绝不谎称走了模板通道。
+
+## 失败与恢复
+
+- 渲染失败（黑屏/变量校验/素材失败）：检查后重试 1 次同参数；仍失败如实报原因。
+- 响应不确定：只按原 job_id/batch 查询或恢复，绝不新建。
+- 排队（active_job_cap=5）：如实告知「正在排队」，不是错误。
+
+## 交付检查清单（发回复前逐项过）
+
+- [ ] 链接是成片本体（result.video_url / `/api/v4/render/...`），不是素材来源/pexels
+- [ ] 相对路径、无域名无前缀
+- [ ] 时长照实测报
+- [ ] 标了「内测期免费、不扣点」
+- [ ] 转义符已还原（\n、\*、\"、\\）
+- [ ] 拿到 job_id 才说「已提交」

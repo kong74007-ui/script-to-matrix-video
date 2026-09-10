@@ -1,5 +1,7 @@
 # 黄条标题·变幅冲击
 
+> ⚠️ 本地渲染器文档（主站已退役，2026-09-10）：以下内容仅作离线参考，黄雀主站生产走平台矩阵模板能力，见 SKILL.md 与 legacy-local-renderer.md。
+
 独立模板 ID：`yellow-banner-zoom`。仅在用户明确选择这个 ID 或“黄条标题·变幅冲击”时使用。源码位于 `assets/templates/yellow-banner-zoom/`，由 `scripts/prepare_yellow_banner.py` 准备任务，再用固定的 HyperFrames `0.8.33` 渲染。该模板不加入标准 `catalog.json` 或 `ref-*` 清单，也不改变普通任务的默认模板。
 
 ## 固定画面与时序

@@ -4,6 +4,14 @@
 
 当前版本：`v1.8.7`
 
+> ## ⚠️ 黄雀主站现状（2026-09-10 起，先读这段）
+>
+> 黄雀主站上「模板成片」已平台化：由主站矩阵模板能力（matrix-template-*，20 个模板）在渲染机集群出片，成片子 Agent（hq-compose）用 `hq capabilities` / `hq run` 调用；本地渲染器（本仓库 `scripts/` 与下方两功能描述）在主站**已退役**，仅保留作离线参考、模板资产源与外部环境自渲染。
+>
+> **训练子 Agent 请读 `script-to-matrix-video/SKILL.md`（平台版正文）+ `references/production-platform.md`（平台对接完整规范）**；模板目录/语义断句/时长/素材/批量/交付红线均以这两份为准。生产模板目录 20 个：full-overlay-bold、poster-split（2 个 FFmpeg）+ ref-01~ref-17（17 个 HyperFrames 参考排版）+ nine-grid-reveal（九宫格开场）。
+>
+> 下方「两个独立功能」为本地渲染器时代的说明，仅归档参考。
+
 2026-09-10 模板更新：新增独立的 `nine-grid-reveal` 九宫格开场·全屏展示，固定 12 秒，标题与 CTA 从首帧显示至结尾，并随模板保存和复用已授权同步到仓库的参考 BGM。
 
 2026-09-10 后续同步：新增 `triple-strip-shutter` 三横屏开场·光栅快切和 `yellow-banner-zoom` 黄条标题·变幅冲击，两套源模板与各自绑定 BGM 经用户本次授权公开同步至 GitHub。当前仓库共 29 套模板。

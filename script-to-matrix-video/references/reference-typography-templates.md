@@ -1,82 +1,30 @@
-# 18 套参考排版模板
+# 参考排版模板（ref-01 ~ ref-17，主站现行）
 
-这组模板保留了用户确认过的 18 套文字排版、字号、字体、颜色、描边、文字层级和中间素材结构。它们使用 HyperFrames 渲染，与 `assets/templates/catalog.json` 中的 8 套标准 FFmpeg 模板相互独立。
+17 套 HyperFrames 参考排版模板（variant v01~v17，引擎 hyperframes 0.8.16，1080x1920@30）。字体模板锁定（内置私有字体，含马善政/站酷快乐体/站酷小薇体等），标题与行动文案由 **AI 语义断句** 按各 variant 的真实字体层合同排版（top1 开场钩子 / top2 说明 / top3 补充（部分 variant）/ bottom2 行动文案）。id/名称对应关系见 `style-templates.md`。
 
-## 选择表
+## 输入输出契约
 
-| template_id | 名称 | 适合内容 |
-|---|---|---|
-| `ref-01-chengdu-green-brush` | 成都绿描边手写 | 女性圈层、社群、成长 |
-| `ref-02-shenzhen-ai-orange` | 深圳 AI 橙色主标题 | AI 沙龙、获客、科技创业 |
-| `ref-03-zhengzhou-blue-banner` | 郑州蓝色标题红横条 | 城市活动、沙龙报名 |
-| `ref-04-foshan-yellow-strip` | 佛山黄色信息条 | 老板茶话会、同城活动 |
-| `ref-05-changsha-white-red` | 长沙白字红强调 | 聚会、破圈、邀约 |
-| `ref-06-guangzhou-yellow-button` | 广州黄色按钮 CTA | 读书会、女性组织、强转化 |
-| `ref-07-shenzhen-red-growth` | 深圳红色成长强调 | 高净值圈层、成长话题 |
-| `ref-08-puyang-yellow-white` | 濮阳黄白层级 | 中年女性圈层、聚会报名 |
-| `ref-09-urumqi-soft-brush` | 乌鲁木齐柔和手写 | 温暖女性社群、长期成长 |
-| `ref-10-shenzhen-sisters` | 深圳姐妹自我提升 | 姐妹圈、自我提升 |
-| `ref-11-nansha-clean` | 南沙清爽三层标题 | 创业沙龙、资源互换 |
-| `ref-12-guangzhou-brush` | 广州手写聚会 | 中年女性、资源链接 |
-| `ref-13-shenzhen-green-location` | 深圳绿色坐标 CTA | 本地活动、饭局、线下邀约 |
-| `ref-14-karamay-green` | 克拉玛依绿系手写 | 异地女性圈、资源共享 |
-| `ref-15-tianjin-monochrome` | 天津黑白极简 | 稳重圈层、退休生活、知识活动 |
-| `ref-16-shenzhen-opc` | 深圳 OPC 多层信息 | OPC、共享创业、项目招募 |
-| `ref-17-shenzhen-yellow-red` | 深圳黄红爆款层级 | 强钩子、强报名、矩阵引流 |
-| `ref-18-beauty-private-domain` | Noto Serif 粉白宋体＋3°轻微右倾＋底部错位 | 美业、私域运营、朋友圈、女性创业 |
+- 输入：top_text（2~60）、bottom_text（2~80）；**不传 font_family、不传 duration**。
+- 时长：**随机整数 8~15 秒**（`8 + sha256(job_id:template_id)%8`），任务内锁定并写入变量；模板变量声明 duration min=8，引擎 `--strict-variables` 校验——任何 7 秒时长都会报「Variable validation failed」（2026-09-10 已修复随机段，历史失败全部来自旧算法）。
+- 素材：3~5 段（required_visuals=3, max=5），策略 huangque-bookends-pexels-middle-v1（头尾黄雀库 + 中间 pexels），每段 2~3 秒切片，服务端选取。
+- 排版：语义断句结果由服务端生成并真字体校验，随任务冻结；Agent 不生成不传不改。
 
-## 输入字段
+## 语义断句层合同（semantic_layout v1）
 
-每条任务使用以下字段：
+每个 variant 的层合同（font_size_px / font_weight / max_width_px / max_lines）由渲染服务从模板 CSS 实测返回，主站 `_SEMANTIC_CONTRACTS` 有等值快照。结构：
 
-- `name`：输出文件名，只使用英文、数字、连字符或下划线。
-- `template_id`：上表中的一个稳定 ID。
-- `top1`、`top2`、`top3`：顶部三层文字；至少填写一层。
-- `bottom1`、`bottom2`：底部两层文字；至少填写一层。
-- `videoA`、`videoB`、`videoC`：三个不同的、已批准的本地视频素材。禁止 AI 生成素材、禁止图片替代，也禁止用同一个素材重复填充。
-- `bgm`：可选的已批准本地 BGM；省略时保留兼容音轨但静音。
+- top1：开场钩子（多数 variant 2 行，字号 70~118px）
+- top2：具体说明（无 top3 的 variant 4 行，有 top3 的 2 行，字号 50~104px）
+- top3：补充说明（v01/v04/v05/v06/v07/v08/v10/v11/v12/v16/v17 有；2 行）
+- bottom2：行动文案（2 行，字号 58~92px）
 
-不要输入 `duration`。每条任务在准备阶段自动随机生成一个 8–15 秒的整数时长，并写入工作目录中的 `batch/prepared-rows.json`。同一工作目录的 dry-run 与正式渲染复用该次随机结果；新任务使用新的随机结果。
+断点规则（服务端执行）：只在完整短语边界断；禁止拆数字组合、地名、行业词、多层名词短语、动宾短语、列举项、短 CTA；明显边界（标点/空格）自动并入；top1_end 必须取 top1 能独立排下的最早安全边界。
 
-示例：
+## 动效（服务端按任务种子生成，Agent 不指定）
 
-```json
-{
-  "rows": [
-    {
-      "name": "opc-shenzhen-a",
-      "template_id": "ref-16-shenzhen-opc",
-      "top1": "我在深圳发起了\n共享创业 OPC 门店",
-      "top2": "1个人＋AI员工",
-      "top3": "接待｜导购｜成交｜复盘",
-      "bottom1": "坐标：深圳-南山",
-      "bottom2": "想了解私信 OPC",
-      "videoA": "D:/approved-media/store-01.mp4",
-      "videoB": "D:/approved-media/ai-store-02.mp4",
-      "videoC": "D:/approved-media/customer-service-03.mp4",
-      "bgm": "D:/approved-media/bgm/track-01.mp3"
-    }
-  ]
-}
-```
+- 编辑计划 v2（editing_plan）：每段一个 motion（pan_left/pull_back/tilt/slow_push/pan_right 等）、bookends（entrance/exit，如 slide_left/circle_close）、段间 transition（whip_left/cube_flip/zoom_swap 等）、禁止的 color_effects 列表（老电影/褪色类，模板走现代干净路线）。
+- 片头片尾各约 0.5s 黑场由模板自身处理；文字从首帧全显，不做文字淡入。
 
-## 渲染
+## 与小样/示例的关系
 
-先完成素材库连接、素材检索和来源记录，再运行：
-
-```bash
-python scripts/render_reference_typography.py batch.json --quality high --workers 4
-```
-
-批量任务默认串行启动每个成片、单条内部使用 4 个 worker，避免本机内存峰值。脚本会把模板复制到任务自己的工作目录，不会修改 Skill 内的模板源文件。三个输入视频会在任务目录中循环补足到 15 秒，HyperFrames 完整渲染后再按该条记录的随机时长精确裁切，避免短素材或最后一段提前结束造成黑屏。
-
-这组版式固定为 1080×1920、30fps，单条时长由脚本随机设为 8–15 秒整数。三个素材按实际总时长自动均分，文字从第一帧完整显示且不做渐入。它适合短钩子和活动邀约；超过可读容量的文案必须先压缩或拆成多条，不要缩成难以阅读的小字。
-
-## 文件位置
-
-- 模板源文件：`assets/templates/reference-typography-17/`
-- 机器可读清单：`assets/templates/reference-typography-17/manifest.json`
-- 案例视频和封面：`assets/examples/text-media-text/reference-typography-17/`
-- 批量渲染脚本：`scripts/render_reference_typography.py`
-
-案例 MP4/JPG 只用于选款和视觉核对，禁止把案例视频重新当作内容素材投入新成片。
+仓库 `assets/examples/text-media-text/reference-typography-17/` 下 18 个 jpg/mp4 是本地渲染器时代的示例（含 18-beauty-private-domain，生产目录为 17 套），只作视觉参考，不作为模板目录依据；生产以 `matrix-template-templates` 实时返回为准。

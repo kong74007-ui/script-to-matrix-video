@@ -1,5 +1,7 @@
 # text-media-text template examples
 
+> ⚠️ 本地渲染器文档（主站已退役，2026-09-10）：以下内容仅作离线参考，黄雀主站生产走平台矩阵模板能力，见 SKILL.md 与 legacy-local-renderer.md。
+
 Read this reference when the user asks to see the 26 bundled templates or when visual calibration is needed.
 
 All examples use the same copy, 1080×1920 output, about 5% visible top margin, central approved video material, fixed bottom CTA, no narration, and no extra template effects. They are accepted visual references only; do not reuse their footage for a new client unless the user explicitly authorizes it.

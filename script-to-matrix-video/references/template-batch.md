@@ -1,56 +1,20 @@
-# Template batch validation
+# 批量模板成片（matrix-template-batch-generate，主站现行）
 
-Read this reference before rendering more than one `text-media-text` output. The validator makes duration, media variety, video-first selection, A/B differences, and BGM rotation deterministic across computers.
+## 契约
 
-## Batch manifest
+- 一条调用 `count` 2~5 条：`top_text + bottom_text + template_id + count`（+可选 font_family / voiceover）。
+- 一次调用生成整批，**绝不逐条单独 generate**；同一批共享一次报价与一次确认（内测期运行时自动确认直出）。
+- 批量任务由渲染服务按 batch_id（32hex）+ batch_index/batch_size（1~5）标记，整批独立成片；素材/切点/强调在批内做差异轮换（服务端按种子决定），文案本身不改。
+- **字体锁定的模板（ref-* / nine-grid-reveal）批量可用**；只有「字体参数」这类必须单条的能力才降级单条并说明（当前目录下没有这种模板）。
 
-Create one project manifest per output, then create a batch JSON beside them:
+## 提交后
 
-```json
-{
-  "bgm_policy": {"allow_mixed_enabled": false},
-  "jobs": [
-    {
-      "job_id": "01-A",
-      "copy_id": "01",
-      "variant_id": "A",
-      "project": "projects/01-A/project.json"
-    },
-    {
-      "job_id": "01-B",
-      "copy_id": "01",
-      "variant_id": "B",
-      "project": "projects/01-B/project.json"
-    }
-  ]
-}
-```
+- 保存返回的**全部 job_ids**，只轮询 task 查这些原任务直到终态。
+- 部分成功/部分失败：保留已接受任务与已出成片，按返回错误里的 jobs/job_ids 处理，**绝不新建整批**；仅当返回 batch_result_pending 并明确要求恢复时，才用完全相同输入、原 quote_token 重放一次。
+- 结果不确定（超时/网络错误）：先按原 batch_id / job_ids 查询，绝不盲目重发。
 
-Paths are relative to `batch.json`. A `projects` array of path strings is accepted for simple batches, but include `copy_id` and `variant_id` when producing A/B variants so duplicate media sets can be detected.
+## 与单条的区别
 
-Every project manifest must stay inside the folder that contains `batch.json`; absolute paths and `..` escapes are rejected. Run validation before starting render workers. Both validator and renderer use optimistic file snapshots plus an exclusive save lock, so a project changed by another process fails instead of silently overwriting the newer manifest. The renderer publishes its probed candidate MP4 only after that check and restores the previous output if manifest persistence fails.
-
-## Required preflight
-
-```powershell
-python scripts/validate_template_batch.py "D:\video-project\batch.json" --fix-duration --report "D:\video-project\batch-validation.json"
-```
-
-`--fix-duration` only extends project durations to the copy-based target. It never invents, substitutes, or downloads media and never changes BGM. A nonzero exit code means the batch is not ready to render.
-
-Projects may select a bundled style with `layout.template_id`. The validator resolves the same catalog as the renderer before checking `layout.preset`, then reports the resolved `template_id` per job. Do not expand and duplicate the full template object into every batch manifest.
-
-The validator rejects:
-
-- a duration below `max(8 seconds, reading time + 1.5 seconds)`;
-- fewer than two distinct assets through 10 seconds, fewer than three above 10 through 15 seconds, or fewer than four above 15 seconds;
-- image-only selection without an explicit documented fallback;
-- A/B variants of one copy that use the same full media set;
-- fewer than two distinct BGM tracks across two or three BGM-enabled outputs;
-- fewer than three distinct BGM tracks across four or more BGM-enabled outputs;
-- consecutive BGM-enabled jobs that reuse the same track.
-- a batch that enables BGM on only some outputs unless `bgm_policy.allow_mixed_enabled=true` explicitly records that mixed plan.
-
-Use each library record's `record_id` in `media` and `bgm`. When `record_id` is absent and a local file exists, the validator hashes the file so copying the same asset under different names cannot bypass the checks.
-
-After validation passes, render project manifests with safe concurrency and write the separate timing/status report required by the main Skill workflow.
+- 单条：matrix-template-generate，一次一条。
+- 批量：count 2~5。用户要「同一文案多条」或「一套文案多条」时优先批量。
+- 内测期两条路都直出无报价卡、免费不扣点。

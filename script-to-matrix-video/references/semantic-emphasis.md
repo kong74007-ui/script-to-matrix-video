@@ -1,57 +1,16 @@
-# Semantic emphasis for template videos
+# 关键词强调（semantic emphasis，主站现行）
 
-Read this reference before producing a `text-media-text` project that needs AI-selected large type or keyword emphasis.
+> 旧版「Agent 用 AI 逐字分析关键词、把强调结果写进项目文件」的职责已随本地渲染器退役。主站现状：关键词强调是**服务端渲染器内建行为**，Agent 不做关键词分析、不传强调参数。
 
-## Responsibility boundary
+## 现行行为
 
-- The calling Agent decides **which exact source spans matter** and writes `emphasis.v1`.
-- The selected `template_id` decides **how those spans look** through the catalog's `emphasis_profiles` map.
-- The renderer validates, lays out, and draws the result. It never calls a model.
+- **只作用于 2 个 FFmpeg 模板**（full-overlay-bold / poster-split）：目录 `emphasis_profiles` 定义各模板的强调参数（scale 放大倍率、color 强调色、outline 描边、role_colors 数字/利益点/CTA 角色色），渲染器按 `auto_highlight` 自动识别数字与利益关键词并上色放大。
+  - full-overlay-bold：黄 #FFD400 强调、8px 深描边、放大 1.18x。
+  - poster-split：黄 #FFD400 / 白利益点、7px 描边、放大 1.16x。
+- **17 个 ref 模板没有关键词强调**：固定排版 + 固定字体，文案按语义断句排版，不做大字号关键词变色。
+- 九宫格：标题/CTA 常驻，无关键词强调。
 
-Codex is the internal provider. A future Huangque Agent may replace it by emitting the same object; the renderer and templates do not change.
+## Agent 注意
 
-## Contract
-
-```json
-{
-  "emphasis": {
-    "schema_version": "emphasis.v1",
-    "provider": "codex",
-    "source_hash": "sha256...",
-    "prompt_version": "v1",
-    "top": [
-      {
-        "start": 7,
-        "end": 10,
-        "text": "一样大",
-        "role": "contrast",
-        "priority": 1,
-        "confidence": 0.95
-      }
-    ],
-    "bottom": []
-  }
-}
-```
-
-`top` and `bottom` offsets are zero-based Python string offsets into the first persistent `scene.top_text` and `scene.bottom_text`. Preserve that copy exactly. Calculate `source_hash` as SHA-256 of this canonical UTF-8 JSON, with sorted keys and compact separators:
-
-```json
-{"bottom":"<exact bottom_text>","top":"<exact top_text>"}
-```
-
-Use `template_policy.emphasis_source_hash(top_text, bottom_text)` when building a project programmatically.
-
-Supported roles are `number`, `contrast`, `pain`, `benefit`, `conclusion`, and `cta`. Priority `1` is strongest. Confidence must be from `0` through `1`; spans below `0.6` are ignored. Each region keeps at most three non-overlapping spans.
-
-The renderer rejects or drops rewritten text, stale hashes, out-of-range offsets, unsupported roles, overlaps, and excess spans. If the semantic object is absent or invalid, deterministic rules may highlight numbers, money, percentages, dates, quoted phrases, contrast clauses, and CTA phrases. It never invents or rewrites copy.
-
-## Precedence and fitting
-
-1. A scene's existing `top_highlights` or `bottom_highlights` remains the strongest explicit override.
-2. A valid top-level `emphasis.v1` is next.
-3. Deterministic fallback runs only when no valid semantic object controls the region and `auto_highlight` is enabled.
-
-The renderer protects emphasized phrases from automatic line breaks. It first wraps and sizes the base copy, then applies the template profile. If the highlighted run would overflow, it reduces the emphasis scale, then the base font size, and finally removes only the extra scale. It never truncates the source text.
-
-`emphasis_profiles` may set `scale`, `min_scale`, `color`, `outline_width`, `outline_color`, `underline`, `italic`, `bold`, `angle`, and per-role colors. Keep these visual settings in the catalog; providers must not emit styling instructions.
+- 不要向用户承诺「某个词会被放大标黄」到 ref 模板上；要强调效果建议选 FFmpeg 两模板。
+- 文案里的数字（价格/日期/数量）在两个 FFmpeg 模板上天然会被服务端强调，无需在文案里加特殊符号。

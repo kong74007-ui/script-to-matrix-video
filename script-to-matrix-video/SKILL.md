@@ -1,136 +1,184 @@
 ---
 name: script-to-matrix-video
-description: Create publishable multi-platform 9:16 Chinese lead-generation MP4s through two independent functions, defaulting to `text-media-text` template video when the user does not name a mode. The default template function uses persistent top copy, approved client/library media, a bottom CTA, optional BGM, and no narration; AI-generated media is forbidden. Also supports the independent nine-grid-reveal template for 九宫格开场接全屏展示. Use full script-to-video only when the user explicitly requests a narrated, storyboarded, or complete-script production. Use for 文案一键成片、模板成片、上文字中素材下文字、批量矩阵视频、素材库自动剪辑、AI 图片口播视频 or 矩阵引流视频. Do not use for manual frame-accurate editing of supplied footage.
+description: 黄雀主站模板成片（matrix-template）平台技能。顶部标题 + 底部行动文案 → 平台模板 → 9:16 成片。模板目录 20 个实时读取（2 个 FFmpeg 固定版式 full-overlay-bold/poster-split + 17 个 HyperFrames 参考排版 ref-01~ref-17 + 九宫格开场 nine-grid-reveal）。时长一律由服务端决定：ref 随机整数 8~15 秒、FFmpeg 按文案长度 8~15 秒、九宫格固定 12 秒、配音跟随口播。AI 语义断句、素材选取（黄雀库头尾 + pexels 中间）、字体锁定全部服务端自动，Agent 不生成不传不改。内测期直出无报价卡。Use for 模板成片、上文字中素材下文字、批量矩阵视频、九宫格开场接全屏展示。Do not use for 手动逐帧剪辑（video-compose/video-timeline-compose）或完整文案口播成片（text-video-*/director）。
+short_description: 模板成片平台技能：20 模板目录、语义排版契约、8~15 秒时长规则、素材策略、批量 2~5、直出交付纪律。
+short_description_zh: 黄雀模板成片平台技能：模板目录/语义排版/时长规则/素材策略/批量与交付红线，服务端自动项 Agent 不越俎代庖。
+version: 6
+updated: 2026-09-11T00:00:00Z
 ---
 
-# Script and Template Matrix Video
+# Script and Template Matrix Video（黄雀模板成片 · 平台版）
 
-Create the final MP4, not merely a storyboard. Keep intermediate project files so failed stages can resume without regenerating completed assets. Treat the following as two independent user-facing functions, not as one workflow with an incidental layout option.
+## 0. 本技能的两代实现（2026-09-10 定调，先读这里）
 
-## Two independent functions
+本仓库历史上是一个「本地渲染器技能」：Agent 在本机用 `scripts/` 里的 FFmpeg / HyperFrames 管线自己出片（两功能：Function 1 完整文案成片、Function 2 模板成片，29 个模板）。**2026-09-10 老板定调：模板成片直接派平台生成，本地渲染器在主站退役。** 现在的正确做法是：
 
-Default route: use Function 2 (`text-media-text`) whenever the user invokes this Skill without naming a function. Do not ask the user to choose between the two functions when the default has enough input to proceed.
+- **模板成片** = 主站平台能力族 `matrix-template-*`，由成片子 Agent（hq-compose）用 `hq capabilities` / `hq run` 调用，渲染发生在服务端（渲染机集群），Agent 不再本地渲染。
+- 本仓库现在的角色：① 渲染服务加载模板资产与目录的源（skill root）；② 训练子 Agent 的技能文档（本文件与 `references/`）。
+- 本地渲染器文档与脚本仍保留在仓库里（`scripts/`、`references/legacy-local-renderer.md`），仅供离线参考与回归，**主站生产不再使用**。
 
-### Function 1: Full script-to-video (`script-video`, explicit mode)
+因此本文件正文全部按**平台现行契约**编写。能力 id、参数、目录一律以 `hq capabilities --json` / `hq describe <id> --json` 实时结果为准，本文件是快照与解释，冲突时以实时目录为准。
 
-Use when the user explicitly asks for 文案一键成片、完整口播、配音、语义分镜、知识讲解完整版, or a complete client script preserved as a narrated/storyboarded production. Analyze the full context, split it into semantic scenes, retrieve or generate scene material, optionally synthesize narration, add subtitles, motion, transitions, SFX, BGM, and a dedicated first-frame cover.
+## 1. 平台功能边界（哪些活派给本技能）
 
-- Minimum input: the complete client copy.
-- Optional input: narration preference, platform, brand assets, material-library constraints, BGM preference, CTA, and style.
-- Output: one publishable MP4 by default, plus intermediates only when requested.
+| 用户要什么 | 走哪里 | 说明 |
+| --- | --- | --- |
+| 顶部标题 + 底部行动文案套模板出片（单条/批量） | **matrix-template-generate / matrix-template-batch-generate** | 本技能的核心。默认入口。 |
+| 九宫格开场接全屏展示 | matrix-template 系 + 模板 `nine-grid-reveal` | 同一个能力，只换 template_id，输入仍是两段文案。 |
+| 完整文案/口播/配音/语义分镜/长文成片 | text-video-generate（27 个文案成片模板）、director-* 族 | 另一族能力，不属于本技能；如用户明确要口播文案成片，转交对应域。 |
+| 手动逐帧剪辑、按时间轴拼多素材 | video-compose 链、video-timeline-compose | 不属于本技能。 |
+| 用户自带图片/视频套模板 | matrix-template + `user_materials`，通道未开通则降级（见 §5） | 先试一次平台，被拒降级剪辑出同款并如实说明。 |
 
-### Function 2: Template video (`text-media-text`, default)
+模板成片只吃「顶部标题 + 底部行动文案」两要素；素材、断句、字体、时长全部服务端决定（§6）。用户没给齐两要素就问清，一次问清不重复确认。
 
-Use by default for an unspecified “make a video” request, as well as when the user asks for 模板成片、上面文字中间素材下面文字, a fixed-title information card, or batch variants of that format. This function has its own inputs, workflow, and deliverables. It does not require a narration script or semantic storyboarding across a long article.
+## 2. 能力清单（hq capabilities 实时为准）
 
-- Minimum input: top title and bottom subtitle/CTA. Accept direct text, a table, or text extracted from supplied screenshots. If the user supplies only a topic and asks Codex to write the copy, draft both fields and continue. If the user supplies a title but no CTA, infer one using the constrained CTA rules below.
-- Optional input: background context, asset keywords, preferred image/video mix, BGM preference, duration, variant count, platform, brand style, and one bundled `template_id`.
-- Default behavior: use `layout.template_id: black-left-bold` for the 1080x1920 default style: no narration, fixed top and bottom text, central client-supplied or approved-library media, pure black background, left-aligned bold title, about 5% visible top margin, no divider or decoration, and auto BGM unless the user asks for silence. The Skill bundles 29 templates in three groups: eight standard FFmpeg templates (`black-left-bold`, `white-center-bold`, `white-handwritten`, `black-playful`, `white-left-editorial`, `black-right-modern`, `white-left-playful`, and `black-center-editorial`), 18 HyperFrames reference-typography templates whose IDs begin with `ref-`, and three independent motion compositions: `nine-grid-reveal`, `triple-strip-shutter`, and `yellow-banner-zoom`. Read [the style template catalog](references/style-templates.md) when the user asks to choose or compare styles. Read [the 18-template reference pack](references/reference-typography-templates.md) for a `ref-` choice, or [the nine-grid reference](references/nine-grid-reveal.md) for 九宫格开场接全屏展示. Do not invent or silently restore a removed template. For AI-selected keyword treatment, read [the semantic emphasis contract](references/semantic-emphasis.md), analyze each copy once, and reuse that neutral result across templates. Never generate AI media for this function. Enforce an 8-second hard minimum; calculate longer standard-template copy from reading time instead of defaulting every output to 8 seconds. For every `ref-` output, do not ask for or accept a duration: randomly assign one integer from 8 through 15 seconds during job preparation, record it in `prepared-rows.json`, and reuse it when the same task work directory is rendered again. Use three distinct approved video assets so every randomized duration satisfies the material policy.
-- Single mode: generate one or more variants for one copy.
-- Batch mode: accept multiple copy rows or screenshots and generate the requested number of variants per copy. Vary media choice, crop/start offset, highlight treatment, or palette without changing the copy's meaning. Render independent jobs with safe concurrency, isolate failures, and record batch start/end time, per-output render time, status, and file path in CSV or JSON.
-- Output: final MP4 files; for batch work, also return a ZIP and timing report unless the user requests individual files only.
-- Reference outputs: when the user asks to see examples or when visual calibration is needed, read [the template example index](references/template-examples.md). The bundled MP4s and JPGs are accepted output references, not source material for new videos.
+| 能力 id | 用途 | 要点 |
+| --- | --- | --- |
+| matrix-template-capability | 模板成片可用状态 | 开关 + 渲染服务健康；生成前可查 |
+| matrix-template-templates | 模板目录（含字体） | **先查后选**；template_id、font_family 只从实时结果取，绝不编造 |
+| matrix-template-generate | 单条模板成片 | top_text★ + bottom_text★ + template_id★；可选 font_family / voiceover / user_materials |
+| matrix-template-batch-generate | 批量 2~5 条 | 同上 + count★（2~5）；一次调用生成整批，绝不逐条 |
+| task | 轮询任务状态 | 提交后只轮询原 job_id(s)，直到终态 |
+| voices | 配音音色目录 | voiceover 的 voice 只从 ready 项复制 voice_key |
+| image-upload / video-upload | 上传素材拿 upload_id | 为 user_materials 做准备（上传免费不扣点，confirm 直发，约 4 小时有效） |
 
-Routing rule: Function 2 is the fallback whenever the mode is absent or ambiguous, including short requests such as “出个视频”, topic-only requests, headline/CTA copy, screenshots, tables, and ordinary matrix-video requests. Select Function 1 only when the user explicitly requests full-script production, narration/voiceover, semantic storyboarding, speech-synced subtitles, or preservation of a long script as a complete narrated video. An explicit mode always wins. Never switch a Function 2 job to Function 1 merely because library media is missing.
+## 3. 模板目录（20 个，2026-09-10 线上状态）
 
-When the user selects `nine-grid-reveal`, 九宫格开场, or 九宫格接全屏展示, use its independent Function 2 route in [the nine-grid reference](references/nine-grid-reveal.md). It fixes the output at 12 seconds and 30 fps, shows the title and CTA from frame 0 through the end, reveals nine distinct supplied/approved videos, and switches to three full-screen videos at 3.2 seconds. Preserve the bundled BGM unchanged; it is part of the template and is excluded from automatic music selection and batch rotation. Its input is `title`, `tagline`, nine `grid` records, and three `main` records, prepared with `scripts/prepare_nine_grid.py`. It does not use either existing template catalog or their render wrappers.
+实时目录见 `matrix-template-templates`（id/name/description/tags/engine/font_mode/variant/duration_mode/required_visuals/semantic_layout）。**绝不凭记忆报模板，绝不编 template_id。** 快照：
 
-## Defaults
+### 3.1 FFmpeg 固定版式（2 个，字体可选）
 
-- Operate in `auto` mode unless the user asks to review a stage.
-- Produce one universal `1080x1920`, 30 fps, H.264/AAC master for Douyin, Xiaohongshu, WeChat Channels, Kuaishou, and similar feeds.
-- Use the native-feed, problem-solution light-motion style: readable, human, direct, and less polished than a cinematic ad or slide deck.
-- For Function 1, prefer client-supplied assets, then semantically relevant library records whose `状态` is `可使用`, then AI-generated images as fallback. For Function 2, stop after client and approved-library assets; AI generation is forbidden. Copy selected library files into the project before rendering.
-- Generate missing images with the available AI image-generation capability only for Function 1. Do not require a third-party image API.
-- In Function 1, use Alibaba Cloud Bailian CosyVoice for Chinese narration by default. If the user asks for no narration, set `voice.enabled` to `false`, give every scene an explicit reading-duration, and render a silent AAC compatibility track without calling TTS. Function 2 defaults to no narration.
-- Function 1 includes burned-in Chinese subtitles and restrained semantic sound effects. Function 2 uses persistent top and bottom copy instead of speech-synced subtitles.
-- Set BGM to `auto` when a configured library has a suitable track and the user has not requested silence, except for the three independent motion templates, which keep their bound audio. An explicit no-BGM instruction always wins; handle it for a bound-music template as a separate custom version. With narration, keep music subordinate and enable ducking; without narration, use a restrained full music bed.
-- Derive total duration from the copy, semantic scenes, and actual synthesized audio, except for the independent motion templates: nine-grid is fixed at 12 seconds, triple-strip at 17.6 seconds, and yellow-banner at 302/30 seconds. Do not force a target duration for other modes.
-- In Function 1, generate a dedicated cover from the copy and use it as the first visible frame. In Function 2, the completed text layout itself is the first visible frame. For `nine-grid-reveal`, the first five frames intentionally show text on black before the first video tile appears.
-- Function 1 uses full-frame media by default. Function 2 uses `layout.template_id: black-left-bold`, backed by the `text-media-text` layout in [the layout template reference](references/layout-templates.md), unless the user explicitly selects another bundled template.
-- Return only the final MP4 to the user unless they request intermediate artifacts.
+| id | 名称 | 时长 | 特点 |
+| --- | --- | --- | --- |
+| full-overlay-bold | 沉浸强标题 | 按文案 8~15s | 素材全屏铺底、上下渐暗文字区、黄白强标题；私域/同城圈层/资源链接 |
+| poster-split | 三段式活动海报 | 按文案 8~15s | 上标题、中素材、下行动号召三段式，绿橙双层描边；活动/社群招募 |
 
-## Runtime prerequisites
+- 字体：`font_family` 可选，目录 fonts 实时为准；默认「自动搭配」。
+- 文案长度建议：顶 2~12 字、底 2~13 字观感最好（目录 layout 的 top_max_chars/bottom_max_chars）；过长会被服务端按字数把时长顶到上限甚至拒单（§6.1）。
 
-- A verified material-library connection is mandatory on every newly installed machine. Before the first render, read [the installation reference](references/installation.md), then run `python scripts/material_library.py inspect`. If it fails, stop the video task and help the user connect a local/mounted root or an SSH library with `material_library.py connect`; do not create a project, generate substitute media, or render until `inspect` succeeds. A successful connection is stored only in the per-user profile and does not need to be recreated for every job.
-- Before the first render on a machine, or when diagnosing setup failures, also run `python scripts/check_environment.py`. Add `--require-tts` when narration is enabled.
-- Rendering requires Python 3.10 or newer plus `ffmpeg` and `ffprobe` on `PATH`. HyperFrames templates additionally require Node.js/npm: the 18 `ref-` templates pin HyperFrames `0.8.29`, and all three independent motion templates pin `0.8.33`.
-- Alibaba narration additionally requires the Python packages in `requirements.txt` and a locally configured `DASHSCOPE_API_KEY`. Never copy the key into this Skill, a project manifest, or a distributable archive.
-- Function 1 AI image generation uses the image-generation capability available to the running Codex environment. If it is unavailable, request local images instead of claiming that generation succeeded. Function 2 must not call any image- or video-generation model.
-- The material library is a required first-run dependency. Read [the material-library reference](references/material-library.md) when connecting, inspecting, searching, or fetching. The helper accepts command-line settings, environment variables, or the per-user `~/.codex/script-to-matrix-video/material-library.json` profile. Remote access must use an existing SSH key or agent; never put a server password in this Skill, a project, a command, or an archive.
+### 3.2 HyperFrames 参考排版（17 个 ref-01~ref-17，字体模板锁定）
 
-## Inputs and inferred values
+| id | 名称 | variant |
+| --- | --- | --- |
+| ref-01-chengdu-green-brush | 成都绿描边手写 | v01 |
+| ref-02-shenzhen-ai-orange | 深圳 AI 橙色主标题 | v02 |
+| ref-03-zhengzhou-blue-banner | 郑州蓝色标题红横条 | v03 |
+| ref-04-foshan-yellow-strip | 佛山黄色信息条 | v04 |
+| ref-05-changsha-white-red | 长沙白字红强调 | v05 |
+| ref-06-guangzhou-yellow-button | 广州黄色按钮 CTA | v06 |
+| ref-07-shenzhen-red-growth | 深圳红色成长强调 | v07 |
+| ref-08-puyang-yellow-white | 濮阳黄白层级 | v08 |
+| ref-09-urumqi-soft-brush | 乌鲁木齐柔和手写 | v09 |
+| ref-10-shenzhen-sisters | 深圳姐妹自我提升 | v10 |
+| ref-11-nansha-clean | 南沙清爽三层标题 | v11 |
+| ref-12-guangzhou-brush | 广州手写聚会 | v12 |
+| ref-13-shenzhen-green-location | 深圳绿色坐标 CTA | v13 |
+| ref-14-karamay-green | 克拉玛依绿系手写 | v14 |
+| ref-15-tianjin-monochrome | 天津黑白极简 | v15 |
+| ref-16-shenzhen-opc | 深圳 OPC 多层信息 | v16 |
+| ref-17-shenzhen-yellow-red | 深圳黄红爆款层级 | v17 |
 
-For Function 1, the only required input is the client's complete copy. Infer the topic, audience, promise, tone, visual world, CTA, and reasonable scene count. Use supplied brand assets, required wording, products, offers, disclaimers, or platform constraints when present. Treat the complete copy as retrieval context; do not select material from a scene sentence in isolation.
+- 字体：**模板锁定**（内置私有字体），不传 font_family。
+- 时长：**随机整数 8~15 秒**，按任务锁定，用户不可指定（§6.1）。
+- 排版：**AI 语义断句**（§6.2）把标题/行动文案按真实字体排进模板的 top1/top2/(top3)/bottom2 层。
+- 素材：3~5 段（服务端选，§6.3）。
+- 详情见 `references/reference-typography-templates.md`。
 
-For Function 2, use a top title and bottom subtitle/CTA. When the user asks Codex to create copy from a topic, generate these fields without asking them to choose a function; ask only for the topic when no subject can be inferred. Infer content context, visual direction, reading duration, and asset-search terms. When text comes from screenshots, extract visible copy and normalize obvious masking such as `小○子` only when the intended character is unambiguous; otherwise preserve the visible wording or ask for the missing term. Do not reproduce play buttons, progress bars, account labels, or other platform UI from screenshot references.
+### 3.3 九宫格开场（1 个）
 
-If the copy already contains a CTA, preserve its intent. Otherwise choose one CTA from a constrained cross-platform pool and vary its wording: comment keyword, private message, follow for the next part, or save/share. Do not invent discounts, results, credentials, or guarantees.
+| id | 名称 | 时长 | 特点 |
+| --- | --- | --- | --- |
+| nine-grid-reveal | 九宫格开场接全屏展示 | **固定 12s**、30fps | 标题+行动文案全程常驻；前 3.2s 九宫格九画面，之后三格放大接全屏（0/4/8 位）；绑定 BGM（bgm_optional=true，可关） |
 
-## Function 1 workflow
+- 输入与普通模板相同（top_text + bottom_text 映射 title/tagline）；9 个画面 + 3 个全屏画面由服务端素材池选取（每段 3.0s 切片），**Agent 不挑画面**。
+- 详情见 `references/nine-grid-reveal.md`。
 
-1. Create a task-owned project folder outside the Skill directory and write `project.json` using [the project schema](references/project-schema.md). Preserve source copy verbatim in the manifest.
-2. Read [the complete workflow](references/workflow.md), then analyze the full copy before splitting it. Split by semantic beat, not sentence length. A scene may use one to three image assets.
-3. Choose one visual bible for the whole video. Read [the creative system](references/creative-system.md) before writing image prompts, motion, transitions, captions, cover copy, or CTA.
-4. Run `scripts/material_library.py inspect`, then search the connected library per semantic scene. Consider only `可使用` records, visually inspect the strongest candidates, then copy approved images, videos, and optional BGM into the project. Preserve each `record_id` and relative source path in the manifest.
-5. Generate the cover and any scene images still missing. Every prompt must combine the global visual bible with the current scene's narrative function and composition needs. Keep character, palette, lens language, and lighting consistent.
-6. When narration is enabled, run `scripts/aliyun_tts.py <project.json>`. It caches successful lines, records request IDs and exact durations, and stops after the initial request plus two retries per failed scene. Never print or store the API key. Skip this stage when `voice.enabled` is `false`.
-7. With narration, lock each scene duration only after TTS: `scene duration = probed audio duration + tail padding`. Without narration, set an explicit duration based on text reading time and visual complexity. Treat the resulting duration as the source of truth for motion, captions, and the edit.
-8. Add subtitle chunks, optional semantic SFX, per-asset motion, style-consistent transitions, and the resolved BGM configuration. If a structured layout is requested, read [the layout template reference](references/layout-templates.md) and record the selected layout in `project.json`. Avoid motion on every object and avoid transitions that compete with narration or music.
-9. Run `scripts/render_video.py <project.json>`. It renders image and video assets, subtitles, scene audio, and the configured BGM in one resumable pass. Preserve the render report and updated manifest.
-10. Inspect the opening frame, at least one middle frame, the CTA frame, and the final media probe. Confirm that captions fit safe areas, media is contextually relevant, voice is intelligible, music does not mask speech, no asset is missing, and the MP4 begins with the intended cover.
+## 4. 输入契约（generate / batch 的 payload）
 
-## Function 2 workflow
+| 字段 | 规则 |
+| --- | --- |
+| top_text★ | 2~60 字符（顶部标题；空格会被归一） |
+| bottom_text★ | 2~80 字符（底部行动文案） |
+| template_id★ | 1~64，`^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`；只从 matrix-template-templates 取 |
+| font_family | 可选；**只对 2 个 FFmpeg 模板有效**；ref/nine-grid 模板锁定，不要传 |
+| voiceover | 可选：`{text ≤120字, voice(从 voices ready 项复制 voice_key), voice_scope, speed 0.5~2.0}`；传了即开启配音 |
+| count | 2~5（仅 batch） |
+| user_materials | 可选 1~20 条 `{upload_id, media_type: image|video}`（通道状态见 §5） |
+| bgm | 无配音默认开；**配音时默认关**（开了则 bgm_volume 默认 0.2、0~1）；nine-grid 绑定 BGM 可关 |
 
-When the user names `triple-strip-shutter` / 三横屏开场·光栅快切, read [its workflow](references/triple-strip-shutter.md) and run `scripts/prepare_triple_strip.py --task <task.json> --output <new-project>`, then HyperFrames `0.8.33`. Keep 1080×1920, 30 fps, 528 frames (17.6 seconds), three opening strips and five main slots. Its four text fields remain visible from frame 0 to frame 527. Preserve the bound reference BGM; do not apply random duration, reading-time extension, image fallback, or batch music rotation.
+**没有 duration 字段**：用户无法指定时长，Agent 也不要试图传（CLI schema 里不存在，会被当未知参数拒）。时长一律服务端算（§6.1）。
 
-When the user names `yellow-banner-zoom` / 黄条标题·变幅冲击, read [its workflow](references/yellow-banner-zoom.md) and run `scripts/prepare_yellow_banner.py --task <task.json> --output <new-project>`, then HyperFrames `0.8.33`. Keep 1080×1920, 30 fps, 302 frames, three distinct approved videos, and cuts at frames 86 and 183. First/third slots use horizontal bands over blurred backgrounds; the middle fills the canvas. All six nonempty text fields remain static and visible throughout. Preserve its bound reference BGM; do not apply random duration, reading-time extension, image fallback, or batch music rotation.
+**semantic_layout 不是输入**：AI 语义断句由主站服务端生成并校验，Agent 不生成、不传、不改（§6.2）。
 
-Both new routes are explicit selections and do not change ordinary default-template jobs. User-provided/approved-library videos only; no AI-generated media. Fonts and effects approximate the supplied references; timing is fixed. The user authorized public repository synchronization of both templates and their bound audio on 2026-09-10. Source footage and material-library credentials are not bundled.
+## 5. 用户自带素材套模板（user_materials，2026-09-10 现状）
 
-For `nine-grid-reveal`, follow [its preparation, render, and verification workflow](references/nine-grid-reveal.md) instead of the standard/reference workflow below. Keep the fixed 12-second timing, first-frame title/CTA, nine distinct grid videos, three full-screen inputs, and hash-verified bound BGM. The normal reading-time calculation, random duration, image fallback, and batch BGM rotation do not apply to this template.
+- 用户明确说「用我的图/我的素材 + 套模板」→ 素材先 image-upload / video-upload 上传拿 upload_id（上传免费不扣点、confirm 直发、约 4 小时有效），payload 加 `user_materials`（1~20 条，顺序即画面顺序，视频可带 clip_start_seconds）。
+- **通道状态：尚未开通**（2026-09-10 服务器直测：提交返回 400「不支持的参数：user_materials」）。**只试一次**；被这样拒绝 → 降级走 ChatCut 剪辑出同款效果（用户照片全屏铺底 + 标题/底字按所选模板样式排 9:16、时长对齐模板），并如实告诉用户一句「平台带图套模板的通道还没开通，我先用剪辑帮你出同款效果」——**绝不谎称走了模板通道、绝不空手回去**。
+- 素材归属必须是用户本人上传的；路径从交接包「本会话上传」的 server:// 路径原样取，绝不猜、绝不编。
 
-1. Normalize each copy item into `top_text`, `bottom_text`, background context, optional media constraints, requested variant count, and BGM preference. Preserve the user's wording and CTA intent.
-2. Read [the layout template reference](references/layout-templates.md) and create one project manifest per output variant. Use `layout.template_id` instead of copying a complete style object when a bundled standard style fits; explicit project fields may override that template. If the selected ID begins with `ref-`, instead read [the 18-template reference pack](references/reference-typography-templates.md), normalize the copy into `top1`/`top2`/`top3` and `bottom1`/`bottom2`, and use that pack's HyperFrames batch schema. When semantic emphasis is requested for a standard template, read [the semantic emphasis contract](references/semantic-emphasis.md) and write one top-level `emphasis.v1` object using exact source offsets. The Agent chooses the words and roles; the template chooses their styling; no renderer calls AI. Reuse the same semantic result for style variants of unchanged copy. Bundled Chinese fonts load from the Skill, so do not depend on a machine-specific font install. For standard templates without narration, calculate `target duration = max(8 seconds, visible-copy reading time + 1.5 seconds)`. Use approximately five visible Chinese characters, letters, or digits per second; ignore whitespace and punctuation. The renderer repeats the same calculation and extends short manifests to the calculated target, not merely to 8 seconds. The normal target is 8–15 seconds. For a `ref-` job, omit `duration` from the input. The wrapper randomly assigns and records an integer duration from 8 through 15 seconds, then divides three distinct videos evenly across that chosen duration. Shorten or split copy that exceeds the selected layout's readable capacity rather than changing its typography.
-3. Analyze the complete title and CTA together before searching. Use only client assets or library images/videos marked `可使用`. Never call AI image/video generation, even when no candidate matches. Search `视频` first and `图片` second. For a standard-template 8–10 second output use at least two distinct assets; above 10 through 15 seconds use at least three; above 15 seconds use at least four or split the copy. Every `ref-` job always requires three distinct approved videos because its random duration can be 11–15 seconds. Include at least one contextually suitable video by default. An image-only fallback is permitted only for standard templates when two distinct video searches find no suitable approved record; record `material_policy.allow_image_only=true` and a non-empty `image_only_reason` in the project. The `ref-` pack does not accept image-only fallback.
-4. Build deliberate variants. Do not create duplicates by merely renaming the same render; change at least one meaningful visual dimension while preserving the copy.
-5. Add optional BGM, restrained SFX, subtle media motion, and readable highlight hierarchy. Keep `divider_height` and `media_border_width` at `0` unless the user explicitly requests a separator or border. For a BGM-enabled batch, retrieve a pool of at least three approved tracks. Rotate tracks in job order, never reuse the same track on consecutive outputs, use different tracks for A/B variants, require at least two distinct tracks for two or three outputs, and at least three distinct tracks for four or more outputs.
-6. For standard-template batch work, read [the template batch reference](references/template-batch.md), create `batch.json`, and run `python scripts/validate_template_batch.py <batch.json> --fix-duration --report <validation.json>` before any render. For a `ref-` batch, create the reference pack's `rows` JSON and first run `python scripts/render_reference_typography.py <batch.json> --dry-run`; its wrapper rejects missing text regions, unknown IDs, duplicate media, and invalid BGM rotation. Do not render a job while either validator reports an error.
-7. Run `scripts/render_video.py <project.json>` for each validated standard-template job. For a `ref-` job or batch, run `python scripts/render_reference_typography.py <batch.json> --quality high --workers 4`. For batch work, limit concurrency to machine capacity, keep a separate manifest and render report per job, and continue other jobs when one fails.
-8. Inspect the top text, central crop, bottom CTA, first frame, final probe, audio presence, and media provenance. Reject any Function 2 output whose media is not traceable to a supplied file or a `可使用` library record. For batch work, write a timing report containing batch start/end timestamps, total elapsed time, per-file render seconds, status, and final path; package the successful MP4s and report together.
+## 6. 服务端自动做的事（Agent 不越俎代庖）
 
-## Material and image rules
+### 6.1 时长规则（现行，2026-09-10 双修复后）
 
-- For Function 1 AI fallback, generate portrait images at 9:16 or at enough resolution to crop cleanly to 9:16. Function 2 may only crop or reframe supplied/library media and may not generate new media.
-- A scene may mix copied library videos and images through `media`. Use exact local project paths; never stream remote library files during final rendering.
-- Metadata search is candidate retrieval, not creative approval. Preview candidates and reject mismatched people, locations, embedded text, watermarks, weak framing, or repeated filler.
-- For Function 1 AI fallback, reserve composition space for captions and never ask the image model to render subtitle or CTA text.
-- In Function 1, use one to three assets only when the semantic beat benefits from a reveal, comparison, or detail cutaway. In Function 2, never hold one asset for the entire output: use the duration-based minimums defined above and change assets at meaningful intervals.
-- In Function 1, retry a failed scene image twice. On a third failure, use a designed text card or an already generated contextually compatible asset; do not restart the whole project.
-- In Function 1, record prompt, seed or generation ID when available, local path, and status in `project.json`. In Function 2, record the supplied-file path or library `record_id` for every media item.
+- ref 模板：**随机整数 8~15 秒**（`8 + hash%8`，按任务锁定；模板变量声明 min=8，引擎 --strict-variables 校验，出 7 秒必失败）。
+- FFmpeg 模板：`max(8.0, 可见字符数/5 + 1.5)`，上限 15；超长文案报「文案过长，请缩短标题或行动文案」。
+- nine-grid：固定 12 秒。
+- 配音：成片时长跟随口播实测时长（主站 cosyvoice 合成 + ffmpeg 混音，bgm_volume 生效）。
 
-## Timing and edit invariants
+### 6.2 AI 语义断句（semantic_layout，版本 1 契约）
 
-- When narration is enabled, audio duration is measured from the generated file, never estimated from character count. When narration is disabled, every scene must provide a positive explicit duration.
-- A `text-media-text` video's total duration may never be shorter than 8 seconds. The renderer calculates the copy-based target itself and extends the final scene to that target, so longer copy does not collapse to the 8-second floor. An explicit user duration below the calculated target does not override this guard.
-- Narration may not be cut to fit a visual. Extend or simplify the visual instead.
-- Prefer clean cuts, short dissolves, subtle push/slide transitions, and match-motion handoffs. Avoid random transition packs.
-- Render every title, fixed CTA, and overlay at full opacity from its first displayed frame. Do not apply text fade-in; a short fade-out and optional scale pop may remain. This rule does not disable media dissolves or scene transitions.
-- Captions should normally contain 7–14 Chinese characters per chunk and no more than two display lines. Break on meaning and punctuation.
-- Keep essential text inside mobile safe areas. Do not place CTA text against platform UI zones.
-- SFX should mark a real action, reveal, emphasis, or transition. Omit SFX when none improves comprehension.
-- BGM should follow the overall content and emotional arc, not a single keyword. Use crossfade looping, short fades, and conservative loudness. Enable ducking when narration exists. For the three independent motion templates, preserve the bound audio bytes, timing, volume, and existing fades instead of applying these automatic music treatments.
+- 主站用 gpt-4.1-mini 生成断句、gpt-4.1 修复，渲染服务 preflight 按真实字体回显校验；通过后随任务冻结。
+- 契约：`{version:1, model, source_sha256=sha256(top+"\0"+bottom), top1_end, top_break_after, bottom_break_after}`；只在完整短语边界断，数字组合/地名/行业词/动宾短语不拆。
+- 断句失败 = 任务未创建且未扣点，报「AI 断句失败…请重试」；Agent 把文案改短/改顺后重试即可，不要自行编断点。
 
-## Failure and cost control
+### 6.3 素材策略（huangque-bookends-pexels-middle-v1）
 
-- Cache artifacts by source text and settings. Reuse a successful audio or image unless its inputs changed.
-- In Function 1, make at most three total attempts per generated image or TTS scene. Record the sanitized error and use the defined fallback after that.
-- In Function 2, if no contextually suitable supplied or `可使用` library media exists, mark that output `material_missing` and report which semantic searches were attempted. Do not generate AI media, reuse unrelated filler, or silently switch to Function 1. Other batch jobs may continue.
-- Never expose `DASHSCOPE_API_KEY`, place it in a manifest, or echo it to logs.
-- Never store SSH passwords or material-library credentials in the Skill, manifest, logs, or packaged project.
-- A failed scene should not invalidate other completed scenes.
-- Do not make paid generation calls during dry runs, schema validation, or workflow explanation.
+- 头尾段用黄雀素材库、中间段用 pexels（china_query 检索、2~3s 切片）；ref 3~5 段、nine-grid 9 段 + 3 全屏。
+- **Agent 不挑素材**：除非 user_materials 通道开通，否则素材全由服务端按策略选。
+- 素材清单（material_manifest）只作内部审计：第三方署名字段（provider_url/contributor_url）平台已剥掉；**清单里的素材来源链接绝不是成片链接，严禁贴给用户**。
 
-## Completion criteria
+### 6.4 字体
 
-The job is complete only when every successful final MP4 exists and media probing confirms the requested canvas, playable H.264 video, AAC audio, and nonzero duration. For a single output, link the MP4 and briefly state its duration and resolution. For a batch, link the ZIP and timing report and state the success count, failure count, total elapsed time, and output count. Mention fallbacks only if they materially affected quality.
+- ref/nine-grid：模板锁定（内置私有字体，含马善政/站酷等）；FFmpeg：目录 fonts 可选或自动搭配。Agent 不编字体名。
+
+## 7. 报价、提交与轮询（内测期现状）
+
+- **报价系统已删除、内测直出**：`hq run` 第一段仍回报价（generation:quote），运行时自动确认提交（auto_submit），**拿到 job_id 才算已提交**；绝不重复提交同参数任务（防重复扣点）；统一标注「内测期免费、不扣点」。
+- 提交后**只轮询 task** 查原 job_id(s) 直到终态；batch 保存全部 job_ids。
+- 平台渲染并发上限 active_job_cap=5：「有任务在排队/生成中」是限流排队，**不是报错**，如实告知用户稍候即可。
+- 批量部分失败：保留已接受任务，按返回的结构化恢复指引处理（jobs/job_ids），**绝不新建整批**；仅当返回 batch_result_pending 且明确要求恢复时，才用完全相同输入重放一次。
+
+## 8. 渲染链路（技术背景，Agent 无感）
+
+主站 → render-relay（pull 队列，dapeng-server）→ 办公室 GPU 节点（tang/yuelei）出站认领渲染 → 成片回传 COS → 中转器流式取回。只读接口（templates/preflight/health）由中转器转发云端渲染服务。Agent 只面对一个统一 API，无需关心节点；`references/production-platform.md` 有完整协议。
+
+## 9. 交付纪律（老板红线，逐条执行）
+
+1. completed 结果：`video_url`（相对路径 `/api/v4/render/...`，**不加域名不加前缀**）、实测 `duration`、`material_manifest`（已剥第三方署名）。
+2. **成片只贴成片本体链接**：一行裸文本原样贴进回复；时长照实测报。
+3. **绝对禁止贴 material_manifest / pexels 等素材来源链接当成交片**——素材来源不是成片，贴了客户点开看不到自己的成片（任务 8007/8010 实录）。
+4. 模板选择卡挂**带封面预览**的选择卡；小样视频链接在对话页渲染成**小缩略图**（点开才播，不占满对话）。
+5. 回复文本里的转义符（\n、\*、\"、\\）必须还原，绝不露出原始转义。
+6. 拿到 job_id 才说「已提交」，绝不谎报；失败如实说原因与下一步。
+
+## 10. 失败与容错
+
+| 失败类 | 含义 | 处置 |
+| --- | --- | --- |
+| Variable validation failed | 时长 7s 违反模板 min=8（strict-variables） | 已修复（2026-09-10）；再遇到 = 渲染机代码未更新，报障并换机/重试 1 次 |
+| 模板成片存在持续黑屏 | 平台黑屏检测判定 | 换模板或重试 1 次；仍失败如实报 |
+| Pexels 素材文件读取失败 | 渲染机连不上 pexels | 生产节点（办公室）一般无此问题；云端直提任务时可能出现，重试或改走正常生产渠道 |
+| HTTP 400 / 不支持的参数 | 参数问题（如 user_materials 未开通） | 按 detail 修正；user_materials 场景走 §5 降级 |
+| 排队/限流 | active_job_cap=5 | 不是错误，如实告知稍候 |
+
+- 重试纪律：render 失败检查素材与参数后**重试 1 次同参数**；仍失败 → failed 说明原因，不重复扣点、不空手。
+- 响应不确定（超时/网络错误）绝不重复提交：只按原 job_id / request_id 查询或恢复。
+
+## 11. 仓库文件地图与部署注意
+
+- `script-to-matrix-video/SKILL.md`（本文件）：平台版技能正文。
+- `references/production-platform.md`：平台对接完整规范（能力 schema、语义排版算法、时长、素材策略、中转器协议、交付结构、失败类）。
+- `references/style-templates.md` / `reference-typography-templates.md` / `nine-grid-reveal.md` / `template-batch.md` / `material-library.md` / `semantic-emphasis.md` / `workflow.md`：现行平台契约分册。
+- `references/legacy-local-renderer.md` + `scripts/`：本地渲染器（主站已退役，仅离线参考/回归）。
+- `assets/templates/`：模板资产（渲染服务 skill root 的源）。**部署注意**：渲染服务校验 catalog.json 恰为 `full-overlay-bold` + `poster-split` 两个模板；本仓库 catalog.json 与生产副本存在版本差（渲染服务代码不在 git），拉取部署前必须先与生产 `/opt/huangque/matrix-template-video/source/upstream|reference-upstream/script-to-matrix-video/` 核对，否则会把目录校验打挂。

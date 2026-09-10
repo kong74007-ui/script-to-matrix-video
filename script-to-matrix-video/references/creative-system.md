@@ -1,5 +1,7 @@
 # Creative system
 
+> ⚠️ 本地渲染器文档（主站已退役，2026-09-10）：以下内容仅作离线参考，黄雀主站生产走平台矩阵模板能力，见 SKILL.md 与 legacy-local-renderer.md。
+
 Read this reference before storyboarding, material selection, and image generation.
 
 ## Default direction

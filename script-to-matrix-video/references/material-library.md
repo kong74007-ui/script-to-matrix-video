@@ -1,143 +1,27 @@
-# Material library integration
+# 素材库与素材策略（主站现行）
 
-Use this reference to connect and operate the required local or SSH-accessible
-Huangque-style material library. Every new machine must pass `inspect` before
-its first render; the video project must remain self-contained after selected
-files are copied into it.
+> 旧版「本地/SSH 素材库 + inspect 自检」流程已随本地渲染器退役，见 `legacy-local-renderer.md`。主站现状：素材全部由渲染服务按策略自动选取，Agent 不挑素材。
 
-## Mandatory first-run connection
+## 素材策略 huangque-bookends-pexels-middle-v1
 
-Connect and validate a local or mounted library:
+- **头尾（bookends）**：黄雀自有素材库（feishu-video-* 等上传素材，`可使用` 状态）。
+- **中间（middle）**：Pexels 视频（`pexels_china_query` 中文检索，如「中国女性聚会」「中国健康生活」），按文案主题词检索；来源含 pexels-video-* 记录（provider_video_id、source_url）。
+- 切片：每段 2~3 秒（`/v1/select` 只收 2~3s 的 clip_duration_seconds）；同一任务内素材互不重复。
+- 段数：ref 模板 3~5 段；九宫格 9 段 + 3 全屏；FFmpeg 模板按文案时长决定素材个数。
 
-```powershell
-python scripts/material_library.py connect --root "D:\media\huangque-media"
-```
+## 素材清单（material_manifest）纪律
 
-Or connect through an existing SSH key or agent:
+- 是渲染服务的**审计清单**（record_id/sha256/media_type/match_level/provider/clip_*），不是给用户的素材来源列表。
+- 主站已剥掉第三方署名字段（provider_url/contributor_url）。
+- **红线**：绝不把清单里的 pexels/素材来源链接当「成片链接」贴给用户（任务 8007/8010 实录：客户点开看不到自己的成片）。成片只贴 result.video_url。
 
-```powershell
-python scripts/material_library.py connect --host material-library-ssh-alias --user media-reader --remote-root /srv/huangque-media
-```
+## 用户自带素材（user_materials）
 
-Then verify the saved per-user profile:
+- 通道尚未开通（2026-09-10 实测 400「不支持的参数」）。主站 bridge 已实现 upload_id→sha256→`/v1/user-assets` 推送、渲染服务也支持 `[{"sha256","media_type"}]`，只等 CLI 目录开放。
+- 现状处置：只试一次；被拒降级 ChatCut 剪辑出同款并如实说明（见 SKILL.md §5）。
 
-```powershell
-python scripts/material_library.py inspect
-```
+## BGM
 
-The `connect` command writes the profile only after it can read a non-empty
-`index.jsonl`. If `inspect` fails, first-run setup is incomplete and the Skill
-must not create or render a video. Fix the connection instead of using unrelated
-or AI-generated replacement material.
-
-## Selection order
-
-1. Use assets explicitly supplied or required by the client.
-2. Search the configured library and consider only records whose `状态` is
-   `可使用`.
-3. Visually inspect the best metadata matches and copy only the assets that
-   actually support the current scene.
-4. In Function 1 (`script-video`) only, generate an AI image when no usable
-   supplied or library asset covers the scene.
-
-Function 2 (`text-media-text`) is library-only after supplied assets. AI image
-or video generation is prohibited. If no contextually suitable `可使用` record
-exists, mark the affected output `material_missing`, report the searches tried,
-and continue other batch jobs. Do not substitute unrelated filler.
-
-For Function 2, perform a type-filtered `视频` search before the `图片` search.
-Use at least one suitable video by default, plus enough distinct approved assets
-for the duration policy in `layout-templates.md`. Image-only output requires two
-failed video searches and a recorded fallback reason; it is not the normal path.
-
-Do not treat keyword similarity as final approval. Reject a candidate when its
-subject, location, demographic, action, embedded wording, quality, or visual
-tone conflicts with the full copy. Avoid repeated filler shots. One strong
-asset is preferable to three vaguely related assets.
-
-## Library contract
-
-The library root must contain `index.jsonl`. Each record should provide:
-
-- `record_id`
-- `素材名称`
-- `素材类型`: `图片`, `视频`, or `BGM`
-- `状态`
-- `server_relative_path`
-- useful semantic fields such as `标签`, `一级场景`, `二级场景`, `使用环节`,
-  `情绪氛围`, `画面方向`, `宽度`, `高度`, and `时长秒`
-
-The current workflow uses `状态 == 可使用` as the availability gate. It does
-not silently rewrite library metadata.
-
-## Inspect and search
-
-The helper resolves connection settings in this order: command-line arguments,
-`MATRIX_MATERIAL_LIBRARY_*` environment variables, then the per-user profile at
-`~/.codex/script-to-matrix-video/material-library.json`. The profile contains
-only non-secret routing settings:
-
-```json
-{
-  "host": "material-library-ssh-alias",
-  "user": "media-reader",
-  "remote_root": "/srv/huangque-media"
-}
-```
-
-Configure the SSH alias and identity in `~/.ssh/config`. Never put a password
-or private-key content in the JSON profile.
-
-Local library:
-
-```powershell
-python scripts/material_library.py inspect --root "D:\media\huangque-media"
-python scripts/material_library.py search --root "D:\media\huangque-media" --query "私域 社群 女性 商务" --type 视频 --orientation 竖屏
-```
-
-Remote library over SSH:
-
-```powershell
-python scripts/material_library.py search --host media.example.com --user media-reader --remote-root /srv/huangque-media --query "数据 商务 增长" --type 视频 --orientation 竖屏
-```
-
-Use space-separated semantic keywords rather than pasting the whole script.
-Search separately for each scene function: hook, comparison, proof, process,
-emotion, or CTA.
-
-## Copy selected assets into the project
-
-```powershell
-python scripts/material_library.py fetch --host media.example.com --user media-reader --remote-root /srv/huangque-media --record-id RECORD_ID --destination "D:\video-project\assets\library"
-```
-
-Remote mode uses the computer's existing SSH key or SSH agent. The helper has
-no password argument and must never be modified to put a password in a command,
-manifest, log, or distributable Skill. A read-only material-library account is
-preferred.
-
-Record the copied local path and source metadata in `project.json`. The renderer
-accepts copied images and videos through each scene's `media` array. Never point
-a distributable project at a remote library path that the recipient cannot
-access.
-
-## BGM choice
-
-Search `素材类型=BGM` using the video's content and emotional arc. Prefer:
-
-- community, private-domain, women, social connection: light social rhythm;
-- data, business, growth, execution: steady or progressive business rhythm;
-- adversity, persistence, warning: restrained motivational rhythm;
-- future, opportunity, positive CTA: hopeful and light rhythm.
-
-Preview the track. Avoid vocals that compete with narration and avoid dramatic
-music that overstates ordinary knowledge content. Copy the chosen file into
-`assets/bgm`, record it under top-level `bgm`, and let the renderer handle the
-loop, fades, loudness, and optional ducking.
-
-For a BGM-enabled template batch, retrieve at least three suitable approved BGM
-records before assigning jobs. Rotate them in job order, give A/B variants
-different tracks, and never place the same track on consecutive outputs. Two or
-three outputs require at least two distinct tracks; four or more require at least
-three. Preserve each BGM `record_id` so the batch validator can detect accidental
-reuse even when files were copied under different local names.
+- 无配音：默认开，服务端从素材池选 BGM（`server-bgm-*`）。
+- 配音：默认关（voiceover 时 bgm 默认 false）；开则 bgm_volume 默认 0.2（0~1）。
+- 九宫格：绑定 BGM（bgm_mode=bound），可关（bgm_optional=true）。

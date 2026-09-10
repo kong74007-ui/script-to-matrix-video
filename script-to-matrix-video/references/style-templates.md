@@ -1,68 +1,57 @@
-# Style template catalog
+# 模板目录（主站现行，2026-09-10）
 
-Read this reference when the user asks to choose, compare, or batch-rotate text-media-text styles.
+> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。旧版本地渲染器的 29 模板目录见 `legacy-local-renderer.md`。
 
-The Skill contains 29 templates across two engines and three groups:
+主站现行共 **20 个模板**：2 个 FFmpeg 固定版式 + 17 个 HyperFrames 参考排版（ref-01~ref-17）+ 1 个九宫格开场。
 
-- eight standard FFmpeg templates whose machine-readable source of truth is `assets/templates/catalog.json`;
-- 18 exact HyperFrames reference-typography templates whose source of truth is `assets/templates/reference-typography-17/manifest.json`;
-- three independent HyperFrames motion templates: `nine-grid-reveal`, `triple-strip-shutter`, and `yellow-banner-zoom`; each uses its own `assets/templates/<id>/template.json`.
+## FFmpeg 固定版式（字体可选）
 
-Select a standard template with:
+| id | 名称 | 时长 | 文案建议 | 特点 |
+| --- | --- | --- | --- | --- |
+| full-overlay-bold | 沉浸强标题 | 按文案 8~15s | 顶 ≤12 字/≤4 行，底 ≤12 字/≤3 行 | 素材全屏铺底、上下渐暗文字区、黄白强标题；私域/同城圈层/资源链接 |
+| poster-split | 三段式活动海报 | 按文案 8~15s | 顶 ≤12 字/≤4 行，底 ≤13 字/≤3 行 | 上标题、中素材、下 CTA 三段式，绿橙双层描边；活动/社群招募 |
 
-    {"layout": {"template_id": "black-left-bold"}}
+- 字体 `font_family` 可选（目录 fonts 实时为准：value="" 自动搭配 + bundled/private 字体）；默认自动搭配。
+- 关键词强调由服务端按目录 emphasis_profiles 处理（黄字/描边/放大），Agent 不指定（见 `semantic-emphasis.md`）。
 
-The renderer resolves the selected template first and then applies explicit project-level layout and render overrides.
+## HyperFrames 参考排版（17 个，字体模板锁定）
 
-## Available templates
+| id | 名称 | variant |
+| --- | --- | --- |
+| ref-01-chengdu-green-brush | 成都绿描边手写 | v01 |
+| ref-02-shenzhen-ai-orange | 深圳 AI 橙色主标题 | v02 |
+| ref-03-zhengzhou-blue-banner | 郑州蓝色标题红横条 | v03 |
+| ref-04-foshan-yellow-strip | 佛山黄色信息条 | v04 |
+| ref-05-changsha-white-red | 长沙白字红强调 | v05 |
+| ref-06-guangzhou-yellow-button | 广州黄色按钮 CTA | v06 |
+| ref-07-shenzhen-red-growth | 深圳红色成长强调 | v07 |
+| ref-08-puyang-yellow-white | 濮阳黄白层级 | v08 |
+| ref-09-urumqi-soft-brush | 乌鲁木齐柔和手写 | v09 |
+| ref-10-shenzhen-sisters | 深圳姐妹自我提升 | v10 |
+| ref-11-nansha-clean | 南沙清爽三层标题 | v11 |
+| ref-12-guangzhou-brush | 广州手写聚会 | v12 |
+| ref-13-shenzhen-green-location | 深圳绿色坐标 CTA | v13 |
+| ref-14-karamay-green | 克拉玛依绿系手写 | v14 |
+| ref-15-tianjin-monochrome | 天津黑白极简 | v15 |
+| ref-16-shenzhen-opc | 深圳 OPC 多层信息 | v16 |
+| ref-17-shenzhen-yellow-red | 深圳黄红爆款层级 | v17 |
 
-| Number | template_id | Name | Best for |
+- 时长：随机整数 8~15 秒，任务内锁定，不可指定；字体模板锁定，不传 font_family；AI 语义断句排版；素材 3~5 段。详见 `reference-typography-templates.md`。
+
+## 九宫格开场（1 个）
+
+| id | 名称 | 时长 | 特点 |
 | --- | --- | --- | --- |
-| 1 | black-left-bold | 黑底左排粗体 | 招商、门店、观点、矩阵引流；default |
-| 2 | white-center-bold | 白底居中粗体 | 知识点、方案说明、商业观点 |
-| 4 | white-handwritten | 白底加粗手写体 | 个人表达、经历分享、轻商业 |
-| 5 | black-playful | 黑底趣味体 | 社交传播、活动招募、轻松口吻 |
-| 6 | white-left-editorial | 白底左排编辑体 | 观点、行业判断、品牌叙事 |
-| 7 | black-right-modern | 黑底右排现代体 | 反常识钩子、结论先行、商业口播 |
-| 8 | white-left-playful | 白底左排趣味体 | 社交话题、轻知识、活动招募 |
-| 9 | black-center-editorial | 黑底居中编辑体 | 品牌观点、趋势洞察、高级感表达 |
+| nine-grid-reveal | 九宫格开场接全屏展示 | 固定 12s、30fps | 标题+CTA 全程常驻；九宫格九画面 3.2s 后三格放大接全屏；绑定 BGM 可关 |
 
-The additional stable IDs are listed in [the 18-template reference pack](reference-typography-templates.md). They run through `scripts/render_reference_typography.py`, not `scripts/render_video.py`.
+详见 `nine-grid-reveal.md`。
 
-For 九宫格开场接全屏展示, choose `nine-grid-reveal` and read [its independent workflow](nine-grid-reveal.md). It runs through `scripts/prepare_nine_grid.py` and HyperFrames `0.8.33`: 1080×1920, 30 fps, fixed 12 seconds, title and CTA visible from frame 0 through the end, nine distinct grid videos, and three full-screen inputs. Its bundled reference BGM is copied unchanged and does not participate in batch music rotation. The standard catalog and `ref-` manifest remain unchanged.
+## 目录里的其余字段（Agent 需知道的）
 
-No other bundled template_id is supported. Do not invent, alias, or silently fall back from a removed template.
-
-### Additional independent motion templates
-
-| template_id | Name and instructions | Fixed duration | Preparation entry |
-| --- | --- | --- | --- |
-| triple-strip-shutter | [三横屏开场·光栅快切](triple-strip-shutter.md) | 17.6 seconds / 528 frames | `scripts/prepare_triple_strip.py` |
-| yellow-banner-zoom | [黄条标题·变幅冲击](yellow-banner-zoom.md) | 302/30 seconds (about 10.1 seconds) | `scripts/prepare_yellow_banner.py` |
-
-Both use HyperFrames `0.8.33`, replaceable copy and approved videos, first-frame text, and their own bundled bound BGM. Do not pass these IDs to the standard or reference-pack renderers. Music and motion timing do not participate in random duration or batch music rotation. Template-specific fonts, assets, and instructions are included; client footage is not.
-
-## Shared structure
-
-The eight standard and 18 reference templates follow the top-text / middle-media / bottom-text structure below. The three independent motion compositions follow their own fixed layout, motion, and bound-music specifications. The 18 reference templates may split the top into three independently styled text layers and the bottom into two independently styled text layers. `ref-18-beauty-private-domain` uses straight-edged full-frame video, bundled Noto Serif SC at real 600/700 weights, a subtle 3-degree right oblique, large pink and white Song-style top copy, and an offset two-line lower block; it does not reproduce the rounded app-card container from its screenshot reference.
-
-- 1080×1920 vertical canvas.
-- Visible top margin is about 5% (96–100px).
-- Persistent top copy, central approved material, fixed bottom CTA.
-- Background is pure black or pure white.
-- Do not add decorations, boxes, separators, borders, blur, or text fade-in beyond the chosen template's defined treatment.
-- Function 2 still requires multiple approved library/client assets and may not generate AI media.
-
-## Semantic emphasis
-
-Each standard template owns its colors and scale through the catalog's emphasis_profiles. Providers emit only neutral [emphasis.v1](semantic-emphasis.md) spans. Use emphasis sparingly: one or two decisive phrases in the title and the CTA keyword. Independent motion templates keep their own fixed typography.
-
-## Fonts
-
-The Skill bundles and validates the font files it uses:
-
-- Noto Sans SC (also resolves the Microsoft YaHei compatibility alias);
-- Ma Shan Zheng;
-- ZCOOL KuaiLe.
-
-Do not depend on an unbundled machine-specific font.
+- `engine`：ffmpeg / hyperframes。
+- `font_mode`：selectable（可选字体）/ template_locked（模板锁定）。
+- `variant`：FFmpeg=布局变体名；ref=v01~v17；九宫格=nine-grid。
+- `duration_mode`：copy_length（FFmpeg）/ random_integer_7_15（ref 旧字样，实际 8~15）/ fixed_12（九宫格）。
+- `required_visuals` / `required_visuals_max`：素材段数（ref=3/5，九宫格=9/9）。
+- `bgm_mode` / `bgm_optional`：bound=绑定 BGM；九宫格 bound+可关。
+- `semantic_layout`：模板 AI 断句层合同（v01~v17 各层字号/宽度/行数），服务端用它做断句校验——Agent 只读不传。
