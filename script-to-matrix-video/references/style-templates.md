@@ -1,10 +1,16 @@
 # 模板目录（主站现行，2026-09-10）
 
-> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。本仓库离线资产现保留 21 个模板（18 ref + 3 动效），原 8 个标准 FFmpeg 预设已删除。**2026-09-11 渲染服务侧实测 22 个模板：2 FFmpeg + 17 ref + nine-grid + triple-strip + yellow-banner**；主站对外目录因单个模板契约校验失败（ref-07）暂不可刷新、报「模板目录暂不可用」，用户可见模板数以主站页面实时为准（见 production-platform.md 的「目录刷新失败」）。两代区别见 `legacy-local-renderer.md`。
+> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。本仓库离线资产现保留 22 个模板（18 ref + 4 动效），原 8 个标准 FFmpeg 预设已删除。**2026-09-11 渲染服务侧实测 22 个模板：2 FFmpeg + 17 ref + nine-grid + triple-strip + yellow-banner**；主站对外目录因单个模板契约校验失败（ref-07）暂不可刷新、报「模板目录暂不可用」，用户可见模板数以主站页面实时为准（见 production-platform.md 的「目录刷新失败」）。两代区别见 `legacy-local-renderer.md`。
 
 渲染服务侧现行共 **22 个模板**（2026-09-11 实测）：2 个 FFmpeg 固定版式 + 17 个 HyperFrames 参考排版（ref-01~ref-17）+ 1 个九宫格开场 + 2 个特殊动效（triple-strip-shutter / yellow-banner-zoom）。**数量以实时目录为准，不要记写死的数字。**
 
 ## FFmpeg 固定版式（字体可选）
+
+### 仓库新增离线资产（不是线上目录项）
+
+2026-09-11 新增 [fan-whip-static · 三屏旋展甩切·红黄粗体](fan-whip-static.md)：377 帧（约 12.57 秒）、五条不同视频、静态红黄文字、绑定原 BGM，采用 HyperFrames 0.8.34。新增后仓库离线资产为 **22 个（18 ref + 4 动效）**；本机另有 ref-19，因此本机计数可不同。线上数量仍必须读实时目录。保存/上传源码不代表已部署到服务端。
+
+模板维护者保存新模板时执行 [本机与 GitHub 同步规则](template-publishing.md)。
 
 | id | 名称 | 时长 | 文案建议 | 特点 |
 | --- | --- | --- | --- | --- |

@@ -1,0 +1,29 @@
+{
+  "id": "fan-whip-static",
+  "name": "三屏旋展甩切·红黄粗体",
+  "status": "saved",
+  "distribution": "User authorized public GitHub synchronization including bound BGM on 2026-09-11; private source footage excluded",
+  "renderer": "hyperframes",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "frames": 377,
+  "duration": 12.5666666667,
+  "textReference": "user-membership-poster-red-cream-outline-yellow-bold",
+  "textAnimation": "none; first frame through last frame",
+  "mediaWindow": {"x": 0, "y": 0, "width": 1080, "height": 1920},
+  "media": {"requiredDistinctVideos": 5, "aiGeneratedAllowed": false, "minimumPreparedDuration": 4, "paths": ["assets/media/01-aspect-fixed.mp4", "assets/media/02-aspect-fixed.mp4", "assets/media/03-aspect-fixed.mp4", "assets/media/04-aspect-fixed.mp4", "assets/media/05.mp4"]},
+  "referenceAudio": {
+    "path": "assets/media/reference-bgm.m4a",
+    "duration": 12.538776,
+    "start": 0,
+    "volume": 1,
+    "sha256": "95183944e0c5f63e583c52686bff3a57d94fa078c22eee10fd5749026c5fdae8",
+    "decodedPcmSha256": "e72a407fd7b8bcae7c0339dc98b63153b95806a1a60c52af3d580ad5c7c40570",
+    "permission": "User authorized public synchronization of this template and bound BGM to kong74007-ui/script-to-matrix-video on 2026-09-11. This records publication instructions, not independent proof of music rights."
+  },
+  "editableText": ["title", "subtitle", "body", "cta"],
+  "motion": ["three horizontal bands", "fan rotation", "paired horizontal/vertical whip", "zoom-wipe"],
+  "registryStudy": ["zoom-through-transition", "whip-pan"],
+  "notes": "Recreated reference motion, not pixel-identical. Fan uses frame extracts under one second. Text and audio stay outside all picture transforms."
+}

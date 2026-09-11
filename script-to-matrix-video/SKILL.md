@@ -207,6 +207,9 @@ updated: 2026-09-11T00:00:00Z
 
 ## 11. 仓库文件地图与部署注意
 
+- 新增离线资产 `fan-whip-static`（三屏旋展甩切·红黄粗体）：377 帧、HyperFrames 0.8.34、静态红黄文字与绑定原 BGM，完整使用说明见 [fan-whip-static](references/fan-whip-static.md)。这是源模板同步，不代表主站上线；不得在实时平台目录未返回该 ID 时提交生产任务。
+- 仓库所有者维护规则：保存确认的新模板必须同时更新本机 Skill 与 GitHub（含绑定 BGM），具体范围、排除项及远程确认见 [模板保存与同步](references/template-publishing.md)。此规则用于模板维护，不改变上文生产成片 Agent 的调用契约。
+
 - `script-to-matrix-video/SKILL.md`（本文件）：平台版技能正文。
 - `references/production-platform.md`：平台对接完整规范（能力 schema、语义排版算法、时长、素材策略、中转器协议、交付结构、失败类）。
 - `references/style-templates.md` / `reference-typography-templates.md` / `nine-grid-reveal.md` / `template-batch.md` / `material-library.md` / `semantic-emphasis.md` / `workflow.md`：现行平台契约分册。

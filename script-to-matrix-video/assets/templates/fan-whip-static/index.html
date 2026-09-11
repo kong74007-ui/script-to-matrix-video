@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-resolution="portrait" data-composition-variables="[
+ {&quot;id&quot;:&quot;title&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;顶部标题&quot;,&quot;default&quot;:&quot;想开店又怕养团队？&quot;},
+ {&quot;id&quot;:&quot;subtitle&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;核心利益&quot;,&quot;default&quot;:&quot;1个人＋AI员工&quot;},
+ {&quot;id&quot;:&quot;body&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;补充说明&quot;,&quot;default&quot;:&quot;也能运行一家门店&quot;},
+ {&quot;id&quot;:&quot;cta&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;底部引导&quot;,&quot;default&quot;:&quot;私信「OPC」了解模式&quot;}
+]">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=1080, height=1920">
+ <title>三屏旋展甩切 · 静态粗体</title>
+ <script src="assets/vendor/gsap.min.js"></script>
+ <style>
+ @font-face{font-family:NotoSC;src:url('assets/fonts/NotoSansSC-Variable.ttf') format('truetype');font-weight:100 900}
+ *{box-sizing:border-box}html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+ #root{position:relative;width:1080px;height:1920px;overflow:hidden;background:#000;color:#fff;font-family:NotoSC,sans-serif}
+ .top{position:absolute;top:96px;left:42px;width:996px;text-align:center;z-index:30}
+ .top h1,.top p,.cta{margin:0;white-space:pre-line;overflow-wrap:anywhere;letter-spacing:-.025em;paint-order:stroke fill}
+ .top h1,.cta{filter:drop-shadow(2px 0 0 #21170d) drop-shadow(-2px 0 0 #21170d) drop-shadow(0 2px 0 #21170d) drop-shadow(0 -2px 0 #21170d)}
+ .top h1{font-size:96px;font-weight:900;line-height:1.12;color:#d51b08;-webkit-text-stroke:11px #fff3ca;text-shadow:3px 5px 0 #25160f}
+ .top .subtitle{margin-top:8px;font-size:82px;font-weight:900;line-height:1.12;color:#ffe018;-webkit-text-stroke:4px #201909;text-shadow:2px 4px 0 #201909}
+ .top .body{margin-top:8px;font-size:62px;font-weight:900;line-height:1.12;color:#ffe018;-webkit-text-stroke:4px #201909;text-shadow:2px 3px 0 #201909}
+ .cta{position:absolute;bottom:116px;left:42px;width:996px;text-align:center;font-size:86px;line-height:1.16;font-weight:900;z-index:30;color:#d51b08;-webkit-text-stroke:10px #fff3ca;text-shadow:3px 5px 0 #25160f}
+ #media-stage{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden;background:#000;isolation:isolate}
+ .scene{position:absolute;inset:0;opacity:0;overflow:hidden;background:#000;will-change:transform;transform-origin:50% 50%}
+ .visual{position:absolute;inset:0;will-change:transform;transform-origin:50% 50%}
+ .clip{position:absolute}video{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+ #opening{position:absolute;inset:0;z-index:12;transform-origin:50% 50%;will-change:transform}
+ .strip{position:absolute;left:0;width:1080px;height:640px;overflow:hidden;background:#000;will-change:transform}
+ #strip1{top:0}#strip2{top:640px;opacity:0}#strip3{top:1280px;opacity:0}
+ .strip video{object-fit:cover;object-position:center 45%}
+ #fan{position:absolute;inset:0;opacity:0;z-index:14;pointer-events:none}
+ .petal{position:absolute;left:270px;top:480px;width:540px;height:960px;transform-origin:50% 70%;will-change:transform}
+ .fan-band{position:absolute;left:0;width:100%;height:33.334%;background-size:cover;background-position:center 45%;background-repeat:no-repeat}
+ .fan-band:nth-child(1){top:0;background-image:url('assets/media/01-aspect-fixed.jpg')}
+ .fan-band:nth-child(2){top:33.333%;background-image:url('assets/media/02-aspect-fixed.jpg')}
+ .fan-band:nth-child(3){top:66.666%;background-image:url('assets/media/03-aspect-fixed.jpg')}
+ </style>
+</head>
+<body>
+ <div data-hf-id="hf-tlan" id="root" data-composition-id="main" data-width="1080" data-height="1920" data-duration="12.5666666667" data-fps="30">
+  <header data-hf-id="hf-a7gx" class="top"><h1 data-hf-id="hf-hpvg" id="title" data-var-text="title">想开店又怕养团队？</h1><p data-hf-id="hf-jn4b" id="subtitle" class="subtitle" data-var-text="subtitle">1个人＋AI员工</p><p data-hf-id="hf-1kjl" id="body" class="body" data-var-text="body">也能运行一家门店</p></header>
+  <div data-hf-id="hf-sgou" id="media-stage">
+   <div data-hf-id="hf-qthf" id="shot1" class="scene"><div data-hf-id="hf-a3i3" id="visual1" class="visual"><video data-hf-id="hf-j1o1" id="v1" class="clip" src="assets/media/02-aspect-fixed.mp4" data-start="2.1333333333" data-duration="2.3333333334" data-track-index="1" muted playsinline></video></div></div>
+   <div data-hf-id="hf-i5lk" id="shot2" class="scene"><div data-hf-id="hf-1fm8" id="visual2" class="visual"><video data-hf-id="hf-y2ef" id="v2" class="clip" src="assets/media/03-aspect-fixed.mp4" data-start="4.0666666667" data-duration="2.5" data-track-index="2" muted playsinline></video></div></div>
+   <div data-hf-id="hf-ix9d" id="shot3" class="scene"><div data-hf-id="hf-27a1" id="visual3" class="visual"><video data-hf-id="hf-sjt7" id="v3" class="clip" src="assets/media/04-aspect-fixed.mp4" data-start="6.1666666667" data-duration="2.5" data-track-index="3" muted playsinline></video></div></div>
+   <div data-hf-id="hf-a9di" id="shot4" class="scene"><div data-hf-id="hf-rbse" id="visual4" class="visual"><video data-hf-id="hf-v4an" id="v4" class="clip" src="assets/media/05.mp4" data-start="8.2666666667" data-duration="2.5" data-track-index="4" muted playsinline></video></div></div>
+   <div data-hf-id="hf-e7hj" id="shot5" class="scene"><div data-hf-id="hf-v9wf" id="visual5" class="visual"><video data-hf-id="hf-4xsk" id="v5" class="clip" src="assets/media/01-aspect-fixed.mp4" data-start="10.3666666667" data-duration="2.2" data-track-index="5" muted playsinline></video></div></div>
+   <div data-hf-id="hf-xc27" id="opening">
+    <div data-hf-id="hf-j1s7" id="strip1" class="strip"><video data-hf-id="hf-09ol" id="op1" class="clip" src="assets/media/01-aspect-fixed.mp4" data-start="0" data-duration="1.8333333333" data-track-index="6" muted playsinline></video></div>
+    <div data-hf-id="hf-86ak" id="strip2" class="strip"><video data-hf-id="hf-5dtf" id="op2" class="clip" src="assets/media/02-aspect-fixed.mp4" data-start="0.4666666667" data-duration="1.3666666666" data-track-index="7" muted playsinline></video></div>
+    <div data-hf-id="hf-8xyd" id="strip3" class="strip"><video data-hf-id="hf-kxic" id="op3" class="clip" src="assets/media/03-aspect-fixed.mp4" data-start="0.9333333333" data-duration="0.9" data-track-index="8" muted playsinline></video></div>
+   </div>
+   <div data-hf-id="hf-yavr" id="fan" data-layout-ignore="">
+    <div data-hf-id="hf-c9qc" class="petal"><div data-hf-id="hf-20rp" class="fan-band"></div><div data-hf-id="hf-ty9l" class="fan-band"></div><div data-hf-id="hf-v56o" class="fan-band"></div></div><div data-hf-id="hf-hr3w" class="petal"><div data-hf-id="hf-uqvn" class="fan-band"></div><div data-hf-id="hf-srci" class="fan-band"></div><div data-hf-id="hf-sd1h" class="fan-band"></div></div><div data-hf-id="hf-gk6t" class="petal"><div data-hf-id="hf-tjyk" class="fan-band"></div><div data-hf-id="hf-t5nj" class="fan-band"></div><div data-hf-id="hf-r64e" class="fan-band"></div></div><div data-hf-id="hf-gyhu" class="petal"><div data-hf-id="hf-qrtd" class="fan-band"></div><div data-hf-id="hf-3wrv" class="fan-band"></div><div data-hf-id="hf-4b2w" class="fan-band"></div></div><div data-hf-id="hf-iy0z" class="petal"><div data-hf-id="hf-345t" class="fan-band"></div><div data-hf-id="hf-3igu" class="fan-band"></div><div data-hf-id="hf-2bjr" class="fan-band"></div></div><div data-hf-id="hf-jcc0" class="petal"><div data-hf-id="hf-2pus" class="fan-band"></div><div data-hf-id="hf-1ixp" class="fan-band"></div><div data-hf-id="hf-1x8q" class="fan-band"></div></div>
+   </div>
+  </div>
+  <p data-hf-id="hf-xols" id="cta" class="cta" data-var-text="cta">私信「OPC」了解模式</p>
+  <audio data-hf-id="hf-vamf" id="reference-bgm" src="assets/media/reference-bgm.m4a" data-start="0" data-duration="12.539002" data-track-index="20" data-volume="1"></audio>
+ </div>
+ <script>
+ // Text is deliberately not targeted by any animation. Picture-only motion.
+ const tl=gsap.timeline({paused:true});
+ tl.fromTo('#strip2',{x:1080,opacity:1},{x:0,opacity:1,duration:0.2,ease:'power3.out'},14/30);
+ tl.fromTo('#strip3',{x:-1080,opacity:1},{x:0,opacity:1,duration:0.2,ease:'power3.out'},28/30);
+ tl.fromTo('#opening',{scale:1,rotation:0},{scale:0.53,rotation:24,duration:10/30,ease:'power3.inOut'},42/30);
+ tl.set('#fan',{opacity:1},50/30);
+ document.querySelectorAll('.petal').forEach((el,i)=>{
+  const angle=(i-2.5)*31;
+  tl.fromTo(el,{rotation:24,scale:0.7,x:0,y:0},{rotation:angle,scale:0.82,x:(i-2.5)*28,y:-60,duration:8/30,ease:'power3.out'},50/30);
+  tl.fromTo(el,{rotation:angle,scale:0.82,x:(i-2.5)*28,y:-60},{rotation:0,scale:2.5,x:0,y:0,duration:12/30,ease:'power3.in',immediateRender:false},59/30);
+ });
+ tl.set('#opening',{opacity:0},54/30);
+ // Incoming full image overtakes the fan, leaving no white wash or black hole.
+ tl.set('#shot1',{opacity:1,zIndex:15},64/30);
+ tl.fromTo('#shot1',{scale:0.56},{scale:1,duration:10/30,ease:'power3.out'},64/30);
+ tl.set('#fan',{opacity:0},71/30);
+ tl.fromTo('#visual1',{scale:1.05},{scale:1.14,duration:2,ease:'none'},74/30);
+ // Paired push handoffs: both pictures move on the same beat.
+ function whip(a,b,t,axis,extent){
+  tl.set(b,{opacity:1,zIndex:20},t);
+  tl.fromTo(a,{[axis]:0},{[axis]:-extent,duration:10/30,ease:'power4.inOut',immediateRender:false},t);
+  tl.fromTo(b,{[axis]:extent},{[axis]:0,duration:10/30,ease:'power4.inOut'},t);
+  tl.set(a,{opacity:0},t+10/30);
+ }
+ whip('#shot1','#shot2',122/30,'x',1080);
+ tl.fromTo('#visual2',{scale:1.2},{scale:1.02,duration:2.1,ease:'power2.out'},122/30);
+ // Scale/wipe geometry adapted from the installed zoom-through-transition.
+ function zoom(a,b,t,reverse){
+  tl.set(b,{opacity:1,zIndex:22},t);
+  tl.fromTo(b,{clipPath:'inset(0% 100% 0% 0%)',scale:reverse?1.5:0.72},{clipPath:'inset(0% 0% 0% 0%)',scale:1,duration:11/30,ease:'power3.inOut'},t);
+  tl.fromTo(a,{scale:1},{scale:reverse?0.78:1.55,duration:11/30,ease:'power3.inOut',immediateRender:false},t);
+  tl.set(a,{opacity:0},t+11/30);
+ }
+ zoom('#shot2','#shot3',185/30,false);
+ tl.fromTo('#visual3',{scale:1.03},{scale:1.18,duration:2.1,ease:'none'},185/30);
+ whip('#shot3','#shot4',248/30,'y',1920);
+ tl.fromTo('#visual4',{scale:1.18},{scale:1.02,duration:2.1,ease:'power2.out'},248/30);
+ zoom('#shot4','#shot5',311/30,true);
+ tl.fromTo('#visual5',{scale:1.04},{scale:1.12,duration:66/30,ease:'none'},311/30);
+ window.__timelines=window.__timelines||{};
+ window.__timelines.main=tl;
+ </script>
+</body></html>
