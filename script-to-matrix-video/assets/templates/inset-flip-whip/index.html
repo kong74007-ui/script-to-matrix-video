@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-composition-variables="[{&quot;id&quot;:&quot;title&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;title&quot;,&quot;default&quot;:&quot;想开店又怕养团队？&quot;},{&quot;id&quot;:&quot;subtitle&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;subtitle&quot;,&quot;default&quot;:&quot;1个人＋AI员工&quot;},{&quot;id&quot;:&quot;body&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;body&quot;,&quot;default&quot;:&quot;也能运行一家门店&quot;},{&quot;id&quot;:&quot;cta&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;cta&quot;,&quot;default&quot;:&quot;私信「OPC」了解模式&quot;},{&quot;id&quot;:&quot;media0&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽1&quot;,&quot;default&quot;:&quot;assets/media/00.mp4&quot;},{&quot;id&quot;:&quot;media1&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽2&quot;,&quot;default&quot;:&quot;assets/media/01.mp4&quot;},{&quot;id&quot;:&quot;media2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽3&quot;,&quot;default&quot;:&quot;assets/media/02.mp4&quot;},{&quot;id&quot;:&quot;media3&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽4&quot;,&quot;default&quot;:&quot;assets/media/03.mp4&quot;},{&quot;id&quot;:&quot;media4&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽5&quot;,&quot;default&quot;:&quot;assets/media/01.mp4&quot;},{&quot;id&quot;:&quot;media5&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽6&quot;,&quot;default&quot;:&quot;assets/media/04.mp4&quot;},{&quot;id&quot;:&quot;media6&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽7&quot;,&quot;default&quot;:&quot;assets/media/05.mp4&quot;},{&quot;id&quot;:&quot;media7&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽8&quot;,&quot;default&quot;:&quot;assets/media/06.mp4&quot;},{&quot;id&quot;:&quot;media8&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽9&quot;,&quot;default&quot;:&quot;assets/media/01.mp4&quot;},{&quot;id&quot;:&quot;media9&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材槽10&quot;,&quot;default&quot;:&quot;assets/media/02.mp4&quot;}]">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=1080,height=1920">
+<title>小窗推拉·翻片甩切</title><script src="assets/vendor/gsap.min.js"></script>
+<style>
+@font-face{font-family:TemplateNoto;src:url('assets/fonts/NotoSansSC-Variable.ttf') format('truetype');font-weight:100 900;font-display:block}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{width:1080px;height:1920px;overflow:hidden;background:#000000}
+#root{position:relative;font-family:TemplateNoto,sans-serif}
+.copy{position:absolute;left:42px;width:996px;text-align:center;font-weight:900;letter-spacing:-.025em;line-height:1.23;z-index:40}
+#copy-top{top:96px;display:flex;flex-direction:column;gap:8px}
+.red{color:#d51b08;-webkit-text-stroke:11px #fff3ca;paint-order:stroke fill;filter:drop-shadow(2px 0 0 #000000) drop-shadow(-2px 0 0 #000000) drop-shadow(0 5px 0 #000000)}
+.yellow{color:#ffe018;-webkit-text-stroke:4px #000000;paint-order:stroke fill}
+#title{font-size:96px}#subtitle{font-size:82px}#body{font-size:62px}
+#cta{bottom:116px;font-size:86px;-webkit-text-stroke-width:10px}
+#media-stage{position:absolute;left:0;top:656px;width:1080px;height:608px;overflow:hidden;background:#000000;isolation:isolate}
+.shot,.picture{position:absolute;inset:0;width:1080px;height:608px}
+.shot{opacity:0;overflow:hidden;will-change:transform,clip-path}
+#shot0{opacity:1}
+.picture video{position:absolute;inset:0;width:1080px;height:608px;object-fit:cover;object-position:center}
+#inset{position:absolute;inset:0;width:1080px;height:608px;z-index:20;overflow:hidden}
+#inset-frame{position:absolute;left:134px;top:164px;width:812px;height:280px;z-index:19;border:2px solid #000000;box-shadow:0 5px 14px #000000;pointer-events:none}
+#inset video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#masks{position:absolute;width:0;height:0;pointer-events:none}
+</style></head><body>
+<div data-hf-id="hf-0lyw" id="root" data-composition-id="inset-flip-whip" data-width="1080" data-height="1920" data-duration="14.766667">
+<div data-hf-id="hf-hv10" class="copy" id="copy-top"><h1 data-hf-id="hf-ct8m" id="title" class="red" data-var-text="title">想开店又怕养团队？</h1><div data-hf-id="hf-7aj6" id="subtitle" class="yellow" data-var-text="subtitle">1个人＋AI员工</div><div data-hf-id="hf-pdr4" id="body" class="yellow" data-var-text="body">也能运行一家门店</div></div>
+<div data-hf-id="hf-sgou" id="media-stage">
+<svg data-hf-id="hf-l07e" id="masks" aria-hidden="true"><defs data-hf-id="hf-mh0t">
+<clippath data-hf-id="hf-9ame" id="fold-a" clipPathUnits="userSpaceOnUse"><path data-hf-id="hf-leuy" id="fold-path-a" d="M1080 0 L1080 0 L1080 608 L1080 608 Q1080 304 1080 0 Z" /></clippath>
+<clippath data-hf-id="hf-5cid" id="fold-b" clipPathUnits="userSpaceOnUse"><path data-hf-id="hf-cxjj" id="fold-path-b" d="M0 0 L0 0 Q0 304 0 608 L0 608 Z" /></clippath>
+<clippath data-hf-id="hf-uqcq" id="slats" clipPathUnits="userSpaceOnUse"><rect data-hf-id="hf-b2pi" id="slat0" x="0" y="0" width="181" height="608" /><rect data-hf-id="hf-5yne" id="slat1" x="180" y="0" width="181" height="608" /><rect data-hf-id="hf-76np" id="slat2" x="360" y="0" width="181" height="608" /><rect data-hf-id="hf-e0yo" id="slat3" x="540" y="0" width="181" height="608" /><rect data-hf-id="hf-93ln" id="slat4" x="720" y="0" width="181" height="608" /><rect data-hf-id="hf-8q7q" id="slat5" x="900" y="0" width="181" height="608" /></clippath>
+</defs></svg>
+<div data-hf-id="hf-aa3g" class="shot" id="shot0" style="z-index:1"><div data-hf-id="hf-3wlw" class="picture" id="pic0"><video data-hf-id="hf-dfaq" id="video0" class="clip" data-start="0" data-duration="2.033333" data-media-start="0" data-track-index="2" src="assets/media/00-opening-backplate.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-bufu" class="shot" id="shot1" style="z-index:2"><div data-hf-id="hf-4o9p" class="picture" id="pic1"><video data-hf-id="hf-ao4v" id="video1" class="clip" data-start="1.533333" data-duration="2.700000" data-media-start="0" data-track-index="3" data-var-src="media1" src="assets/media/01.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-51hs" class="shot" id="shot2" style="z-index:3"><div data-hf-id="hf-8mdq" class="picture" id="pic2"><video data-hf-id="hf-o06g" id="video2" class="clip" data-start="3.733333" data-duration="2.200000" data-media-start="0" data-track-index="4" data-var-src="media2" src="assets/media/02.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-cuf1" class="shot" id="shot3" style="z-index:4;clip-path:url(#fold-a)"><div data-hf-id="hf-ckhr" class="picture" id="pic3"><video data-hf-id="hf-18w1" id="video3" class="clip" data-start="5.333333" data-duration="1.400000" data-media-start="0" data-track-index="5" data-var-src="media3" src="assets/media/03.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-fax8" class="shot" id="shot4" style="z-index:5"><div data-hf-id="hf-gils" class="picture" id="pic4"><video data-hf-id="hf-erg9" id="video4" class="clip" data-start="6.2" data-duration="2.533333" data-media-start="0.7" data-track-index="6" data-var-src="media4" src="assets/media/01.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-yc5e" class="shot" id="shot5" style="z-index:6"><div data-hf-id="hf-ha9l" class="picture" id="pic5"><video data-hf-id="hf-pwpx" id="video5" class="clip" data-start="8.2" data-duration="2.033333" data-media-start="0" data-track-index="7" data-var-src="media5" src="assets/media/04.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-z5eg" class="shot" id="shot6" style="z-index:7"><div data-hf-id="hf-nfze" class="picture" id="pic6"><video data-hf-id="hf-i5hy" id="video6" class="clip" data-start="9.733333" data-duration="2.133334" data-media-start="0" data-track-index="8" data-var-src="media6" src="assets/media/05.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-gvz8" class="shot" id="shot7" style="z-index:8;clip-path:url(#fold-b)"><div data-hf-id="hf-re3f" class="picture" id="pic7"><video data-hf-id="hf-89yb" id="video7" class="clip" data-start="11.2" data-duration="1.600000" data-media-start="0" data-track-index="9" data-var-src="media7" src="assets/media/06.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-5mj0" class="shot" id="shot8" style="z-index:9"><div data-hf-id="hf-vc7g" class="picture" id="pic8"><video data-hf-id="hf-ur7u" id="video8" class="clip" data-start="12.3" data-duration="2.466667" data-media-start="2.2" data-track-index="10" data-var-src="media8" src="assets/media/01.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-35q0" class="shot" id="shot9" style="z-index:10;clip-path:url(#slats)"><div data-hf-id="hf-w3v9" class="picture" id="pic9"><video data-hf-id="hf-pivt" id="video9" class="clip" data-start="14.066667" data-duration="0.700000" data-media-start="1.2" data-track-index="11" data-var-src="media9" src="assets/media/02.mp4" muted playsinline preload="auto"></video></div></div>
+<div data-hf-id="hf-e0zh" id="inset-frame" aria-hidden="true"></div>
+<div data-hf-id="hf-bfzo" id="inset"><video data-hf-id="hf-dukw" class="clip" id="inset-video" src="assets/media/00.mp4" data-var-src="media0" data-start="0" data-duration="1.233333" data-track-index="12" muted playsinline></video></div></div>
+<div data-hf-id="hf-3339" class="copy red" id="cta" data-var-text="cta">私信「OPC」了解模式</div>
+<audio data-hf-id="hf-mibu" id="bgm" src="assets/media/reference-bgm.m4a" data-start="0" data-duration="14.745011" data-track-index="20" data-volume="1"></audio>
+</div>
+<script>
+const tl=gsap.timeline({paused:true});
+const W=1080;
+tl.addLabel("inset-intro",0);
+// Color window crops a 1:1 aligned duplicate. Never scale the footage into a small card.
+tl.fromTo("#inset",{clipPath:"polygon(674px 164px,1486px 164px,1486px 444px,674px 444px)"},{clipPath:"polygon(134px 164px,946px 164px,946px 444px,134px 444px)",duration:.4,ease:"power3.out"},0);
+tl.fromTo("#inset-frame",{x:540},{x:0,duration:.4,ease:"power3.out"},0);
+tl.fromTo("#inset",{clipPath:"polygon(134px 164px,946px 164px,946px 444px,134px 444px)"},{clipPath:"polygon(0px 0px,1080px 0px,1080px 608px,0px 608px)",duration:.55,ease:"power3.inOut",immediateRender:false},.55);
+tl.fromTo("#inset-frame",{scaleX:1,scaleY:1},{scaleX:1080/812,scaleY:608/280,duration:.55,ease:"power3.inOut",immediateRender:false},.55);
+tl.set("#inset-frame",{opacity:0},1.1);
+tl.set("#inset",{opacity:0},1.1);
+// Adapted whip-pan-cut: equal duration/ease + one frame-width gives matched seam velocity.
+// No blur or seam overlay: preserve natural color and uncluttered layout.
+function whip(oldId,newId,T,D,sign){
+ tl.set(newId,{opacity:1},T);
+ tl.fromTo(oldId,{x:0},{x:sign*W,duration:D,ease:"power3.inOut",immediateRender:false},T);
+ tl.fromTo(newId,{x:-sign*W},{x:0,duration:D,ease:"power3.inOut",immediateRender:false},T);
+ tl.set(oldId,{opacity:0},T+D);
+}
+whip("#shot0","#shot1",1.533333,.5,-1);
+whip("#shot1","#shot2",3.733333,.5,1);
+tl.set("#shot3",{opacity:1},5.333333);
+tl.fromTo("#fold-path-a",{attr:{d:"M1080 0 L1080 0 L1080 608 L1080 608 Q1080 304 1080 0 Z"}},{attr:{d:"M-320 0 L1080 0 L1080 608 L-200 608 Q-500 304 -320 0 Z"},duration:.6,ease:"power2.inOut"},5.333333);
+tl.set("#shot2",{opacity:0},5.933333);
+whip("#shot3","#shot4",6.2,.533333,-1);
+whip("#shot4","#shot5",8.2,.533333,1);
+tl.addLabel("punch-diagonal",9.733333);
+tl.set("#shot6",{opacity:1},9.733333);
+tl.fromTo("#shot6",{clipPath:"polygon(100% 0,100% 0,100% 100%,155% 100%)"},{clipPath:"polygon(-55% 0,100% 0,100% 100%,-55% 100%)",duration:.5,ease:"power3.inOut"},9.733333);
+tl.set("#shot5",{opacity:0},10.233333);
+tl.fromTo("#pic6",{scale:1.16},{scale:1,duration:.6,ease:"power2.out"},10.233333);
+tl.set("#shot7",{opacity:1},11.2);
+tl.fromTo("#fold-path-b",{attr:{d:"M0 0 L0 0 Q0 304 0 608 L0 608 Z"}},{attr:{d:"M0 0 L1280 0 Q1550 304 1400 608 L0 608 Z"},duration:.666667,ease:"power2.inOut"},11.2);
+tl.set("#shot6",{opacity:0},11.866667);
+whip("#shot7","#shot8",12.3,.5,-1);
+tl.fromTo("#pic8",{scale:1},{scale:1.08,duration:1.1,ease:"power1.inOut"},12.8);
+tl.addLabel("vertical-slat-close",14.066667);
+tl.set("#shot9",{opacity:1},14.066667);
+for(let i=0;i<6;i++){tl.fromTo("#slat"+i,{y:i%2===0?-610:610},{y:0,duration:.37,ease:"power3.out"},14.066667+i*.043);}
+tl.set("#shot8",{opacity:0},14.666667);
+window.__timelines["inset-flip-whip"]=tl;
+</script></body></html>

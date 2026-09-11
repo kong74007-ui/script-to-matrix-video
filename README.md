@@ -36,11 +36,13 @@
 
 离线参考排版每条随机 8–15 秒，使用 3 个不同的已审核视频；批量 BGM 保留轮换规则。五套独立动效模板保留各自固定时间线与绑定音乐。FFmpeg 通用渲染器保留用于文案成片和自定义清单，不再提供原 8 个标准模板。
 
-## 23 套可复用视觉模板（离线资产）
+## 24 套可复用视觉模板（离线资产）
 
-新增 **[横屏笔刷分片·上下黑底（brush-panel-transitions）](script-to-matrix-video/references/brush-panel-transitions.md)**：1080×1920、30 fps、454 帧，横屏画面居中、上下纯黑，保留笔刷/分片切换和绑定原 BGM。七条不同视频填入八个素材槽；红黄文字从首帧静态显示，不含原参考文字。源码和绑定 BGM 获用户授权公开同步，不包含客户演示素材；预览已检查，最终 MP4 尚未渲染。当前离线资产 23 套（18 ref + 5 动效），未部署主站。
+新增 **[横屏笔刷分片·上下黑底（brush-panel-transitions）](script-to-matrix-video/references/brush-panel-transitions.md)**：1080×1920、30 fps、454 帧，横屏画面居中、上下纯黑，保留笔刷/分片切换和绑定原 BGM。七条不同视频填入八个素材槽；红黄文字从首帧静态显示，不含原参考文字。源码和绑定 BGM 获用户授权公开同步，不包含客户演示素材；预览已检查，最终 MP4 尚未渲染。当前离线资产 24 套（18 ref + 6 动效），未部署主站。
 
-原 8 套标准 FFmpeg 模板已删除。保留 18 套 HyperFrames 参考排版，以及 `nine-grid-reveal`、`triple-strip-shutter`、`yellow-banner-zoom`、`fan-whip-static`、`brush-panel-transitions` 五套独立动效模板。
+新增 [小窗推拉·翻片甩切（inset-flip-whip）](script-to-matrix-video/references/inset-flip-whip.md)：443 帧（约14.77秒）、7条不同视频/10槽、上下黑底、红黄首帧静态文字及绑定 BGM。开头为同源同帧对齐的彩色裁切窗口，非缩小画中画；换素材后运行模板内 `python prepare_backplate.py` 重建匹配灰底。仅公开离线源码与音乐，不含演示视频，不代表主站部署；线上 ID 以实时目录为准。
+
+原 8 套标准 FFmpeg 模板已删除。保留 18 套 HyperFrames 参考排版，以及 `nine-grid-reveal`、`triple-strip-shutter`、`yellow-banner-zoom`、`fan-whip-static`、`brush-panel-transitions`、`inset-flip-whip` 六套独立动效模板。
 
 离线默认改为 **`ref-15-tianjin-monochrome`（天津黑白极简）**，可替换任意主题文案。使用参考包的 rows 格式和 `scripts/render_reference_typography.py`，不把 ref ID 传给 FFmpeg 渲染器。完整 ID 与五层文字输入见 [参考排版说明](script-to-matrix-video/references/reference-typography-templates.md)。
 
@@ -150,7 +152,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 
 - Python 3.10+
 - FFmpeg 和 FFprobe
-- HyperFrames 模板需要 Node.js/npm；参考排版固定 `0.8.29`，前三套独立动效模板固定 `0.8.33`，`fan-whip-static` 和 `brush-panel-transitions` 固定 `0.8.34`
+- HyperFrames 模板需要 Node.js/npm；参考排版固定 `0.8.29`，前三套独立动效模板固定 `0.8.33`，`fan-whip-static`、`brush-panel-transitions` 和 `inset-flip-whip` 固定 `0.8.34`
 - 阿里配音需要本机环境变量 `DASHSCOPE_API_KEY`
 - 远程素材库需要 OpenSSH 和已授权的 SSH 密钥
 - AI 图片能力只用于文案一键成片，不用于模板成片

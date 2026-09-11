@@ -208,6 +208,8 @@ updated: 2026-09-11T00:00:00Z
 ## 11. 仓库文件地图与部署注意
 
 - 新增离线资产 `brush-panel-transitions`（横屏笔刷分片·上下黑底）：454 帧、HyperFrames 0.8.34、七条不同视频与八个素材槽、红黄首帧静态文字、绑定原 BGM，不含原视频文字。使用说明见 [brush-panel-transitions](references/brush-panel-transitions.md)。仅同步离线源码与绑定音乐，不代表主站上线；实时目录未返回该 ID 时不得提交生产任务。
+
+新增 [小窗推拉·翻片甩切（inset-flip-whip）](references/inset-flip-whip.md)：443 帧（约14.77秒）、7条不同视频/10槽、上下黑底、红黄首帧静态文字及绑定 BGM。开头为同源同帧对齐的彩色裁切窗口，非缩小画中画；换素材后运行模板内 `python prepare_backplate.py` 重建匹配灰底。仅公开离线源码与音乐，不含演示视频，不代表主站部署；线上 ID 以实时目录为准。
 - 新增离线资产 `fan-whip-static`（三屏旋展甩切·红黄粗体）：377 帧、HyperFrames 0.8.34、静态红黄文字与绑定原 BGM，完整使用说明见 [fan-whip-static](references/fan-whip-static.md)。这是源模板同步，不代表主站上线；不得在实时平台目录未返回该 ID 时提交生产任务。
 - 仓库所有者维护规则：保存确认的新模板必须同时更新本机 Skill 与 GitHub（含绑定 BGM），具体范围、排除项及远程确认见 [模板保存与同步](references/template-publishing.md)。此规则用于模板维护，不改变上文生产成片 Agent 的调用契约。
 

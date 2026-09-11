@@ -1,0 +1,9 @@
+{
+  "source": "assets/media/00.mp4",
+  "output": "assets/media/00-opening-backplate.mp4",
+  "reason": "Realtime canonical grading repeatedly caused browser navigation timeout; cached SDR derivative fallback.",
+  "attemptedCanonical": {"adjust":{"saturation":-0.85,"exposure":-0.15}},
+  "fallbackFilter": "eq=saturation=0.15:brightness=-0.03:enable='lt(t,1.1)'",
+  "neutralAtSec": 1.1,
+  "templateRule": "Whenever media0 changes, regenerate this matching same-frame backplate from it. Foreground uses original media0 without rescaling. Do not package private demo footage."
+}

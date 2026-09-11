@@ -1,0 +1,12 @@
+{
+  "name": "inset-flip-whip",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:backplate": "python prepare_backplate.py",
+    "dev": "npx --yes hyperframes@0.8.34 preview",
+    "check": "npx --yes hyperframes@0.8.34 check",
+    "render": "npx --yes hyperframes@0.8.34 render",
+    "publish": "npx --yes hyperframes@0.8.34 publish"
+  }
+}

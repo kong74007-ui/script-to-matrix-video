@@ -1,0 +1,6 @@
+{
+  "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
+  "paths": {"blocks":"compositions","components":"compositions/components","assets":"assets"},
+  "media": {"autoProxy":true},
+  "authoringSkill": "general-video"
+}

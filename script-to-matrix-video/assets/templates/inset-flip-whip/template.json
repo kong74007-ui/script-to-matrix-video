@@ -1,0 +1,81 @@
+{
+  "id": "inset-flip-whip",
+  "name": "小窗推拉·翻片甩切",
+  "status": "saved",
+  "approvedAt": "2026-09-11",
+  "distribution": "Owner authorized public synchronization including bound BGM; private demonstration footage and reference video are excluded.",
+  "mediaWindow": {"x":0,"y":656,"width":1080,"height":608,"fit":"cover","preserveAspectRatio":true},
+  "opening": {"type":"aligned-color-crop","window":{"x":134,"y":164,"width":812,"height":280},"centerAt":0.4,"expandStart":0.55,"expandEnd":1.1,"backplate":"assets/media/00-opening-backplate.mp4","prepareCommand":"python prepare_backplate.py","sameSourceTimeAndFraming":true,"scaleForeground":false},
+  "renderer": "hyperframes",
+  "cliVersion": "0.8.34",
+  "width": 1080,
+  "height": 1920,
+  "frames": 443,
+  "fps": 30,
+  "duration": 14.766666666666667,
+  "editableText": [
+    "title",
+    "subtitle",
+    "body",
+    "cta"
+  ],
+  "media": {
+    "starts": [
+      0,
+      1.533333,
+      3.733333,
+      5.333333,
+      6.2,
+      8.2,
+      9.733333,
+      11.2,
+      12.3,
+      14.066667
+    ],
+    "ends": [
+      2.033333,
+      4.233333,
+      5.933333,
+      6.733333,
+      8.733333,
+      10.233333,
+      11.866667,
+      12.8,
+      14.766667,
+      14.766667
+    ],
+    "sources": [
+      0,
+      1,
+      2,
+      3,
+      1,
+      4,
+      5,
+      6,
+      1,
+      2
+    ],
+    "offsets": [
+      0,
+      0,
+      0,
+      0,
+      0.7,
+      0,
+      0,
+      0,
+      2.2,
+      1.2
+    ],
+    "requiredDistinctSources": 7,
+    "aiGeneratedAllowed": false,
+    "minimumPreparedDuration": 5
+  },
+  "bgm": "assets/media/reference-bgm.m4a",
+  "textMotion": "none",
+  "referenceTextIncluded": false,
+  "referenceAudio": {"path":"assets/media/reference-bgm.m4a","duration":14.745011,"start":0,"volume":1,"sha256":"6f011a2a509560d47d495bd5123bbd50ef0d7a62a2fd61f5d44d955e13444a1a","permission":"Owner authorized public synchronization including this music; not independent proof of music rights."},
+  "validation": "Approved preview; lint, runtime, layout, motion and contrast checks passed on the populated job. Final MP4 is not bundled.",
+  "notes": "Fixed bound-music timeline. Regenerate the matching backplate after replacing media0. No scaled picture-in-picture, text animation or private demo footage."
+}
