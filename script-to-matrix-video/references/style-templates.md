@@ -1,8 +1,8 @@
 # 模板目录（主站现行，2026-09-10）
 
-> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。本仓库离线资产现保留 21 个模板（18 ref + 3 动效），原 8 个标准 FFmpeg 预设已删除；平台 20 个模板快照不受本次离线资产精简影响。两代区别见 `legacy-local-renderer.md`。
+> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。本仓库离线资产现保留 21 个模板（18 ref + 3 动效），原 8 个标准 FFmpeg 预设已删除。**2026-09-11 渲染服务实测 22 个模板：2 FFmpeg + 17 ref + nine-grid + triple-strip + yellow-banner**（平台对外目录可能因单个模板契约校验失败停在旧快照——见 production-platform.md 的「目录刷新失败」）。两代区别见 `legacy-local-renderer.md`。
 
-主站现行共 **20 个模板**：2 个 FFmpeg 固定版式 + 17 个 HyperFrames 参考排版（ref-01~ref-17）+ 1 个九宫格开场。
+主站现行共 **22 个模板**（2026-09-11 渲染服务实测）：2 个 FFmpeg 固定版式 + 17 个 HyperFrames 参考排版（ref-01~ref-17）+ 1 个九宫格开场 + 2 个特殊动效（triple-strip-shutter / yellow-banner-zoom）。**数量以实时目录为准，不要记写死的数字。**
 
 ## FFmpeg 固定版式（字体可选）
 

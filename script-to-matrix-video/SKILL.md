@@ -1,7 +1,7 @@
 ---
 name: script-to-matrix-video
-description: 黄雀主站模板成片（matrix-template）平台技能。顶部标题 + 底部行动文案 → 平台模板 → 9:16 成片。模板目录 20 个实时读取（2 个 FFmpeg 固定版式 full-overlay-bold/poster-split + 17 个 HyperFrames 参考排版 ref-01~ref-17 + 九宫格开场 nine-grid-reveal）。时长一律由服务端决定：ref 随机整数 8~15 秒、FFmpeg 按文案长度 8~15 秒、九宫格固定 12 秒、配音跟随口播。AI 语义断句、素材选取（黄雀库头尾 + pexels 中间）、字体锁定全部服务端自动，Agent 不生成不传不改。内测期直出无报价卡。Use for 模板成片、上文字中素材下文字、批量矩阵视频、九宫格开场接全屏展示。Do not use for 手动逐帧剪辑（video-compose/video-timeline-compose）或完整文案口播成片（text-video-*/director）。
-short_description: 模板成片平台技能：20 模板目录、语义排版契约、8~15 秒时长规则、素材策略、批量 2~5、直出交付纪律。
+description: 黄雀主站模板成片（matrix-template）平台技能。顶部标题 + 底部行动文案 → 平台模板 → 9:16 成片。模板目录实时读取（2026-09-11 渲染服务实测 22 个：2 个 FFmpeg 固定版式 full-overlay-bold/poster-split + 17 个 HyperFrames 参考排版 ref-01~ref-17 + 九宫格开场 nine-grid-reveal + 特殊动效 triple-strip-shutter/yellow-banner-zoom）。时长一律由服务端决定：ref 随机整数 8~15 秒、FFmpeg 按文案长度 8~15 秒、九宫格固定 12 秒、配音跟随口播。AI 语义断句、素材选取（黄雀库头尾 + pexels 中间）、字体锁定全部服务端自动，Agent 不生成不传不改。内测期直出无报价卡。Use for 模板成片、上文字中素材下文字、批量矩阵视频、九宫格开场接全屏展示。Do not use for 手动逐帧剪辑（video-compose/video-timeline-compose）或完整文案口播成片（text-video-*/director）。
+short_description: 模板成片平台技能：模板目录（2026-09-11 实测 22 个）、语义排版契约、8~15 秒时长规则、素材策略、批量 2~5、直出交付纪律。
 short_description_zh: 黄雀模板成片平台技能：模板目录/语义排版/时长规则/素材策略/批量与交付红线，服务端自动项 Agent 不越俎代庖。
 version: 6
 updated: 2026-09-11T00:00:00Z
@@ -43,7 +43,7 @@ updated: 2026-09-11T00:00:00Z
 | voices | 配音音色目录 | voiceover 的 voice 只从 ready 项复制 voice_key |
 | image-upload / video-upload | 上传素材拿 upload_id | 为 user_materials 做准备（上传免费不扣点，confirm 直发，约 4 小时有效） |
 
-## 3. 模板目录（20 个，2026-09-10 线上状态）
+## 3. 模板目录（2026-09-11 渲染服务实测 22 个；**实时目录为准，绝不凭记忆报数**）
 
 实时目录见 `matrix-template-templates`（id/name/description/tags/engine/font_mode/variant/duration_mode/required_visuals/semantic_layout）。**绝不凭记忆报模板，绝不编 template_id。** 快照：
 
@@ -58,6 +58,8 @@ updated: 2026-09-11T00:00:00Z
 - 文案长度建议：顶 2~12 字、底 2~13 字观感最好（目录 layout 的 top_max_chars/bottom_max_chars）；过长会被服务端按字数把时长顶到上限甚至拒单（§6.1）。
 
 ### 3.2 HyperFrames 参考排版（17 个 ref-01~ref-17，字体模板锁定）
+
+> 2026-09-11 备注：ref-07 的语义排版层数已由渲染服务更新为 5 层（top1/top2/top3/bottom1/bottom2），主站契约校验尚未同步——目录以实时返回为准，若平台目录暂不含某 ref 模板，如实说明"该模板暂未上目录"，绝不编造。
 
 | id | 名称 | variant |
 | --- | --- | --- |
@@ -81,7 +83,7 @@ updated: 2026-09-11T00:00:00Z
 
 - 字体：**模板锁定**（内置私有字体），不传 font_family。
 - 时长：**随机整数 8~15 秒**，按任务锁定，用户不可指定（§6.1）。
-- **批量限制（2026-09-10 客户实录）**：HyperFrames 模板（ref-* 与 nine-grid-reveal）平台**直接拒绝批量**（报「HyperFrames 模板暂仅支持单条生成」）；要 N 条只能逐条 generate、每条文案必须不同（同参数 5 分钟去重只返回同一 job_id，ok=false 是正常提示不是失败），或如实告知一次只能出一条并问清是否改文案。
+- **批量限制（2026-09-10 客户实录）**：HyperFrames 模板（ref-*、nine-grid-reveal、triple-strip-shutter、yellow-banner-zoom）平台**直接拒绝批量**（报「HyperFrames 模板暂仅支持单条生成」）；要 N 条只能逐条 generate、每条文案必须不同（同参数 5 分钟去重只返回同一 job_id，ok=false 是正常提示不是失败），或如实告知一次只能出一条并问清是否改文案。
 - 排版：**AI 语义断句**（§6.2）把标题/行动文案按真实字体排进模板的 top1/top2/(top3)/bottom2 层。
 - 素材：3~5 段（服务端选，§6.3）。
 - 详情见 `references/reference-typography-templates.md`。
@@ -94,6 +96,17 @@ updated: 2026-09-11T00:00:00Z
 
 - 输入与普通模板相同（top_text + bottom_text 映射 title/tagline）；9 个画面 + 3 个全屏画面由服务端素材池选取（每段 3.0s 切片），**Agent 不挑画面**。
 - 详情见 `references/nine-grid-reveal.md`。
+
+### 3.4 特殊动效排版（2 个，字体模板锁定）
+
+| id | 名称 | 时长 | 特点 |
+| --- | --- | --- | --- |
+| triple-strip-shutter | 三横屏开场·光栅快切 | 服务端固定 | 8 段画面光栅快切开场；BGM 绑定可关 |
+| yellow-banner-zoom | 黄条标题·变幅冲击 | 服务端固定 | 3 段画面 + 黄条标题变幅冲击；BGM 绑定可关 |
+
+- 输入与普通模板相同（top_text + bottom_text）；画面段数服务端定（8 段 / 3 段），Agent 不挑画面。
+- 属于 HyperFrames 引擎：**批量直接拒绝**，只能单条 generate（见 3.2 批量限制）。
+- 离线分册 `references/triple-strip-shutter.md` / `references/yellow-banner-zoom.md` 是本地渲染器时代的文档，仅作视觉参考；生产以平台实时目录为准。
 
 ## 4. 输入契约（generate / batch 的 payload）
 

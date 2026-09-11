@@ -6,10 +6,11 @@
 
 - `matrix-template-templates`：读模板目录（id/name/description/tags/engine/font_mode/font_selectable/variant/duration_mode/required_visuals/required_visuals_max/bgm_mode/bgm_optional/semantic_layout）+ 字体目录（value="" 自动搭配 + bundled/private 字体）。
 - `matrix-template-generate` 必填 `top_text(2~60) bottom_text(2~80) template_id`；可选 `font_family(≤80)`、`voiceover`、`user_materials`（目录 schema 未宣传该字段，见 §6）。
-- `matrix-template-batch-generate` 同上 + `count(2~5)`。**批量只对非字体锁定模板（full-overlay-bold / poster-split）开放**：ref-01~ref-17 与 nine-grid-reveal（HyperFrames+字体锁定）平台直接拒绝，报「HyperFrames 模板暂仅支持单条生成」；要 N 条只能逐条 generate 且每条文案必须不同（平台按「能力+参数」5 分钟去重，同参数第二次只返回同一 job_id、ok=false 属正常提示），或如实告知一次只能出一条。
+- `matrix-template-batch-generate` 同上 + `count(2~5)`。**批量只对非字体锁定模板（full-overlay-bold / poster-split）开放**：ref-01~ref-17、nine-grid-reveal、triple-strip-shutter、yellow-banner-zoom（HyperFrames+字体锁定）平台直接拒绝，报「HyperFrames 模板暂仅支持单条生成」；要 N 条只能逐条 generate 且每条文案必须不同（平台按「能力+参数」5 分钟去重，同参数第二次只返回同一 job_id、ok=false 属正常提示），或如实告知一次只能出一条。
 - `voiceover = {text(1~120)★, voice(1~128)★, voice_scope(public|personal), speed(0.5~2.0, 0.1 步进)}`；voice 从 voices 的 ready 项复制 voice_key。
 - **无 duration 字段**；时长服务端算。第一段调用返回报价（generation:quote），内测期运行时自动确认直出。
 - 模板目录回写：子 Agent 拿到的目录条目可能带 `source=cached`（平台目录接口故障时运行时自动用磁盘缓存兜底），照常用、不要反复重试平台接口（2026-09-10 曾因目录结果被截断导致永远只看到 19 个模板、找不到 nine-grid-reveal——已修：matrix-template-templates 后处理用未截断原始 payload 回写，source=platform 且不把 semantic_layout 塞进上下文）。
+- **目录刷新失败的坑（2026-09-11 实测）**：主站 `_refresh_catalog` 是「一个模板校验失败 → 整个刷新抛异常」→ 对外目录停在旧快照（比渲染服务少模板）。实例：渲染服务把 ref-07 排版更新为 5 层（top1/top2/top3/bottom1/bottom2），主站 `_SEMANTIC_CONTRACTS`/`_SEMANTIC_LAYER_TRANSITIONS` 仍是 4 层 → `set(layers)` 不等 → RuntimeError「HyperFrames 语义排版能力无效」→ 整个目录刷新失败。排查法：调渲染服务 `/v1/templates`（relay 8213，`Authorization: Bearer $RELAY_API_TOKEN`）拿上游清单，逐个过主站 `_semantic_contract` 找失败模板；渲染服务加层/改字号而主站契约没跟上 → 通知协作方同步契约表。
 
 ## 2. 主站校验顺序（validate_payload）
 
