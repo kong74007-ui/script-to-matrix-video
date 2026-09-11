@@ -1,0 +1,18 @@
+{
+ "id":"brush-panel-transitions",
+ "name":"横屏笔刷分片·上下黑底",
+ "status":"saved",
+ "distribution":"Owner authorized local Skill and public GitHub synchronization including bound BGM on 2026-09-11; excludes demo footage and raw reference video.",
+ "renderer":"hyperframes","cliVersion":"0.8.34",
+ "width":1080,"height":1920,"fps":30,"frames":454,"duration":15.133333,
+ "mediaWindow":{"x":0,"y":656,"width":1080,"height":608,"fit":"cover","preserveAspectRatio":true},
+ "textAnimation":"none; first frame through last frame",
+ "editableText":["title","subtitle","body","cta"],
+ "referenceTextIncluded":false,
+ "media":{"requiredDistinctVideos":7,"slots":8,"aiGeneratedAllowed":false,"minimumPreparedDuration":5,"paths":["assets/media/00.mp4","assets/media/01.mp4","assets/media/02.mp4","assets/media/03.mp4","assets/media/04.mp4","assets/media/05.mp4","assets/media/06.mp4"],"slotSourceOrder":[0,1,2,6,3,4,0,5],"slotSourceOffsets":[0,0,0,0,0,0,2.3,0],"slotStarts":[0,1.5,2.4,5.1,7.55,9.05,10.4,11.9],"slotDurations":[2.3,2.2,4.4,3.75,2.4,2.4,2.6,3.233333]},
+ "referenceAudio":{"path":"assets/media/reference-bgm.m4a","duration":15.116009,"start":0,"volume":1,"sha256":"f3327c91050b6b77c95ffde4d5aeb3926ec447bb4de2d7a45a77acdeba74c4ea","permission":"Owner instructed public synchronization including bound music; this records instructions, not independent proof of music rights."},
+ "motion":["circle iris","diagonal wipe","ragged brush wipe","staggered vertical slats","square windows","diagonal panels","diamond windows"],
+ "registryStudy":["iris-reveal"],
+ "validation":"Preview, lint, runtime, layout, motion and contrast checked. Final MP4 not yet rendered at template approval.",
+ "notes":"Reference-inspired reconstruction, not pixel-identical. Plain black bars, no reference English overlays. White opening within media band is intentional. Runtime requires new job media; private demo clips are not bundled."
+}

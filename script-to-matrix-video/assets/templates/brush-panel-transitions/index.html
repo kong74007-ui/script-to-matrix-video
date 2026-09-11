@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-resolution="portrait" data-composition-variables="[
+ {&quot;id&quot;:&quot;title&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;标题&quot;,&quot;default&quot;:&quot;想开店又怕养团队？&quot;},
+ {&quot;id&quot;:&quot;subtitle&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;重点&quot;,&quot;default&quot;:&quot;1个人＋AI员工&quot;},
+ {&quot;id&quot;:&quot;body&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;补充&quot;,&quot;default&quot;:&quot;也能运行一家门店&quot;},
+ {&quot;id&quot;:&quot;cta&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;行动引导&quot;,&quot;default&quot;:&quot;私信「OPC」了解模式&quot;},
+ {&quot;id&quot;:&quot;media0&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材1&quot;,&quot;default&quot;:&quot;assets/media/00.mp4&quot;},
+ {&quot;id&quot;:&quot;media1&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材2&quot;,&quot;default&quot;:&quot;assets/media/01.mp4&quot;},
+ {&quot;id&quot;:&quot;media2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材3&quot;,&quot;default&quot;:&quot;assets/media/02.mp4&quot;},
+ {&quot;id&quot;:&quot;media3&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材4&quot;,&quot;default&quot;:&quot;assets/media/06.mp4&quot;},
+ {&quot;id&quot;:&quot;media4&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材5&quot;,&quot;default&quot;:&quot;assets/media/03.mp4&quot;},
+ {&quot;id&quot;:&quot;media5&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材6&quot;,&quot;default&quot;:&quot;assets/media/04.mp4&quot;},
+ {&quot;id&quot;:&quot;media6&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材7&quot;,&quot;default&quot;:&quot;assets/media/00.mp4&quot;},
+ {&quot;id&quot;:&quot;media7&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;素材8&quot;,&quot;default&quot;:&quot;assets/media/05.mp4&quot;}
+]">
+<head>
+ <meta charset="UTF-8"><meta name="viewport" content="width=1080, height=1920">
+ <title>横屏笔刷分片 · 上下黑底</title>
+ <script src="assets/vendor/gsap.min.js"></script>
+ <style>
+ @font-face{font-family:TemplateNoto;src:url('assets/fonts/NotoSansSC-Variable.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:block}
+ *{box-sizing:border-box;margin:0;padding:0}
+ html,body,#root{width:1080px;height:1920px;overflow:hidden;background:#000000}
+ #root{position:relative;font-family:TemplateNoto,sans-serif}
+ .copy{position:absolute;left:42px;width:996px;text-align:center;font-weight:900;letter-spacing:-.025em;line-height:1.23;z-index:40}
+ #copy-top{top:96px;display:flex;flex-direction:column;gap:8px}
+ .red{color:#d51b08;-webkit-text-stroke:11px #fff3ca;paint-order:stroke fill;text-shadow:0 6px 0 #000000;filter:drop-shadow(2px 0 0 #000000) drop-shadow(-2px 0 0 #000000) drop-shadow(0 2px 0 #000000) drop-shadow(0 -2px 0 #000000)}
+ .yellow{color:#ffe018;-webkit-text-stroke:4px #000000;paint-order:stroke fill}
+ #title{font-size:96px} #subtitle{font-size:82px} #body{font-size:62px}
+ #cta{bottom:116px;font-size:86px;-webkit-text-stroke-width:10px}
+ #media-stage{position:absolute;left:0;top:656px;width:1080px;height:608px;overflow:hidden;background:#ffffff;isolation:isolate}
+ .phase{position:absolute;inset:0;width:1080px;height:608px;overflow:hidden;opacity:0}
+ .phase video{position:absolute;inset:0;width:1080px;height:608px;object-fit:cover;object-position:center}
+ #phase0{opacity:1;clip-path:circle(0px at 38% 51%)}
+ #phase1{clip-path:polygon(-60% 0,-60% 0,-110% 100%,-110% 100%)}
+ #phase2{clip-path:url(#brush-clip)} #phase3{clip-path:url(#slat-clip)} #phase4{clip-path:url(#mosaic-clip)}
+ #phase5{clip-path:polygon(-50% 0,-50% 0,-85% 100%,-85% 100%)}
+ #phase6{clip-path:url(#diagonal-clip)} #phase7{clip-path:url(#diamond-clip)}
+ #masks{position:absolute;width:0;height:0;pointer-events:none}
+ </style>
+</head>
+<body>
+<div data-hf-id="hf-0ehr" id="root" data-composition-id="brush-panel-transitions" data-start="0" data-duration="15.133333" data-width="1080" data-height="1920">
+ <div data-hf-id="hf-hv10" id="copy-top" class="copy">
+  <h1 data-hf-id="hf-ct8m" id="title" class="red" data-var-text="title">想开店又怕养团队？</h1>
+  <div data-hf-id="hf-7aj6" id="subtitle" class="yellow" data-var-text="subtitle">1个人＋AI员工</div>
+  <div data-hf-id="hf-pdr4" id="body" class="yellow" data-var-text="body">也能运行一家门店</div>
+ </div>
+ <div data-hf-id="hf-pgir" id="media-stage" aria-label="中间横屏素材与转场">
+  <div data-hf-id="hf-o95c" id="phase0" class="phase"><video data-hf-id="hf-fvir" id="video0" class="clip" muted playsinline src="assets/media/00.mp4" data-var-src="media0" data-start="0" data-duration="2.3" data-track-index="1"></video></div>
+  <div data-hf-id="hf-p0t5" id="phase1" class="phase"><video data-hf-id="hf-yw6m" id="video1" class="clip" muted playsinline src="assets/media/01.mp4" data-var-src="media1" data-start="1.5" data-duration="2.2" data-track-index="2"></video></div>
+  <div data-hf-id="hf-syx6" id="phase2" class="phase"><video data-hf-id="hf-4uzm" id="video2" class="clip" muted playsinline src="assets/media/02.mp4" data-var-src="media2" data-start="2.4" data-duration="4.4" data-track-index="3"></video></div>
+  <div data-hf-id="hf-wx17" id="phase3" class="phase"><video data-hf-id="hf-naim" id="video3" class="clip" muted playsinline src="assets/media/06.mp4" data-var-src="media3" data-start="5.1" data-duration="3.75" data-track-index="4"></video></div>
+  <div data-hf-id="hf-9fjo" id="phase4" class="phase"><video data-hf-id="hf-cm4w" id="video4" class="clip" muted playsinline src="assets/media/03.mp4" data-var-src="media4" data-start="7.55" data-duration="2.4" data-track-index="5"></video></div>
+  <div data-hf-id="hf-a77h" id="phase5" class="phase"><video data-hf-id="hf-wt7z" id="video5" class="clip" muted playsinline src="assets/media/04.mp4" data-var-src="media5" data-start="9.05" data-duration="2.4" data-track-index="6"></video></div>
+  <div data-hf-id="hf-e5bi" id="phase6" class="phase"><video data-hf-id="hf-z0e5" id="video6" class="clip" muted playsinline src="assets/media/00.mp4" data-var-src="media6" data-media-start="2.3" data-start="10.4" data-duration="2.6" data-track-index="7"></video></div>
+  <div data-hf-id="hf-i3fj" id="phase7" class="phase"><video data-hf-id="hf-83q1" id="video7" class="clip" muted playsinline src="assets/media/05.mp4" data-var-src="media7" data-start="11.9" data-duration="3.233333" data-track-index="8"></video></div>
+ </div>
+ <div data-hf-id="hf-3339" id="cta" class="copy red" data-var-text="cta">私信「OPC」了解模式</div>
+ <svg data-hf-id="hf-l07e" id="masks" aria-hidden="true"><defs data-hf-id="hf-mh0t">
+  <clippath data-hf-id="hf-rm6e" id="brush-clip" clipPathUnits="userSpaceOnUse"><polygon data-hf-id="hf-jsvi" id="brush-edge" points="-100,-100 -100,-100 -100,708 -100,708" /></clippath>
+  <clippath data-hf-id="hf-q6mu" id="slat-clip" clipPathUnits="userSpaceOnUse" />
+  <clippath data-hf-id="hf-l670" id="mosaic-clip" clipPathUnits="userSpaceOnUse" />
+  <clippath data-hf-id="hf-7vgn" id="diagonal-clip" clipPathUnits="userSpaceOnUse" />
+  <clippath data-hf-id="hf-q6iu" id="diamond-clip" clipPathUnits="userSpaceOnUse" />
+ </defs></svg>
+ <audio data-hf-id="hf-p6ut" id="bound-bgm" src="assets/media/reference-bgm.m4a" data-start="0" data-duration="15.116009" data-track-index="20" data-volume="1"></audio>
+</div>
+<script>
+// Shared stage: masks reveal actual moving media, never stretch or duplicate the pixels.
+// Circle geometry adapted from installed iris-reveal: plain register, no rim or dimming.
+const tl=gsap.timeline({paused:true});
+const ns='http://www.w3.org/2000/svg';
+function shape(parent,kind,id,attrs){const el=document.createElementNS(ns,kind);el.id=id;for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));document.getElementById(parent).appendChild(el);return el;}
+function reveal(id,old,t,end){tl.set('#phase'+id,{opacity:1},t);tl.set('#phase'+old,{opacity:0},end);}
+tl.fromTo('#phase0',{clipPath:'circle(0px at 38% 51%)'},{clipPath:'circle(780px at 38% 51%)',duration:.95,ease:'power2.inOut'},0);
+reveal(1,0,1.5,2.25);
+tl.fromTo('#phase1',{clipPath:'polygon(-60% 0,-60% 0,-110% 100%,-110% 100%)'},{clipPath:'polygon(-60% 0,160% 0,110% 100%,-110% 100%)',duration:.75,ease:'power3.inOut'},1.5);
+function brushPoints(p){let s='-1800,-100 ';for(let i=0;i<=76;i++){const y=-100+i*10.7;const tooth=((i*37)%19)*4;const x=-960+2400*p+.68*y-tooth;s+=x+','+y+' ';}return s+'-1800,714';}
+document.getElementById('brush-edge').setAttribute('points',brushPoints(0));
+const brush={p:0};reveal(2,1,2.4,3.6);
+tl.fromTo(brush,{p:0},{p:1,duration:1.1,ease:'power2.inOut',onUpdate:()=>document.getElementById('brush-edge').setAttribute('points',brushPoints(brush.p))},2.4);
+reveal(3,2,5.1,6.65);
+for(let i=0;i<8;i++){
+ const x=i*135;const r=shape('slat-clip','rect','slat-'+i,{x:x+135,y:0,width:0,height:608});
+ tl.fromTo(r,{attr:{x:x+135,width:0}},{attr:{x:x-1,width:137},duration:.7,ease:'power3.inOut'},5.1+(7-i)*.105);
+}
+reveal(4,3,7.55,8.8);
+for(let row=0;row<5;row++)for(let col=0;col<9;col++){
+ const x=col*120,y=row*121.6;const r=shape('mosaic-clip','rect','square-'+row+'-'+col,{x:x+60,y:y+60.8,width:0,height:0});
+ tl.fromTo(r,{attr:{x:x+60,y:y+60.8,width:0,height:0}},{attr:{x:x-1,y:y-1,width:122,height:123.6},duration:.55,ease:'power2.inOut'},7.55+(8-col)*.05+row*.035);
+}
+reveal(5,4,9.05,9.9);
+tl.fromTo('#phase5',{clipPath:'polygon(-50% 0,-50% 0,-85% 100%,-85% 100%)'},{clipPath:'polygon(-50% 0,150% 0,115% 100%,-85% 100%)',duration:.8,ease:'power3.inOut'},9.05);
+reveal(6,5,10.4,11.35);
+for(let i=0;i<7;i++){
+ const x=i*210-210;const p=shape('diagonal-clip','polygon','panel-'+i,{points:`${x},0 ${x},0 ${x-170},608 ${x-170},608`});
+ tl.fromTo(p,{attr:{points:`${x},0 ${x},0 ${x-170},608 ${x-170},608`}},{attr:{points:`${x},0 ${x+213},0 ${x+43},608 ${x-170},608`},duration:.55,ease:'power2.inOut'},10.4+i*.055);
+}
+reveal(7,6,11.9,13.25);
+function diamondPoints(x,y,r){return `${x},${y-r} ${x+r},${y} ${x},${y+r} ${x-r},${y}`;}
+for(let row=0;row<3;row++)for(let col=0;col<6;col++){
+ const x=col*216,y=row*304;const p=shape('diamond-clip','polygon','diamond-'+row+'-'+col,{points:diamondPoints(x,y,0)});
+ tl.fromTo(p,{attr:{points:diamondPoints(x,y,0)}},{attr:{points:diamondPoints(x,y,285)},duration:.8,ease:'power2.inOut'},11.9+(5-col)*.055+row*.06);
+}
+// Text is deliberately visible from frame zero through the last frame. No text tweens.
+window.__timelines=window.__timelines||{};
+window.__timelines['brush-panel-transitions']=tl;
+</script>
+</body>
+</html>

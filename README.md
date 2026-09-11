@@ -18,7 +18,7 @@
 
 ## 两个独立功能
 
-2026-09-11 新增离线源模板 **[三屏旋展甩切·红黄粗体（fan-whip-static）](script-to-matrix-video/references/fan-whip-static.md)**：1080×1920、30 fps、377 帧，红字奶白描边标题/CTA、黄色副标题，文字从首帧静态显示；保留三横屏旋展、甩切动效与原 BGM。模板和绑定音频已获仓库所有者公开同步授权，不包含客户素材。新增后仓库离线资产为 **22 套（18 ref + 4 动效）**。此更新不部署主站，平台数量仍以实时目录为准。
+2026-09-11 新增离线源模板 **[三屏旋展甩切·红黄粗体（fan-whip-static）](script-to-matrix-video/references/fan-whip-static.md)**：1080×1920、30 fps、377 帧，红字奶白描边标题/CTA、黄色副标题，文字从首帧静态显示；保留三横屏旋展、甩切动效与原 BGM。模板和绑定音频已获仓库所有者公开同步授权，不包含客户素材。当时仓库离线资产为 **22 套（18 ref + 4 动效）**。此更新不部署主站，平台数量仍以实时目录为准。
 
 后续保存新模板同时更新本机与 GitHub，见 [维护同步规则](script-to-matrix-video/references/template-publishing.md)。
 
@@ -34,15 +34,17 @@
 
 模板成片只允许使用客户素材或素材库中状态为“可使用”的图片和视频，禁止 AI 生成素材。没有合适素材时返回 `material_missing`，不会使用无关素材填充。
 
-离线参考排版每条随机 8–15 秒，使用 3 个不同的已审核视频；批量 BGM 保留轮换规则。四套独立动效模板保留各自固定时间线与绑定音乐。FFmpeg 通用渲染器保留用于文案成片和自定义清单，不再提供原 8 个标准模板。
+离线参考排版每条随机 8–15 秒，使用 3 个不同的已审核视频；批量 BGM 保留轮换规则。五套独立动效模板保留各自固定时间线与绑定音乐。FFmpeg 通用渲染器保留用于文案成片和自定义清单，不再提供原 8 个标准模板。
 
-## 22 套可复用视觉模板（离线资产）
+## 23 套可复用视觉模板（离线资产）
 
-原 8 套标准 FFmpeg 模板已删除。保留 18 套 HyperFrames 参考排版，以及 `nine-grid-reveal`、`triple-strip-shutter`、`yellow-banner-zoom`、`fan-whip-static` 四套独立动效模板。
+新增 **[横屏笔刷分片·上下黑底（brush-panel-transitions）](script-to-matrix-video/references/brush-panel-transitions.md)**：1080×1920、30 fps、454 帧，横屏画面居中、上下纯黑，保留笔刷/分片切换和绑定原 BGM。七条不同视频填入八个素材槽；红黄文字从首帧静态显示，不含原参考文字。源码和绑定 BGM 获用户授权公开同步，不包含客户演示素材；预览已检查，最终 MP4 尚未渲染。当前离线资产 23 套（18 ref + 5 动效），未部署主站。
+
+原 8 套标准 FFmpeg 模板已删除。保留 18 套 HyperFrames 参考排版，以及 `nine-grid-reveal`、`triple-strip-shutter`、`yellow-banner-zoom`、`fan-whip-static`、`brush-panel-transitions` 五套独立动效模板。
 
 离线默认改为 **`ref-15-tianjin-monochrome`（天津黑白极简）**，可替换任意主题文案。使用参考包的 rows 格式和 `scripts/render_reference_typography.py`，不把 ref ID 传给 FFmpeg 渲染器。完整 ID 与五层文字输入见 [参考排版说明](script-to-matrix-video/references/reference-typography-templates.md)。
 
-`assets/templates/catalog.json` 仅保存空标准目录和移除 ID，用于拒绝旧调用。参考模板及字体文件、四套动效和绑定 BGM 均保留。**线上平台目录仍实时读取，本次未部署或修改服务器。**
+`assets/templates/catalog.json` 仅保存空标准目录和移除 ID，用于拒绝旧调用。参考模板及字体文件、五套动效和绑定 BGM 均保留。**线上平台目录仍实时读取，本次未部署或修改服务器。**
 
 ### 九宫格开场·全屏展示
 
@@ -96,7 +98,7 @@ PR 会运行零付费模板回归，校验标准模板目录、参考模板清�
 
 ## 模板案例视频
 
-仓库保留 18 套参考排版的 MP4 和第一帧 JPG；原 8 套标准模板案例已移除。参考排版案例为 1080×1920、H.264/AAC；新任务时长随机为 8–15 秒。四套独立动效模板提供可复用源模板和绑定 BGM，未将客户视频打包成公开案例。
+仓库保留 18 套参考排版的 MP4 和第一帧 JPG；原 8 套标准模板案例已移除。参考排版案例为 1080×1920、H.264/AAC；新任务时长随机为 8–15 秒。五套独立动效模板提供可复用源模板和绑定 BGM，未将客户视频打包成公开案例。
 
 - [查看案例文案与 A/B 视频索引](script-to-matrix-video/references/template-examples.md)
 - [打开案例视频目录](script-to-matrix-video/assets/examples/text-media-text/)
@@ -148,7 +150,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 
 - Python 3.10+
 - FFmpeg 和 FFprobe
-- HyperFrames 模板需要 Node.js/npm；参考排版固定 `0.8.29`，前三套独立动效模板固定 `0.8.33`，`fan-whip-static` 固定 `0.8.34`
+- HyperFrames 模板需要 Node.js/npm；参考排版固定 `0.8.29`，前三套独立动效模板固定 `0.8.33`，`fan-whip-static` 和 `brush-panel-transitions` 固定 `0.8.34`
 - 阿里配音需要本机环境变量 `DASHSCOPE_API_KEY`
 - 远程素材库需要 OpenSSH 和已授权的 SSH 密钥
 - AI 图片能力只用于文案一键成片，不用于模板成片
@@ -186,7 +188,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 ```text
 script-to-matrix-video/   Skill 本体
   assets/fonts/           5 个开源中文字体家族及许可证
-  assets/templates/       18 套参考排版及 4 套独立动效模板
+  assets/templates/       18 套参考排版及 5 套独立动效模板
   assets/examples/        18 套参考排版案例视频与首帧预览图
 install.ps1               Windows 安装器
 INSTALL.md                完整安装与连接配置
