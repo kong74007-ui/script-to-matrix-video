@@ -3,6 +3,10 @@ __pycache__/
 .env
 .env.*
 material-library.json
+render-runtime.json
+provenance.private.json
+*.verified.json
+*.render.log
 *.pem
 *.key
 id_ed25519

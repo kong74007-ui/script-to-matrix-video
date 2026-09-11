@@ -1,1 +1,1 @@
-{"name":"bilingual-stagger-salon","private":true,"type":"module","scripts":{"check":"npx --yes hyperframes@0.8.38 check","preview":"npx --yes hyperframes@0.8.38 preview --background","render":"npx --yes hyperframes@0.8.38 render"}}
+{"name":"bilingual-stagger-salon","private":true,"type":"module","scripts":{"check":"npx --yes hyperframes@0.8.38 check","preview":"npx --yes hyperframes@0.8.38 preview --background","render":"python render_gpu_hdr.py .","render:sdr":"npx --yes hyperframes@0.8.38 render --gpu --browser-gpu --sdr --quality delivery --crf 16"}}

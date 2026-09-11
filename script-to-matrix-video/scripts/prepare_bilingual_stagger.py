@@ -42,16 +42,20 @@ def source(base, value):
 
 
 def validate(task, base):
+    profile = task.get("render_profile", "gpu-hdr")
+    require(profile in ("gpu-hdr", "sdr-compat"), "Unknown render profile")
+    fps = number(task.get("fps", 30))
+    require(fps in (30, 60), "FPS must be 30 or 60; do not invent intermediate frames")
     require(task.get("bgm") in (None, False, "none"), "This template has no BGM; create a separate customization")
     voice = source(base, task["voice"])
     vp = probe(voice)
     require(any(s["codec_type"] == "audio" for s in vp["streams"]), "Voice has no audio stream")
     audio_duration = number(vp["format"]["duration"])
     require(audio_duration > 0, "Voice is empty")
-    duration = number(task.get("duration", math.ceil((audio_duration + .6) * 30) / 30))
+    duration = number(task.get("duration", math.ceil((audio_duration + .6) * fps) / fps))
     require(duration >= audio_duration, "Do not truncate narration")
     require(duration - audio_duration <= 2, "Tail hold must be at most 2 seconds")
-    require(abs(duration * 30 - round(duration * 30)) < .001, "Duration must align to 30 fps")
+    require(abs(duration * fps - round(duration * fps)) < .001, "Duration must align to output fps")
     media = task["media"]
     require(len(media) >= 3, "At least three distinct real videos are required")
     prepared = []
@@ -61,18 +65,32 @@ def validate(task, base):
         if item["source_type"] == "library":
             require(item.get("status") == "可使用" and item.get("record_id"), "Library approval and record_id required")
         path = source(base, item["path"])
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        hasher = hashlib.sha256()
+        with path.open('rb') as source_file:
+            for block in iter(lambda: source_file.read(1024 * 1024), b''):
+                hasher.update(block)
+        digest = hasher.hexdigest()
         require(digest not in hashes, "Duplicate media contents")
         hashes.add(digest)
         p = probe(path)
         streams = [s for s in p["streams"] if s["codec_type"] == "video"]
         require(len(streams) == 1, "Expected one video stream")
         stream = streams[0]
-        require(stream.get("codec_name") == "h264", "Prepare H.264 video first")
-        require(stream.get("color_transfer") == "bt709" and stream.get("color_space") == "bt709",
-                "Prepare real Rec.709 SDR first; do not simply relabel HLG/PQ")
-        require(stream.get("width", 0) >= 720 and stream.get("height", 0) >= 1280,
-                "Prepare proportional portrait video, minimum 720x1280")
+        require(stream.get("codec_name") in ("h264", "hevc", "prores"), "Unsupported source video codec")
+        hdr = stream.get("color_transfer") in ("arib-std-b67", "smpte2084") and stream.get("color_primaries") == "bt2020"
+        if profile == "sdr-compat":
+            require(stream.get("color_transfer") == "bt709" and stream.get("color_space") == "bt709",
+                    "SDR compatibility profile requires real Rec.709 SDR")
+        elif hdr:
+            require(any(bit in stream.get("pix_fmt", "") for bit in ("10", "12", "16")), "HDR source must retain high bit depth")
+        else:
+            require(stream.get("color_primaries") == "bt709", "Untagged source needs color review")
+        rotation = next((s.get("rotation", 0) for s in stream.get("side_data_list", []) if "rotation" in s), 0)
+        width, height = stream.get("width", 0), stream.get("height", 0)
+        if abs(round(rotation)) % 180 == 90:
+            width, height = height, width
+        require(width >= (1080 if profile == "gpu-hdr" else 720) and height >= (1920 if profile == "gpu-hdr" else 1280),
+                "Use original portrait resolution, including rotation metadata; no 720p proxies for HDR")
         start = number(item.get("start", round(i * duration / len(media), 6)))
         end = number(item.get("end", duration if i == len(media)-1 else
                               round((i+1) * duration / len(media) + .18, 6)))
@@ -85,7 +103,8 @@ def validate(task, base):
         else:
             require(abs(prepared[-1]["end"] - start - .18) < .002,
                     "Adjacent clips must overlap by 0.18 seconds")
-        prepared.append(dict(item, path=path, start=start, end=end, offset=offset, sha256=digest))
+        prepared.append(dict(item, path=path, start=start, end=end, offset=offset, sha256=digest, hdr=hdr))
+    require(profile != "gpu-hdr" or any(item["hdr"] for item in prepared), "No genuine HDR source: cannot recover HDR from SDR proxies")
     require(abs(prepared[-1]["end"] - duration) < .002, "Final video must reach output end")
     cues = []
     for i, raw in enumerate(task["cues"]):
@@ -138,7 +157,7 @@ def prepare(task_file, output, validate_only=False):
     shutil.copy2(voice, output/voice_path)
     blocks, moves = [], []
     for i, item in enumerate(media):
-        path = "assets/media/%02d.mp4" % i
+        path = "assets/media/%02d%s" % (i, item["path"].suffix.lower())
         shutil.copy2(item["path"], output/path)
         s, d = item["start"], item["end"] - item["start"]
         later = " later" if i else ""
@@ -164,7 +183,7 @@ def prepare(task_file, output, validate_only=False):
         "__MEDIA_HTML__": "\n".join(blocks), "__MEDIA_MOTION__": "\n".join(moves),
         "__TITLE_HTML__": "\n".join(title_html), "__TITLE_MOTION__": "\n".join(title_moves),
         "__DURATION__": str(duration), "__VOICE_DURATION__": str(audio_duration),
-        "__VOICE_PATH__": voice_path}
+        "__VOICE_PATH__": voice_path, "__FPS__": str(int(task.get("fps", 30)))}
     markup = (TEMPLATE/"index.html.in").read_text(encoding="utf-8")
     for token, value in replacements.items():
         markup = markup.replace(token, value)
@@ -172,12 +191,19 @@ def prepare(task_file, output, validate_only=False):
     (output/"captions.js").write_text("window.CAPTION_CUES = "+json.dumps(cues, ensure_ascii=False)+";\n", encoding="utf-8")
     for name in ("package.json", "hyperframes.json"):
         shutil.copy2(TEMPLATE/name, output/name)
+    shutil.copy2(SKILL/"scripts/render_gpu_hdr.py", output/"render_gpu_hdr.py")
+    shutil.copy2(SKILL/"scripts/hyperframes_hdr_patch.py", output/"hyperframes_hdr_patch.py")
+    if task.get("render_profile", "gpu-hdr") == "sdr-compat":
+        package = json.loads((output/"package.json").read_text(encoding="utf-8"))
+        package["scripts"]["render"] = "npx --yes hyperframes@0.8.38 render --sdr --quality delivery --fps " + str(int(task.get("fps", 30)))
+        (output/"package.json").write_text(json.dumps(package), encoding="utf-8")
     (output/"meta.json").write_text(json.dumps({"id":output.name,"name":output.name}),encoding="utf-8")
     (output/"index.motion.json").write_text(json.dumps({"duration":duration,"assertions":[
         {"kind":"appearsBy","selector":"#heading-0","bySec":number(titles[0]["start"])+.4},
         *({"kind":"staysInFrame","selector":"#"+cue["id"]} for cue in cues)]}),encoding="utf-8")
     provenance = {"template_id":"bilingual-stagger-salon","bgm":None,"voice":str(voice),
-                  "duration":duration,"media":media,"notes":"Private job provenance; do not publish"}
+                  "duration":duration,"media":media,"render_profile":task.get("render_profile", "gpu-hdr"),
+                  "notes":"Private job provenance; do not publish; original bytes copied without tone mapping"}
     (output/"provenance.private.json").write_text(json.dumps(provenance,ensure_ascii=False,indent=2,default=str),encoding="utf-8")
     return {"valid":True,"project":str(output),"duration":duration,"media_count":len(media)}
 

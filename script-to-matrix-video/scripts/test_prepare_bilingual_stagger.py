@@ -15,6 +15,7 @@ class TemplateContract(unittest.TestCase):
         for i, name in enumerate(('voice.mp3', 'a.mp4', 'b.mp4', 'c.mp4')):
             (self.base/name).write_bytes(bytes([i]))
         self.task = {
+            'render_profile': 'sdr-compat',
             'voice': 'voice.mp3',
             'media': [{'path': n, 'source_type': 'client'} for n in ('a.mp4','b.mp4','c.mp4')],
             'titles': [{'text': '一起交流', 'start': 0, 'end': 'end'}],
@@ -39,6 +40,24 @@ class TemplateContract(unittest.TestCase):
     def test_duration_follows_voice(self):
         self.assertAlmostEqual(prep.validate(self.task, self.base)[2], 21.1)
 
+    def test_hdr_caption_layer_is_registered(self):
+        from html.parser import HTMLParser
+        found = []
+        class Layers(HTMLParser):
+            def handle_starttag(self, tag, attrs):
+                item = dict(attrs)
+                if item.get('id') == 'captions':
+                    found.append(item)
+        template = Path(prep.__file__).resolve().parents[1]/'assets/templates/bilingual-stagger-salon/index.html.in'
+        source = template.read_text(encoding='utf-8')
+        Layers().feed(source)
+        self.assertEqual(len(found), 1)
+        self.assertIn('clip', found[0]['class'].split())
+        self.assertEqual(found[0]['data-start'], '0')
+        self.assertEqual(found[0]['data-duration'], '__DURATION__')
+        self.assertEqual(found[0]['data-track-index'], '30')
+        self.assertIn('#captions{position:absolute;inset:0;z-index:30;', source)
+
     def test_reject_truncation(self):
         self.reject(lambda t: t.update(duration=8))
 
@@ -62,6 +81,27 @@ class TemplateContract(unittest.TestCase):
 
     def test_reject_nonfinite(self):
         self.reject(lambda t: t.update(duration=float('nan')))
+
+    def test_reject_fractional_fps(self):
+        self.reject(lambda t: t.update(fps=30.5))
+
+    def test_hdr_rejects_sdr_proxy(self):
+        self.reject(lambda t: t.update(render_profile='gpu-hdr'))
+
+    def test_accepts_rotated_original_hdr(self):
+        original_probe = prep.probe.side_effect
+        def hdr_probe(path):
+            result = original_probe(path)
+            if path.suffix != '.mp3':
+                result['streams'][0].update(codec_name='hevc', color_space='bt2020nc',
+                    color_transfer='arib-std-b67', color_primaries='bt2020', pix_fmt='yuv420p10le',
+                    width=1920, height=1080, side_data_list=[{'rotation':-90}])
+            return result
+        prep.probe.side_effect = hdr_probe
+        self.task.update(render_profile='gpu-hdr', fps=60)
+        result = prep.validate(self.task, self.base)
+        self.assertTrue(all(item['hdr'] for item in result[3]))
+        self.assertEqual(result[2], 21.1)
 
 
 if __name__ == '__main__':
