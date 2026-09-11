@@ -1,7 +1,7 @@
 ---
 name: script-to-matrix-video
-description: 黄雀主站模板成片（matrix-template）平台技能。顶部标题 + 底部行动文案 → 平台模板 → 9:16 成片。模板目录实时读取（2026-09-11 渲染服务实测 22 个：2 个 FFmpeg 固定版式 full-overlay-bold/poster-split + 17 个 HyperFrames 参考排版 ref-01~ref-17 + 九宫格开场 nine-grid-reveal + 特殊动效 triple-strip-shutter/yellow-banner-zoom）。时长一律由服务端决定：ref 随机整数 8~15 秒、FFmpeg 按文案长度 8~15 秒、九宫格固定 12 秒、配音跟随口播。AI 语义断句、素材选取（黄雀库头尾 + pexels 中间）、字体锁定全部服务端自动，Agent 不生成不传不改。内测期直出无报价卡。Use for 模板成片、上文字中素材下文字、批量矩阵视频、九宫格开场接全屏展示。Do not use for 手动逐帧剪辑（video-compose/video-timeline-compose）或完整文案口播成片（text-video-*/director）。
-short_description: 模板成片平台技能：模板目录（2026-09-11 实测 22 个）、语义排版契约、8~15 秒时长规则、素材策略、批量 2~5、直出交付纪律。
+description: 黄雀主站模板成片（matrix-template）平台技能。顶部标题 + 底部行动文案 → 平台模板 → 9:16 成片。模板目录实时读取、绝不写死数量（渲染服务侧 2026-09-11 实测 22 个：2 个 FFmpeg 固定版式 full-overlay-bold/poster-split + 17 个 HyperFrames 参考排版 ref-01~ref-17 + 九宫格开场 nine-grid-reveal + 特殊动效 triple-strip-shutter/yellow-banner-zoom；主站对外目录以页面实时为准）。时长一律由服务端决定：ref 随机整数 8~15 秒、FFmpeg 按文案长度 8~15 秒、九宫格固定 12 秒、配音跟随口播。AI 语义断句、素材选取（黄雀库头尾 + pexels 中间）、字体锁定全部服务端自动，Agent 不生成不传不改。内测期直出无报价卡。Use for 模板成片、上文字中素材下文字、批量矩阵视频、九宫格开场接全屏展示。Do not use for 手动逐帧剪辑（video-compose/video-timeline-compose）或完整文案口播成片（text-video-*/director）。
+short_description: 模板成片平台技能：模板目录以实时为准、语义排版契约、8~15 秒时长规则、素材策略、批量 2~5、直出交付纪律。
 short_description_zh: 黄雀成片子 Agent 模板成片操作手册（平台版）：模板目录/语义排版/时长规则/素材策略/批量与交付红线，服务端自动项 Agent 不越俎代庖。
 version: 7
 updated: 2026-09-11T00:00:00Z
@@ -58,7 +58,7 @@ updated: 2026-09-11T00:00:00Z
 | voices | 配音音色目录 | voiceover 的 voice 只从 ready 项复制 voice_key |
 | image-upload / video-upload | 上传素材拿 upload_id | 为 user_materials 做准备（上传免费不扣点，confirm 直发，约 4 小时有效） |
 
-## 3. 模板目录（2026-09-11 渲染服务实测 22 个；**实时目录为准，绝不凭记忆报数**）
+## 3. 模板目录（**以实时目录为准，绝不凭记忆报数**；2026-09-11 渲染服务侧实测 22 个，主站对外目录曾因 ref-07 契约冲突报「模板目录暂不可用」，以页面实时为准）
 
 实时目录见 `matrix-template-templates`（id/name/description/tags/engine/font_mode/variant/duration_mode/required_visuals/semantic_layout）。**绝不凭记忆报模板，绝不编 template_id。** 快照：
 
