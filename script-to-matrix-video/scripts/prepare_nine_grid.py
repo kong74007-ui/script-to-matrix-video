@@ -26,15 +26,17 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from gpu_runtime import accelerate_ffmpeg
 
 BASE_FILES = ("index.html", "template.json", "index.motion.json", "package.json",
-              "hyperframes.json", "meta.json")
+              "hyperframes.json", "meta.json", "gpu_runtime.py")
 ASSETS = ("fonts/NotoSerifSC-Variable.ttf", "fonts/NotoSansSC-Variable.ttf",
           "fonts/OFL-NotoSerifSC.txt", "fonts/OFL-NotoSansSC.txt", "vendor/gsap.min.js")
 MAIN_SECONDS = (6.3, 4.7, 5.0)
 
 
 def run(command):
+    command = accelerate_ffmpeg(command)
     flags = {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
     result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8",
                             errors="replace", timeout=1200, **flags)

@@ -1,13 +1,13 @@
 # 本机 GPU / 10-bit HEVC HDR
 
-适用：用户明确要求 NVIDIA GPU 编码并保留原素材 HDR 的离线任务。当前入口为 `scripts/render_gpu_hdr.py`，已接入 `bilingual-stagger-salon` 准备脚本；不代表其他旧模板或主站渲染服务已升级。其他模板迁移必须单独检查原始素材、动效、HDR 合成兼容性后实测。
+适用：用户明确要求 NVIDIA GPU 编码并保留原素材 HDR 的离线任务。当前 HDR 入口为 `scripts/render_gpu_hdr.py`，已接入 `bilingual-stagger-salon` 准备脚本。所有其他离线模板也已接入 [统一 GPU 执行规则](gpu-template-rendering.md)，但仍保留各自 SDR 兼容格式；这不代表全部模板已迁移 HDR，也不代表主站服务已部署。
 
 ## 画质与范围
 
 - 从原始 10-bit BT.2020 HLG/PQ 视频开始，保留方向、源帧率、源片段和比例。不能用先前已转 SDR、720p 或 H.264 代理的文件再贴 HDR 标签。没有 HDR 原片时说明限制，不声称能恢复原有高光。
 - 当前成片 1080×1920，30/60fps 可选，60fps 仅用于有相应源帧率的素材；不要用插帧宣称原生画质。文字字号、配音时间轴和动效保持模板约定。
 - HyperFrames 原生 HDR 分层合成保留高位深画面；DOM 文字层转换到目标色彩空间。输出 NVENC HEVC Main10、yuv420p10le、BT.2020、原片 HLG/PQ 类型、CQ16、VBR，无固定低码率上限；音频 AAC。
-- GPU 用于最终 NVENC 编码；浏览器文字层默认软件截图，避免本机曾出现的 GPU 捕获片尾无响应。HDR 解码、合成、磁盘读写仍依赖 CPU。不是全 GPU 流水线，也不是无损输出。`--browser-gpu` 仅供另行测试，不等于已验证的生产配置。HDR 高位深缓存较大，先确认临时磁盘有足够空间。
+- GPU 用于 NVDEC 支持的源视频解码、浏览器支持的图层处理和最终 NVENC 编码；浏览器默认 `--browser-gpu`。HDR 高位深图层合成、截图读回与磁盘读写仍依赖 CPU，不是全 GPU 流水线，也不是无损输出。若出现浏览器驱动/捕获兼容问题，可显式用 `--no-browser-gpu` 诊断，并说明仅浏览器阶段的例外，不能关闭 NVENC。HDR 高位深缓存较大，先确认临时磁盘有足够空间。
 - HLG HDR 不等于严格 HDR10 母版，更不等于保留 Dolby Vision 动态元数据；若用户明确要求 HDR10 mastering metadata 或 Dolby Vision，另行处理。普通 SDR 播放器显示效果不能用来判断 HDR 高光；需要支持 HDR 的显示链。
 
 ## 本机依赖（不公开个人配置）
@@ -28,7 +28,7 @@ python scripts/render_gpu_hdr.py new-job --output renders/final-hdr.mp4 --cli /p
 
 实测上游 HDR `runCaptureHdrStage` 没有把 `useGpu` 传给流式编码器，因此普通 `--gpu --hdr` 仍可能运行 libx265。`hyperframes_hdr_patch.py` 只在每次运行中生成同包目录下的唯一临时 CLI：补传此字段、为 HDR NVENC 设置 Main10/VBR/hvc1，拒绝 CPU 回退，结束后移除临时 CLI。原始安装文件与其他窗口不变。包目录必须可写。
 
-仅支持已审计的 0.8.38，版本或补丁锚点变化时失败并重新审计，不能盲目修改新版本；不声称上游已合并修复。生成项目必须同时保留 `render_gpu_hdr.py` 和 `hyperframes_hdr_patch.py`。
+HDR 仅支持已审计的 0.8.38，版本或补丁锚点变化时失败并重新审计，不能盲目修改新版本；不声称上游已合并修复。生成项目必须同时保留 `render_gpu_hdr.py`、`hyperframes_hdr_patch.py` 和 `gpu_runtime.py`。
 
 ## 验收
 

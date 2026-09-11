@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "npx --yes hyperframes@0.8.34 preview",
     "check": "npx --yes hyperframes@0.8.34 check",
-    "render": "npx --yes hyperframes@0.8.34 render",
+    "render": "python gpu_runtime.py --version 0.8.34 -- --sdr --fps 30 --quality high --workers 2",
     "publish": "npx --yes hyperframes@0.8.34 publish"
   }
 }

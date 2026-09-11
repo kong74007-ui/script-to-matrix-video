@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the bundled 18-style reference typography pack with HyperFrames.
+"""Render the bundled reference typography pack with HyperFrames.
 
 This wrapper keeps user media outside the Skill directory. It copies the immutable
 template pack into a task-owned work directory, stages three distinct approved video
@@ -20,6 +20,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from gpu_runtime import accelerate_ffmpeg, verify_nvenc
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -131,9 +132,10 @@ def stage_video(
         "+faststart",
         str(target),
     ]
-    completed = subprocess.run(command, check=False, **hidden_process_kwargs())
+    completed = subprocess.run(accelerate_ffmpeg(command), check=False, **hidden_process_kwargs())
     if completed.returncode != 0 or not target.is_file() or target.stat().st_size == 0:
         raise InputError(f"Could not normalize video for the reference template: {source}")
+    verify_nvenc(target)
     return target.relative_to(directory.parents[1]).as_posix()
 
 
@@ -171,9 +173,10 @@ def trim_render(raw: Path, final: Path, duration: int, ffmpeg: str) -> int:
         "+faststart",
         str(final),
     ]
-    completed = subprocess.run(command, check=False, **hidden_process_kwargs())
+    completed = subprocess.run(accelerate_ffmpeg(command), check=False, **hidden_process_kwargs())
     if completed.returncode != 0 or not final.is_file() or final.stat().st_size == 0:
         raise InputError(f"Could not trim rendered output: {raw}")
+    verify_nvenc(final)
     return round((time.perf_counter() - started) * 1000)
 
 
@@ -226,46 +229,9 @@ def validate_bgm_rotation(rows: list[dict[str, object]], base: Path) -> None:
 
 
 def resolve_browser_environment(npx: str, workdir: Path) -> dict[str, str]:
-    env = os.environ.copy()
-    if os.name != "nt" or env.get("HYPERFRAMES_BROWSER_PATH"):
-        return env
-
-    candidates = (
-        Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
-        Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
-        Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
-        Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
-    )
-    installed_browser = next((path for path in candidates if path.is_file()), None)
-    if installed_browser:
-        env["HYPERFRAMES_BROWSER_PATH"] = str(installed_browser)
-        return env
-
-    try:
-        result = subprocess.run(
-            [npx, "--yes", f"hyperframes@{HYPERFRAMES_VERSION}", "browser", "path"],
-            cwd=workdir,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            **hidden_process_kwargs(),
-        )
-        bundled = Path(result.stdout.strip()) if result.returncode == 0 else None
-        if bundled and bundled.is_file():
-            probe = subprocess.run(
-                [str(bundled), "--version"],
-                check=False,
-                capture_output=True,
-                timeout=10,
-                **hidden_process_kwargs(),
-            )
-            if probe.returncode == 0:
-                return env
-    except (OSError, subprocess.SubprocessError):
-        pass
-
-    return env
+    # Let the pinned runtime select its tested browser cache. Do not silently
+    # force system Edge/Chrome; preserve an explicit user override unchanged.
+    return os.environ.copy()
 
 
 def prepare(args: argparse.Namespace) -> tuple[Path, Path, list[dict[str, object]]]:
@@ -409,10 +375,11 @@ def render(args: argparse.Namespace) -> int:
     raw_dir.mkdir(parents=True, exist_ok=True)
     output_pattern = (raw_dir / "{name}.mp4").as_posix()
     command = [
-        npx,
-        "--yes",
-        f"hyperframes@{HYPERFRAMES_VERSION}",
-        "render",
+        sys.executable,
+        str(workdir / "gpu_runtime.py"),
+        "--version",
+        HYPERFRAMES_VERSION,
+        "--",
         "--batch",
         "batch/prepared-rows.json",
         "--output",
@@ -429,14 +396,20 @@ def render(args: argparse.Namespace) -> int:
         "--sdr",
         "--json",
     ]
-    completed = subprocess.run(
+    completed = subprocess.Popen(
         command,
         cwd=workdir,
         env=resolve_browser_environment(npx, workdir),
-        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
         **hidden_process_kwargs(),
     )
-    if completed.returncode != 0:
+    for line in completed.stdout:
+        print(line.rstrip(), flush=True)
+    if completed.wait() != 0:
         return completed.returncode
 
     finalized_rows: list[dict[str, object]] = []
@@ -447,6 +420,7 @@ def render(args: argparse.Namespace) -> int:
         final = output_dir / f"{name}.mp4"
         if not raw.is_file():
             raise InputError(f"HyperFrames did not create the expected output: {raw}")
+        verify_nvenc(raw)
         finalization_ms = trim_render(raw, final, duration, ffmpeg)
         finalized_rows.append(
             {
@@ -478,7 +452,7 @@ def render(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Render the 18 bundled reference typography templates"
+        description="Render the bundled reference typography templates"
     )
     parser.add_argument("batch", help="JSON file with a rows or jobs array")
     parser.add_argument("--workdir", help="Task-owned HyperFrames project directory")

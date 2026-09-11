@@ -39,6 +39,7 @@ class TripleStripTests(unittest.TestCase):
         for name in ("package.json", "hyperframes.json", "index.motion.json", "meta.json"):
             (self.template / name).write_text("{}", encoding="utf-8")
         (self.template / "frame.md").write_text("Fixture design", encoding="utf-8")
+        shutil.copy2(Path(__file__).with_name("gpu_runtime.py"), self.template / "gpu_runtime.py")
         (self.template / "compositions").mkdir()
         opening_html = "<template>" + "".join(
             f'<video src="assets/opening/{index:02}.mp4" data-duration="3.9"></video>'

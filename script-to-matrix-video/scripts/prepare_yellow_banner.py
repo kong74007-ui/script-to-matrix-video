@@ -40,7 +40,7 @@ CUT_FRAMES = (86, 183)
 TEXT_LIMITS = {"title": 12, "subtitle1": 16, "subtitle2": 16,
                "sourceLabel": 8, "body": 90, "cta": 24}
 OPTIONAL_TEXT = frozenset(("subtitle2", "sourceLabel", "cta"))
-BASE_FILES = ("index.html", "template.json", "package.json", "hyperframes.json")
+BASE_FILES = ("index.html", "template.json", "package.json", "hyperframes.json", "gpu_runtime.py")
 OPTIONAL_FILES = ("index.motion.json", "meta.json", "frame.md")
 MEDIA_PATHS = {f"media{index}": f"assets/media/{index:02}.mp4" for index in range(1, 4)}
 VIDEO_SUFFIXES = frozenset((".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi", ".mts", ".m2ts", ".mpeg", ".mpg"))

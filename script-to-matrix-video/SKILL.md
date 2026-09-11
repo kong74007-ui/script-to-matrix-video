@@ -207,7 +207,7 @@ updated: 2026-09-11T00:00:00Z
 
 ## 11. 仓库文件地图与部署注意
 
-- 离线 GPU/HDR 维护：新增 [10-bit HEVC HDR 渲染说明](references/gpu-hdr-rendering.md) 及 NVENC 实测包装器，接入 `bilingual-stagger-salon` 原始 HDR 素材工作流。0.8.38 HDR 漏传 GPU 参数由隔离临时补丁处理，不修改安装的 CLI。其他模板和主站服务没有因此自动迁移；不得宣称已部署或全流程均由 GPU 执行。
+- 离线模板统一 GPU：所有保存模板的九个模板族入口已接入 [GPU 默认执行规则](references/gpu-template-rendering.md)，优先 NVDEC 解码、CUDA 预处理缩放、浏览器 GPU 和强制 NVENC 编码，拒绝静默 CPU 编码回退。普通模板保留 H.264 SDR，`bilingual-stagger-salon` 使用 [10-bit HEVC HDR](references/gpu-hdr-rendering.md)；不改变版式、动效、音乐或时长规则。隔离临时兼容补丁不改安装的 CLI。此更新不代表主站部署、旧任务自动迁移或所有步骤均由 GPU 执行。
 
 - 新增离线资产 [双语错位字幕·配音成片（bilingual-stagger-salon）](references/bilingual-stagger-salon.md)：白色手写标题、黄色关键词、中英双层字幕按配音逐字错位入场，三条以上不同真实视频、短叠化和微推近。用 `scripts/prepare_bilingual_stagger.py` 准备任务，HyperFrames 0.8.38 检查与渲染。时长跟随配音，不随机 8–15 秒，无绑定 BGM；此模板明确保留文字动效，不改变其他模板。只公开代码、共享字体及许可证，配音和库视频不公开。仅离线源码，不代表上线主站；实时目录未返回此 ID 时不得提交生产任务。
 

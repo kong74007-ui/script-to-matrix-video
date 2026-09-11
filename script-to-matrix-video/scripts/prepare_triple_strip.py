@@ -33,7 +33,7 @@ DURATION = 17.6
 OPENING_FRAMES = 117
 MAIN_FRAMES = (82, 82, 82, 82, 83)
 TEXT_LIMITS = {"title": 10, "subtitle": 18, "ctaLine1": 14, "ctaLine2": 14}
-BASE_FILES = ("index.html", "template.json", "package.json", "hyperframes.json")
+BASE_FILES = ("index.html", "template.json", "package.json", "hyperframes.json", "gpu_runtime.py")
 OPTIONAL_FILES = ("index.motion.json", "meta.json", "frame.md")
 MEDIA_PATHS = {f"{group}{index}": f"assets/{group}/{index:02}.mp4"
                for group, count in (("opening", 3), ("main", 5)) for index in range(1, count + 1)}

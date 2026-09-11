@@ -4,6 +4,8 @@
 
 当前版本：`v1.8.7`
 
+离线模板 GPU 更新：全部已保存模板入口现默认使用 GPU 浏览器处理及 NVENC 编码，支持的解码与预处理缩放也优先 GPU。普通模板仍为 H.264 SDR，双语配音 HDR 模板为 HEVC Main10；不修改排版、动效、BGM 或时长规则。详见 [统一 GPU 渲染说明](script-to-matrix-video/references/gpu-template-rendering.md)。此更新不等于生产服务已部署，已生成的旧项目需更新入口。
+
 > ## ⚠️ 黄雀主站现状（2026-09-10 起，先读这段）
 >
 > 黄雀主站上「模板成片」已平台化：由主站矩阵模板能力（matrix-template-*，20 个模板）在渲染机集群出片，成片子 Agent（hq-compose）用 `hq capabilities` / `hq run` 调用；本地渲染器（本仓库 `scripts/` 与下方两功能描述）在主站**已退役**，仅保留作离线参考、模板资产源与外部环境自渲染。

@@ -193,9 +193,10 @@ def prepare(task_file, output, validate_only=False):
         shutil.copy2(TEMPLATE/name, output/name)
     shutil.copy2(SKILL/"scripts/render_gpu_hdr.py", output/"render_gpu_hdr.py")
     shutil.copy2(SKILL/"scripts/hyperframes_hdr_patch.py", output/"hyperframes_hdr_patch.py")
+    shutil.copy2(SKILL/"scripts/gpu_runtime.py", output/"gpu_runtime.py")
     if task.get("render_profile", "gpu-hdr") == "sdr-compat":
         package = json.loads((output/"package.json").read_text(encoding="utf-8"))
-        package["scripts"]["render"] = "npx --yes hyperframes@0.8.38 render --sdr --quality delivery --fps " + str(int(task.get("fps", 30)))
+        package["scripts"]["render"] = "python gpu_runtime.py --version 0.8.38 -- --sdr --quality delivery --fps " + str(int(task.get("fps", 30)))
         (output/"package.json").write_text(json.dumps(package), encoding="utf-8")
     (output/"meta.json").write_text(json.dumps({"id":output.name,"name":output.name}),encoding="utf-8")
     (output/"index.motion.json").write_text(json.dumps({"duration":duration,"assertions":[

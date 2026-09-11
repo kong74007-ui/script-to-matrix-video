@@ -95,7 +95,7 @@ python scripts/prepare_yellow_banner.py --task "D:/video-jobs/yellow-banner/task
 Set-Location "D:/video-jobs/yellow-banner/prepared"
 $env:PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS="60000"
 npx --yes hyperframes@0.8.33 check --json
-npx --yes hyperframes@0.8.33 render --output renders/video.mp4 --fps 30 --quality high --workers 2 --browser-timeout 60 --sdr
+npm run render -- --output renders/video.mp4 --browser-timeout 60
 ```
 
 不要向 Skill 模板目录写入任务素材、缓存或成片。Windows 下以隐藏窗口运行 CLI、浏览器和 FFmpeg 子进程。渲染后用 FFprobe 验证 1080×1920、30 fps、302 帧、H.264 视频和 AAC 音频，并实际检查第 0、85、86、182、183、301 帧及冲击效果附近帧，确认六层非空文字始终可见、三段素材顺序正确、无补黑或素材缺失。

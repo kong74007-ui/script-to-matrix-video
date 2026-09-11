@@ -1,1 +1,11 @@
-{"name":"bilingual-stagger-salon","private":true,"type":"module","scripts":{"check":"npx --yes hyperframes@0.8.38 check","preview":"npx --yes hyperframes@0.8.38 preview --background","render":"python render_gpu_hdr.py .","render:sdr":"npx --yes hyperframes@0.8.38 render --gpu --browser-gpu --sdr --quality delivery --crf 16"}}
+{
+  "name": "bilingual-stagger-salon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "npx --yes hyperframes@0.8.38 check",
+    "preview": "npx --yes hyperframes@0.8.38 preview --background",
+    "render": "python render_gpu_hdr.py .",
+    "render:sdr": "python gpu_runtime.py --version 0.8.38 -- --sdr --fps 30 --quality high --workers 2"
+  }
+}

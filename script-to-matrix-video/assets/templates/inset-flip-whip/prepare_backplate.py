@@ -4,12 +4,14 @@ import json
 from pathlib import Path
 import subprocess
 import tempfile
+from gpu_runtime import accelerate_ffmpeg
 
 ROOT = Path(__file__).resolve().parent
 FLAGS = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 def run(args):
+    args = accelerate_ffmpeg(args)
     return subprocess.run(args, check=True, capture_output=True, text=True,
                           encoding="utf-8", creationflags=FLAGS).stdout
 

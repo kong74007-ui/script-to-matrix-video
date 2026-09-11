@@ -2,6 +2,7 @@
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 from hyperframes_hdr_patch import patch_source, patched_cli
 from render_gpu_hdr import is_hdr, Composition, verify_output
 
@@ -34,7 +35,7 @@ class HdrBridge(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             original = Path(directory)/'cli.js'
             original.write_text(FIXTURE, encoding='utf-8')
-            with self.assertRaises(RuntimeError):
+            with patch('hyperframes_hdr_patch.patch_gpu_source', side_effect=lambda value: value), self.assertRaises(RuntimeError):
                 with patched_cli(original) as name:
                     temp = Path(name)
                     self.assertEqual(temp.parent, original.parent)
