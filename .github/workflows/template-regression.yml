@@ -36,9 +36,9 @@ jobs:
         run: python script-to-matrix-video/scripts/test_triple_strip.py
       - name: Verify yellow-banner template and bound BGM
         run: python script-to-matrix-video/scripts/test_yellow_banner.py
-      - name: Render zero-cost review artifacts
+      - name: Build retained reference preview contact sheet
         run: python script-to-matrix-video/scripts/render_ci_artifacts.py "${{ runner.temp }}/template-regression"
-      - name: Upload contact sheet and representative videos
+      - name: Upload retained reference contact sheet
         uses: actions/upload-artifact@v7
         with:
           name: template-regression

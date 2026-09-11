@@ -148,17 +148,15 @@ Unknown values must fall back to `static` or `cut` and be recorded in the render
 - `full-frame`: default; the image fills the entire canvas and captions use the standard lower safe area.
 - `text-media-text`: top scene title, framed media in the middle, and timed captions or fixed text below. Read [layout-templates.md](layout-templates.md) for the configurable region, colors, type sizes, and per-scene fields.
 
-`text-media-text` uses the renderer's `native-bold` structural variant, while the bundled visual choice is controlled by one of eight catalog IDs: `black-left-bold`, `white-center-bold`, `white-handwritten`, `black-playful`, `white-left-editorial`, `black-right-modern`, `white-left-playful`, or `black-center-editorial`. The default is `black-left-bold`. All eight use a solid black or white background, a block title, about 5% visible top margin, central media, a fixed CTA, and no decorative surfaces or text fade-in. Projects may override safe sizing and crop fields without creating an undeclared ninth template. Scene highlight arrays accept strings or objects shaped as `{"text":"40%","color":"#FFD400"}`.
-
 For Agent-selected emphasis, use the top-level `emphasis.v1` object described in [semantic-emphasis.md](semantic-emphasis.md). Its `top` and `bottom` offsets must match the exact persistent scene copy. Scene-level highlight arrays remain backward compatible and take precedence. The renderer drops stale or invalid spans, falls back to conservative deterministic rules when appropriate, and records the resolved provider and span counts in `render_report.emphasis`.
 
-For one of the eight bundled standard styles, set only a stable template identifier:
+The eight standard FFmpeg presets have been removed. This schema remains available for full-script videos and explicit custom layouts, not for selecting retained reference templates. Omit `layout.template_id` for custom low-level rendering:
 
 ```json
-{"layout": {"template_id": "white-handwritten"}}
+{"layout": {"preset": "text-media-text"}}
 ```
 
-The renderer loads its defaults from `assets/templates/catalog.json`. Explicit project `layout` and `render` fields override template defaults. Read [style-templates.md](style-templates.md) for the complete catalog. Bundled templates can set independent `top_font` and `bottom_font`, one persistent `kicker`, validated `surface_boxes` decoration, and one catalog-owned semantic `emphasis_profile`. The Skill automatically supplies `assets/fonts` to FFmpeg/libass; set `render.fonts_dir` only for a custom font directory contained inside the current project.
+Bundled fonts remain available to the low-level renderer. Saved reference templates use the dedicated schema below.
 
 The 18 IDs beginning with `ref-` use a separate five-layer HyperFrames batch schema rather than this `project.json` schema. Read [reference-typography-templates.md](reference-typography-templates.md) and render them with `scripts/render_reference_typography.py`; do not pass a `ref-` ID to `render_video.py`.
 

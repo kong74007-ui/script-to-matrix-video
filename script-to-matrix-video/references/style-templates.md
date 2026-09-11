@@ -1,6 +1,6 @@
 # 模板目录（主站现行，2026-09-10）
 
-> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。旧版本地渲染器的 29 模板目录见 `legacy-local-renderer.md`。
+> 本页是平台版模板目录快照。**实时目录以 `matrix-template-templates` 为准**，template_id 只从实时结果取，绝不编造。本仓库离线资产现保留 21 个模板（18 ref + 3 动效），原 8 个标准 FFmpeg 预设已删除；平台 20 个模板快照不受本次离线资产精简影响。两代区别见 `legacy-local-renderer.md`。
 
 主站现行共 **20 个模板**：2 个 FFmpeg 固定版式 + 17 个 HyperFrames 参考排版（ref-01~ref-17）+ 1 个九宫格开场。
 

@@ -180,6 +180,8 @@ def resolve_template(project: dict[str, Any]) -> tuple[dict[str, Any], str | Non
     catalog = load_json(TEMPLATE_CATALOG_PATH)
     if catalog.get("version") != 1 or not isinstance(catalog.get("templates"), list):
         raise RuntimeError(f"Invalid template catalog: {TEMPLATE_CATALOG_PATH}")
+    if template_id in catalog.get("removed_template_ids", []):
+        raise RuntimeError(f"Removed standard template: {template_id}. Select a ref- template and use render_reference_typography.py.")
     templates = [item for item in catalog["templates"] if isinstance(item, dict)]
     ids = [str(item.get("id") or "") for item in templates]
     if len(ids) != len(set(ids)) or not template_id in ids:

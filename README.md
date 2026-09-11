@@ -14,7 +14,7 @@
 
 2026-09-10 模板更新：新增独立的 `nine-grid-reveal` 九宫格开场·全屏展示，固定 12 秒，标题与 CTA 从首帧显示至结尾，并随模板保存和复用已授权同步到仓库的参考 BGM。
 
-2026-09-10 后续同步：新增 `triple-strip-shutter` 三横屏开场·光栅快切和 `yellow-banner-zoom` 黄条标题·变幅冲击，两套源模板与各自绑定 BGM 经用户本次授权公开同步至 GitHub。当前仓库共 29 套模板。
+2026-09-10 后续同步：新增 `triple-strip-shutter` 三横屏开场·光栅快切和 `yellow-banner-zoom` 黄条标题·变幅冲击，两套源模板与各自绑定 BGM 经用户本次授权公开同步至 GitHub。精简后当前仓库共 21 套模板（18 套参考排版 + 3 套独立动效），原 8 套标准模板及其案例已移除。
 
 ## 两个独立功能
 
@@ -30,31 +30,15 @@
 
 模板成片只允许使用客户素材或素材库中状态为“可使用”的图片和视频，禁止 AI 生成素材。没有合适素材时返回 `material_missing`，不会使用无关素材填充。
 
-标准模板成片总时长硬性不低于 8 秒，常规范围为 8–15 秒。无配音时按以下公式计算：
+离线参考排版每条随机 8–15 秒，使用 3 个不同的已审核视频；批量 BGM 保留轮换规则。三套独立动效模板保留各自固定时间线与绑定音乐。FFmpeg 通用渲染器保留用于文案成片和自定义清单，不再提供原 8 个标准模板。
 
-```text
-目标时长 = max(8秒, 文字阅读时间 + 1.5秒)
-```
+## 21 套可复用视觉模板（离线资产）
 
-阅读速度按每秒约 5 个可见中文字符、字母或数字估算。渲染器会再次计算并把过短清单延长到完整的文案阅读时长，不会把所有视频都固定成 8 秒。
+原 8 套标准 FFmpeg 模板已删除。保留 18 套 HyperFrames 参考排版，以及 `nine-grid-reveal`、`triple-strip-shutter`、`yellow-banner-zoom` 三套独立动效模板。
 
-例外：18 套 `ref-` 参考排版不让用户填写时长。每条新任务自动随机生成 8–15 秒整数时长，并记录到准备清单；同一次任务重跑保持一致。每条固定使用 3 段不同的素材库视频并按总时长均分。选择它们时仍必须先把长文案压缩或拆条，不能为了塞字而破坏已确认的字号和层级。
+离线默认改为 **`ref-15-tianjin-monochrome`（天津黑白极简）**，可替换任意主题文案。使用参考包的 rows 格式和 `scripts/render_reference_typography.py`，不把 ref ID 传给 FFmpeg 渲染器。完整 ID 与五层文字输入见 [参考排版说明](script-to-matrix-video/references/reference-typography-templates.md)。
 
-标准模板素材采用视频优先策略：8–10 秒至少使用 2 个不同素材，10–15 秒至少 3 个，默认至少包含 1 个素材库视频。只有两次视频检索均无合适结果并写明原因时，才允许纯图片成片。标准模板和参考排版批量开启 BGM 时会轮换曲库：2–3 条成片至少 2 首，4 条及以上至少 3 首，相邻成片不得使用同一首。三套独立动效模板使用下方各自规则，保留绑定音乐。
-
-标准模板批量渲染前必须运行 `scripts/validate_template_batch.py`，它会阻止单素材、无理由纯图片、A/B 素材重复、BGM 未轮换以及时长不足的任务进入渲染。
-
-## 29 套可复用视觉模板
-
-模板成片包含三组稳定模板：8 套黑白字体排版标准模板、18 套根据已确认案例保留下来的 HyperFrames 参考排版模板，以及 `nine-grid-reveal`、`triple-strip-shutter`、`yellow-banner-zoom` 三套独立动效模板。默认仍是黑底左排粗体 `black-left-bold`；参考模板 ID 使用 `ref-01-...` 到 `ref-18-...`，覆盖 AI 沙龙、城市圈层、女性成长、同城活动、OPC 招募、美业私域和强 CTA 等排版。
-
-```json
-{"layout": {"template_id": "black-left-bold"}}
-```
-
-8 套标准模板位于 `script-to-matrix-video/assets/templates/catalog.json`，使用 FFmpeg 渲染；18 套参考排版位于 `script-to-matrix-video/assets/templates/reference-typography-17/`，使用固定版本 HyperFrames 渲染，并由 `scripts/render_reference_typography.py` 统一准备素材与批量输出。完整 ID、输入字段和适用场景见 [参考排版模板目录](script-to-matrix-video/references/reference-typography-templates.md)。
-
-8 套标准模板支持 `emphasis.v1` 语义重点；18 套参考模板直接固定五层文字的字号、颜色、描边和层级，输入 `top1`/`top2`/`top3` 与 `bottom1`/`bottom2` 即可复用，不在渲染期间调用模型。
+`assets/templates/catalog.json` 仅保存空标准目录和移除 ID，用于拒绝旧调用。参考模板及字体文件、三套动效和绑定 BGM 均保留。**线上平台目录仍实时读取，本次未部署或修改服务器。**
 
 ### 九宫格开场·全屏展示
 
@@ -86,9 +70,9 @@ v1.7.3 将个人素材库连接设为首次安装硬门槛。新电脑必须先�
 
 v1.7.4 取消所有标题、固定 CTA 和浮层文字的透明度渐入。文字从出现的第一帧即为完全不透明；短暂渐出、可选缩放弹入和素材转场保持不变。
 
-v1.7.5 重做了当时的 `native-bold` 数据版式。后续模板精简将默认恢复为 `black-left-bold`，避免旧模板被静默恢复。
+v1.7.5 重做了当时的 `native-bold` 数据版式。该历史默认后来已移除，当前离线默认见上文。
 
-v1.8.0 新增 17 套经过成片验证的 HyperFrames 参考排版模板，保存完整模板源文件、稳定 ID、批量渲染脚本、17 条 MP4 案例和 17 张首帧预览；原有 8 套标准模板继续保留。
+v1.8.0 新增 17 套经过成片验证的 HyperFrames 参考排版模板，保存完整模板源文件、稳定 ID、批量渲染脚本、17 条 MP4 案例和 17 张首帧预览；当时保留的 8 套标准模板现已移除。
 
 v1.8.1 将 17 套参考模板从固定 8 秒改为每条任务自动随机 8–15 秒；随机结果写入准备清单并在同一任务内复用。每条参考模板统一使用 3 段不同视频素材，按随机总时长自动均分。
 
@@ -108,7 +92,7 @@ PR 会运行零付费模板回归，校验标准模板目录、参考模板清�
 
 ## 模板案例视频
 
-仓库为原有 26 套模板保存了可直接查看的 MP4 和第一帧 JPG：8 套标准模板案例，以及 18 套参考排版案例。参考排版案例为 1080×1920、H.264/AAC；新任务时长随机为 8–15 秒。三套独立动效模板提供可复用源模板和绑定 BGM，未将客户视频打包成公开案例。
+仓库保留 18 套参考排版的 MP4 和第一帧 JPG；原 8 套标准模板案例已移除。参考排版案例为 1080×1920、H.264/AAC；新任务时长随机为 8–15 秒。三套独立动效模板提供可复用源模板和绑定 BGM，未将客户视频打包成公开案例。
 
 - [查看案例文案与 A/B 视频索引](script-to-matrix-video/references/template-examples.md)
 - [打开案例视频目录](script-to-matrix-video/assets/examples/text-media-text/)
@@ -198,8 +182,8 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 ```text
 script-to-matrix-video/   Skill 本体
   assets/fonts/           5 个开源中文字体家族及许可证
-  assets/templates/       8 套标准模板、18 套参考排版及 3 套独立动效模板
-  assets/examples/        26 套模板案例视频与首帧预览图
+  assets/templates/       18 套参考排版及 3 套独立动效模板
+  assets/examples/        18 套参考排版案例视频与首帧预览图
 install.ps1               Windows 安装器
 INSTALL.md                完整安装与连接配置
 功能介绍.md               两个独立功能的说明

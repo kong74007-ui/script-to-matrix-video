@@ -35,8 +35,8 @@ foreach ($requiredPath in @($catalogPath, $referenceManifestPath, $referenceRend
 
 $catalog = Get-Content -LiteralPath $catalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $templateIds = @($catalog.templates | ForEach-Object { [string]$_.id })
-if ($catalog.version -ne 1 -or $templateIds.Count -ne 8 -or @($templateIds | Sort-Object -Unique).Count -ne 8) {
-    throw 'Standard template catalog must be version 1 with exactly 8 unique template IDs.'
+if ($catalog.version -ne 1 -or $templateIds.Count -ne 0 -or @($catalog.removed_template_ids).Count -ne 8) {
+    throw 'Retired standard catalog must be version 1, empty, and record eight removed IDs.'
 }
 
 $referenceManifest = Get-Content -LiteralPath $referenceManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json

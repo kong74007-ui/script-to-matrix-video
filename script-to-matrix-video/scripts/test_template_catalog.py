@@ -29,32 +29,33 @@ def assert_raises_runtime(action) -> None:
 
 
 def check_real_catalog() -> None:
-    assert renderer.TEMPLATE_CATALOG_PATH.is_file(), "required template catalog is missing"
     catalog = json.loads(renderer.TEMPLATE_CATALOG_PATH.read_text(encoding="utf-8"))
-    ids = [item.get("id") for item in catalog.get("templates", []) if isinstance(item, dict)]
-    profiles = catalog.get("emphasis_profiles") or {}
-    assert catalog.get("version") == 1
-    assert ids == [
-        "black-left-bold",
-        "white-center-bold",
-        "white-handwritten",
-        "black-playful",
-        "white-left-editorial",
-        "black-right-modern",
-        "white-left-playful",
-        "black-center-editorial",
-    ]
-    assert len(ids) == len(set(ids))
-    assert set(profiles) == set(ids)
-    for template_id in ids:
-        project, resolved_id = renderer.resolve_template({"layout": {"template_id": template_id}})
-        assert resolved_id == template_id
-        layout = renderer.resolve_layout(project, 1080, 1920, [])
-        assert layout and layout["emphasis_profile"]["scale"] > 1
-        renderer.validated_font(project["render"]["subtitle_font"], f"{template_id}.subtitle_font")
-        assert renderer.resolve_font_files(
-            renderer.DEFAULT_FONTS_DIR, renderer.required_font_families(project["render"], layout)
-        )
+    assert catalog["version"] == 1 and catalog["templates"] == []
+    assert catalog["emphasis_profiles"] == {}
+    removed = catalog["removed_template_ids"]
+    assert len(removed) == len(set(removed)) == 8
+    pack = SCRIPTS.parent / "assets/templates/reference-typography-17"
+    retained = json.loads((pack / "manifest.json").read_text(encoding="utf-8"))
+    assert catalog["default_template_id"] in {item["id"] for item in retained["templates"]}
+    assert catalog["default_renderer"] == "render_reference_typography.py"
+    for template_id in removed:
+        assert_raises_runtime(lambda: renderer.resolve_template({"layout": {"template_id": template_id}}))
+        for suffix in (".jpg", ".mp4"):
+            assert not (SCRIPTS.parent / "assets/examples/text-media-text" / (template_id + suffix)).exists()
+
+
+def custom_test_layout(alignment: str = "left") -> dict:
+    """Explicit low-level renderer fixture, not a selectable saved template."""
+    return {
+        "preset": "text-media-text", "variant": "native-bold",
+        "text_alignment": alignment, "top_text_layout": "block",
+        "top_text_x": 1004 if alignment == "right" else 76,
+        "bottom_text_x": 1004 if alignment == "right" else 76,
+        "top_text_y": 80, "bottom_text_y": 1730,
+        "top_font": "Noto Sans SC", "bottom_font": "Noto Sans SC",
+        "top_max_chars": 12, "top_max_lines": 4,
+        "auto_highlight": False, "text_pop_in": False,
+    }
 
 
 def check_reference_typography_pack() -> None:
@@ -276,7 +277,7 @@ def check_layout_and_ass() -> None:
         bottom = "评论区扣勾兑"
         native_project, _ = renderer.resolve_template(
             {
-                "layout": {"template_id": "black-left-bold"},
+                "layout": custom_test_layout(),
                 "cover": {"title": top},
                 "render": {"subtitle_font": "Noto Sans SC"},
             }
@@ -301,7 +302,7 @@ def check_layout_and_ass() -> None:
         assert "\\fscx94" not in native_ass and "\\fscx96" not in native_ass
 
         right_project, _ = renderer.resolve_template(
-            {"layout": {"template_id": "black-right-modern"}, "render": {"subtitle_font": "Noto Sans SC"}}
+            {"layout": custom_test_layout("right"), "render": {"subtitle_font": "Noto Sans SC"}}
         )
         right_layout = renderer.resolve_layout(right_project, 1080, 1920, [])
         assert right_layout and right_layout["text_alignment"] == "right"
@@ -360,7 +361,7 @@ def check_emphasis_protocol() -> None:
     assert wrapped_long.replace("\n", "") == long_text
 
     styled_project, _ = renderer.resolve_template(
-        {"layout": {"template_id": "black-playful"}, "render": {"subtitle_font": "Noto Sans SC"}, **project}
+        {"layout": custom_test_layout(), "render": {"subtitle_font": "Noto Sans SC"}, **project}
     )
     layout = renderer.resolve_layout(styled_project, 1080, 1920, [])
     assert layout
@@ -386,7 +387,7 @@ def check_emphasis_protocol() -> None:
         )
     )
 
-    legacy_project, _ = renderer.resolve_template({"layout": {"template_id": "white-handwritten"}})
+    legacy_project, _ = renderer.resolve_template({"layout": custom_test_layout()})
     legacy_layout = renderer.resolve_layout(legacy_project, 1080, 1920, [])
     assert legacy_layout and not legacy_layout["auto_highlight"]
     legacy = renderer.normalize_highlights(
@@ -396,7 +397,7 @@ def check_emphasis_protocol() -> None:
         legacy_layout,
     )
     assert legacy[0]["scale"] == 1 and not legacy[0]["underline"] and legacy[0]["color"] == "#FF0000"
-    old_auto_project, _ = renderer.resolve_template({"layout": {"template_id": "black-left-bold"}})
+    old_auto_project, _ = renderer.resolve_template({"layout": custom_test_layout()})
     old_auto_layout = renderer.resolve_layout(old_auto_project, 1080, 1920, [])
     assert old_auto_layout
     old_auto = renderer.normalize_highlights(
@@ -585,7 +586,7 @@ def check_cli_dry_run_and_batch() -> None:
         project = {
             "version": 1,
             "canvas": {"width": 1080, "height": 1920, "fps": 30},
-            "layout": {"template_id": "white-center-bold"},
+            "layout": custom_test_layout(),
             "voice": {"enabled": False},
             "bgm": False,
             "material_policy": {"allow_image_only": False, "image_only_reason": ""},
@@ -611,7 +612,7 @@ def check_cli_dry_run_and_batch() -> None:
             text=True,
         )
         dry = json.loads(dry_run.stdout)
-        assert dry["template_id"] == "white-center-bold" and dry["layout"] == "text-media-text"
+        assert dry["template_id"] is None and dry["layout"] == "text-media-text"
         assert dry["scenes"][0]["video_assets"] == 2
 
         for field, value, expected_error in (
@@ -649,7 +650,7 @@ def check_cli_dry_run_and_batch() -> None:
             text=True,
         )
         validated = json.loads(valid.stdout)
-        assert validated["ok"] and validated["jobs"][0]["template_id"] == "white-center-bold"
+        assert validated["ok"] and validated["jobs"][0]["template_id"] is None
         assert validated["jobs"][0]["video_media"] == 2
 
         duplicate_batch = {
@@ -839,7 +840,7 @@ def check_concurrency_and_boundaries() -> None:
         )
 
         invalid_project = {
-            "layout": {"template_id": "white-center-bold"},
+            "layout": custom_test_layout(),
             "render": {"output": "output/final.mp4"},
             "scenes": ["not-an-object"],
         }
@@ -908,7 +909,7 @@ def check_real_render() -> None:
                 {
                     "version": 1,
                     "canvas": {"width": 1080, "height": 1920, "fps": 30},
-                    "layout": {"template_id": "white-handwritten"},
+                    "layout": custom_test_layout(),
                     "voice": {"enabled": False},
                     "bgm": False,
                     "material_policy": {"allow_image_only": False, "image_only_reason": ""},
@@ -938,10 +939,10 @@ def check_real_render() -> None:
         )
         report = json.loads(result.stdout)
         assert report["video_codec"] == "h264" and report["audio_codec"] == "aac"
-        assert (report["width"], report["height"], report["template_id"]) == (1080, 1920, "white-handwritten")
+        assert (report["width"], report["height"], report["template_id"]) == (1080, 1920, None)
         assert report["duration"] >= 8.0 and (temp / "output/final.mp4").is_file()
         saved = json.loads(project_path.read_text(encoding="utf-8"))
-        assert saved["render_report"]["template_id"] == "white-handwritten"
+        assert saved["render_report"]["template_id"] is None
 
 
 if __name__ == "__main__":
