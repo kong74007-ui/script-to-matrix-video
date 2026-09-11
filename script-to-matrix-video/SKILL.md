@@ -2,22 +2,37 @@
 name: script-to-matrix-video
 description: 黄雀主站模板成片（matrix-template）平台技能。顶部标题 + 底部行动文案 → 平台模板 → 9:16 成片。模板目录实时读取（2026-09-11 渲染服务实测 22 个：2 个 FFmpeg 固定版式 full-overlay-bold/poster-split + 17 个 HyperFrames 参考排版 ref-01~ref-17 + 九宫格开场 nine-grid-reveal + 特殊动效 triple-strip-shutter/yellow-banner-zoom）。时长一律由服务端决定：ref 随机整数 8~15 秒、FFmpeg 按文案长度 8~15 秒、九宫格固定 12 秒、配音跟随口播。AI 语义断句、素材选取（黄雀库头尾 + pexels 中间）、字体锁定全部服务端自动，Agent 不生成不传不改。内测期直出无报价卡。Use for 模板成片、上文字中素材下文字、批量矩阵视频、九宫格开场接全屏展示。Do not use for 手动逐帧剪辑（video-compose/video-timeline-compose）或完整文案口播成片（text-video-*/director）。
 short_description: 模板成片平台技能：模板目录（2026-09-11 实测 22 个）、语义排版契约、8~15 秒时长规则、素材策略、批量 2~5、直出交付纪律。
-short_description_zh: 黄雀模板成片平台技能：模板目录/语义排版/时长规则/素材策略/批量与交付红线，服务端自动项 Agent 不越俎代庖。
-version: 6
+short_description_zh: 黄雀成片子 Agent 模板成片操作手册（平台版）：模板目录/语义排版/时长规则/素材策略/批量与交付红线，服务端自动项 Agent 不越俎代庖。
+version: 7
 updated: 2026-09-11T00:00:00Z
 ---
 
-# Script and Template Matrix Video（黄雀模板成片 · 平台版）
+# Script and Template Matrix Video（黄雀模板成片 · 成片子 Agent 操作手册 · 平台版）
 
-## 0. 本技能的两代实现（2026-09-10 定调，先读这里）
+## 0. 本技能的定位：成片子 Agent 的模板成片操作手册（先读这里）
 
-本仓库历史上是一个「本地渲染器技能」：Agent 在本机用 `scripts/` 里的 FFmpeg / HyperFrames 管线自己出片（两功能：Function 1 完整文案成片、Function 2 模板成片，历史 29 个模板，现离线资产为 21 个）。**2026-09-10 老板定调：模板成片直接派平台生成，本地渲染器在主站退役。** 现在的正确做法是：
+**本技能给谁用**：黄雀成片子 Agent（hq-compose）。它接模板成片的单，按本手册查目录、调平台、交付。
 
-- **模板成片** = 主站平台能力族 `matrix-template-*`，由成片子 Agent（hq-compose）用 `hq capabilities` / `hq run` 调用，渲染发生在服务端（渲染机集群），Agent 不再本地渲染。
-- 本仓库现在的角色：① 渲染服务加载模板资产与目录的源（skill root）；② 训练子 Agent 的技能文档（本文件与 `references/`）。
-- 本地渲染器文档与脚本仍保留在仓库里（`scripts/`、`references/legacy-local-renderer.md`），仅供离线参考与回归，**主站生产不再使用**。
+**两代历史（为什么变成现在这样）**：
+- 2026-09-10 之前，本仓库是「本地渲染器技能」：Agent 在本机用 `scripts/` 里的 FFmpeg / HyperFrames 管线**自己生成模板视频**（Function 1 完整文案成片、Function 2 模板成片，历史 29 个模板）。
+- 2026-09-10 老板定调：**模板成片改造成主站平台能力**（`matrix-template-*`），模板生成走主站渲染机集群，本地渲染器退役。
+- 因此本技能从「造模板」转型为「用模板」：**教子 Agent 用平台出片**。本文件正文全部按平台现行契约编写。
 
-因此本文件正文全部按**平台现行契约**编写。能力 id、参数、目录一律以 `hq capabilities --json` / `hq describe <id> --json` 实时结果为准，本文件是快照与解释，冲突时以实时目录为准。
+**Agent 使用地图（接单后按需读，用 skill_doc 工具）**：
+
+| 场景 | 读哪里 |
+| --- | --- |
+| 总体怎么干 | 本文件 1~11 节（总纲，常驻） |
+| 模板长什么样、怎么选 | 本文件 §3 + `references/style-templates`、`reference-typography-templates`、`layout-templates`、`nine-grid-reveal` |
+| 批量限制与去重口径 | `references/template-batch` |
+| 平台契约、校验顺序、失败类、目录刷新故障 | `references/production-platform` |
+| AI 语义断句规则 | `references/semantic-emphasis` |
+| 素材策略（黄雀库头尾 + pexels 中间） | `references/material-library` |
+| 端到端出片流程 | `references/workflow` |
+
+**本仓库里剩下的旧东西（Agent 不需要读）**：`scripts/`（本地渲染管线）、`references/legacy-local-renderer`、`installation`、`creative-system`、`project-schema`、`triple-strip-shutter`、`yellow-banner-zoom` 等带「本地渲染器文档」横幅的分册 = 历史归档，仅供渲染服务侧离线参考与回归，**生产出片不用**。注意：`triple-strip-shutter` / `yellow-banner-zoom` 两个模板 id 现在在平台目录里**现役**，其平台版说明在本文件 §3.4（分册本身是旧渲染器文档，别混）。
+
+**一切以实时为准**：能力 id、参数、模板目录一律以 `hq capabilities --json` / `hq describe <id> --json` 实时结果为准；本文件是快照与解释，冲突时以实时目录为准。
 
 ## 1. 平台功能边界（哪些活派给本技能）
 
