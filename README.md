@@ -34,19 +34,21 @@
 
 模板成片只允许使用客户素材或素材库中状态为“可使用”的图片和视频，禁止 AI 生成素材。没有合适素材时返回 `material_missing`，不会使用无关素材填充。
 
-离线参考排版每条随机 8–15 秒，使用 3 个不同的已审核视频；批量 BGM 保留轮换规则。五套独立动效模板保留各自固定时间线与绑定音乐。FFmpeg 通用渲染器保留用于文案成片和自定义清单，不再提供原 8 个标准模板。
+离线参考排版每条随机 8–15 秒，使用 3 个不同的已审核视频；批量 BGM 保留轮换规则。独立动效模板保留各自固定时间线与绑定音乐。FFmpeg 通用渲染器保留用于文案成片和自定义清单，不再提供原 8 个标准模板。
 
-## 24 套可复用视觉模板（离线资产）
+## 25 套可复用视觉模板（离线资产）
 
-新增 **[横屏笔刷分片·上下黑底（brush-panel-transitions）](script-to-matrix-video/references/brush-panel-transitions.md)**：1080×1920、30 fps、454 帧，横屏画面居中、上下纯黑，保留笔刷/分片切换和绑定原 BGM。七条不同视频填入八个素材槽；红黄文字从首帧静态显示，不含原参考文字。源码和绑定 BGM 获用户授权公开同步，不包含客户演示素材；预览已检查，最终 MP4 尚未渲染。当前离线资产 24 套（18 ref + 6 动效），未部署主站。
+2026-09-14 新增 [固定双镜开场·横向甩切（fixed-opening-whip）](script-to-matrix-video/references/fixed-opening-whip.md)：17.3 秒、519 帧；固定前两段原画面及原字幕，标题/辅助文案/CTA 从第 97 帧（约 3.23 秒）静态显示，后续四条不同素材填六槽。保留红黄字体、横向甩切、压高光处理及绑定原音轨。用户明确授权公开两段固定开场提取素材；完整参考原片及客户演示素材不分发。v3 成片已渲染验证。当前仓库离线资产 25 套（18 ref + 7 动效），未部署主站；本机另有 ref-19。
+
+新增 **[横屏笔刷分片·上下黑底（brush-panel-transitions）](script-to-matrix-video/references/brush-panel-transitions.md)**：1080×1920、30 fps、454 帧，横屏画面居中、上下纯黑，保留笔刷/分片切换和绑定原 BGM。七条不同视频填入八个素材槽；红黄文字从首帧静态显示，不含原参考文字。源码和绑定 BGM 获用户授权公开同步，不包含客户演示素材；预览已检查，最终 MP4 尚未渲染。此前离线资产 24 套（18 ref + 6 动效），未部署主站。
 
 新增 [小窗推拉·翻片甩切（inset-flip-whip）](script-to-matrix-video/references/inset-flip-whip.md)：443 帧（约14.77秒）、7条不同视频/10槽、上下黑底、红黄首帧静态文字及绑定 BGM。开头为同源同帧对齐的彩色裁切窗口，非缩小画中画；换素材后运行模板内 `python prepare_backplate.py` 重建匹配灰底。仅公开离线源码与音乐，不含演示视频，不代表主站部署；线上 ID 以实时目录为准。
 
-原 8 套标准 FFmpeg 模板已删除。保留 18 套 HyperFrames 参考排版，以及 `nine-grid-reveal`、`triple-strip-shutter`、`yellow-banner-zoom`、`fan-whip-static`、`brush-panel-transitions`、`inset-flip-whip` 六套独立动效模板。
+原 8 套标准 FFmpeg 模板已删除。保留 18 套 HyperFrames 参考排版，以及 `nine-grid-reveal`、`triple-strip-shutter`、`yellow-banner-zoom`、`fan-whip-static`、`brush-panel-transitions`、`inset-flip-whip`、`fixed-opening-whip` 七套独立动效模板。
 
 离线默认改为 **`ref-15-tianjin-monochrome`（天津黑白极简）**，可替换任意主题文案。使用参考包的 rows 格式和 `scripts/render_reference_typography.py`，不把 ref ID 传给 FFmpeg 渲染器。完整 ID 与五层文字输入见 [参考排版说明](script-to-matrix-video/references/reference-typography-templates.md)。
 
-`assets/templates/catalog.json` 仅保存空标准目录和移除 ID，用于拒绝旧调用。参考模板及字体文件、五套动效和绑定 BGM 均保留。**线上平台目录仍实时读取，本次未部署或修改服务器。**
+`assets/templates/catalog.json` 仅保存空标准目录和移除 ID，用于拒绝旧调用。参考模板及字体文件、独立动效和绑定 BGM 均保留。**线上平台目录仍实时读取，本次未部署或修改服务器。**
 
 ### 九宫格开场·全屏展示
 

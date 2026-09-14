@@ -9,6 +9,8 @@ id_ed25519
 id_ed25519.pub
 outputs/
 *.mp4
+!script-to-matrix-video/assets/templates/fixed-opening-whip/assets/media/opening-a-subtitles.mp4
+!script-to-matrix-video/assets/templates/fixed-opening-whip/assets/media/opening-b-subtitles.mp4
 !script-to-matrix-video/assets/examples/text-media-text/*.mp4
 !script-to-matrix-video/assets/examples/text-media-text/reference-typography-17/*.mp4
 !script-to-matrix-video/assets/templates/reference-typography-17/assets/library/*.mp4

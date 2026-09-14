@@ -1,0 +1,11 @@
+{
+  "name": "fixed-opening-whip-20260914",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.38 preview",
+    "check": "npx --yes hyperframes@0.8.38 check",
+    "render": "npx --yes hyperframes@0.8.38 render",
+    "publish": "npx --yes hyperframes@0.8.38 publish"
+  }
+}

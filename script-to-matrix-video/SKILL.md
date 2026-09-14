@@ -207,6 +207,8 @@ updated: 2026-09-11T00:00:00Z
 
 ## 11. 仓库文件地图与部署注意
 
+- 新增离线资产 [固定双镜开场·横向甩切（fixed-opening-whip）](references/fixed-opening-whip.md)：519 帧（17.3 秒），固定开头两段原画面及字幕，标题/辅助文案/CTA 从第 97 帧开始静态显示；后续四条不同视频填六槽，绑定原音轨。用户于 2026-09-14 允许公开两段开场提取视频；其余演示素材不分发。仅同步离线模板，未部署主站，实时目录未返回该 ID 时不得提交生产任务。
+
 - 新增离线资产 `brush-panel-transitions`（横屏笔刷分片·上下黑底）：454 帧、HyperFrames 0.8.34、七条不同视频与八个素材槽、红黄首帧静态文字、绑定原 BGM，不含原视频文字。使用说明见 [brush-panel-transitions](references/brush-panel-transitions.md)。仅同步离线源码与绑定音乐，不代表主站上线；实时目录未返回该 ID 时不得提交生产任务。
 
 新增 [小窗推拉·翻片甩切（inset-flip-whip）](references/inset-flip-whip.md)：443 帧（约14.77秒）、7条不同视频/10槽、上下黑底、红黄首帧静态文字及绑定 BGM。开头为同源同帧对齐的彩色裁切窗口，非缩小画中画；换素材后运行模板内 `python prepare_backplate.py` 重建匹配灰底。仅公开离线源码与音乐，不含演示视频，不代表主站部署；线上 ID 以实时目录为准。

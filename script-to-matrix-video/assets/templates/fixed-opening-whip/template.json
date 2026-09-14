@@ -1,0 +1,41 @@
+{
+  "id": "fixed-opening-whip",
+  "name": "固定双镜开场·横向甩切",
+  "status": "saved",
+  "approvedAt": "2026-09-14",
+  "renderer": "hyperframes",
+  "cliVersion": "0.8.38",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "frames": 519,
+  "duration": 17.3,
+  "fixedOpening": [
+    {"path":"assets/media/opening-a-subtitles.mp4","start":0,"frames":75,"replaceable":false,"sha256":"bbccb7b90d456a45598f6e3c3a066ef011d12d7caf2151aead345a7506d6c54b"},
+    {"path":"assets/media/opening-b-subtitles.mp4","start":2.5,"frames":22,"replaceable":false,"sha256":"bbe870631ae8aa5db798d41a5bc601bea0a43106a4f2f05471dba6b7576e7b2a"}
+  ],
+  "openingCrop": {"x":0,"y":324,"width":720,"height":776},
+  "openingWindow": {"x":0,"y":486,"width":1080,"height":1164},
+  "mediaWindow": {"x":0,"y":656,"width":1080,"height":608,"preserveAspectRatio":true},
+  "editableText": ["title","subtitle","body","cta"],
+  "textStart": 3.2333333333333334,
+  "textStartFrame": 97,
+  "textMotion": "none",
+  "referenceTextIncluded": "opening subtitles only",
+  "media": [
+    {"start":3.2333333333333334,"end":4.6,"source":0,"offset":0},
+    {"start":4.2,"end":7.266666666666667,"source":2,"offset":0},
+    {"start":6.866666666666666,"end":9.466666666666667,"source":3,"offset":0},
+    {"start":9.066666666666666,"end":11.9,"source":1,"offset":0},
+    {"start":11.5,"end":14.6,"source":0,"offset":2},
+    {"start":14.2,"end":17.3,"source":2,"offset":2}
+  ],
+  "mediaPolicy": {"requiredDistinctSources":4,"minimumPreparedDuration":6,"aiGeneratedAllowed":false,"files":["00.mp4","01.mp4","02.mp4","03.mp4"],"demonstrationFootageBundled":false},
+  "transitionFrames": [126,206,272,345,426],
+  "transitionDurationFrames": 12,
+  "bgm": "assets/media/reference-bgm.m4a",
+  "referenceAudio": {"path":"assets/media/reference-bgm.m4a","start":0,"volume":1,"sha256":"02421fad56a79ff3116a1a45b09787f3f118ccfc48421b41e6e9edbffeabeb2f"},
+  "publicFixedFootagePermission": "Owner explicitly authorized public distribution of these two opening extracts on 2026-09-14; not independent proof of third-party rights.",
+  "distribution": "Public template source, fonts/license, runtime, two fixed opening extracts with original subtitles and bound original audio. Excludes full reference video, replaceable client/library footage, final demo, private paths and credentials.",
+  "validation": {"approvedRender":"v3","videoCodec":"h264","audioCodec":"aac","frames":519,"duration":17.3,"sampledFrames":[0,30,84,96,97,165,518],"result":"Opening subtitles retained; template copy absent through frame96 and visible from frame97; final frame contains footage. Final demonstration MP4 remains private."}
+}
